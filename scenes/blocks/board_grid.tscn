@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://dw8cg5g0pc6g7"]
+
+[ext_resource type="Script" uid="uid://1m63od6bllf6" path="res://scripts/board_grid_preview.gd" id="1_grid"]
+
+[node name="BoardGrid" type="Control" unique_id=1689691809]
+custom_minimum_size = Vector2(550, 550)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 550.0
+offset_bottom = 550.0
+script = ExtResource("1_grid")

@@ -3,7 +3,7 @@ class_name MergeBlock
 
 signal block_pressed(block: MergeBlock)
 
-const BLOCK_SIZE := 132.0
+const BLOCK_SIZE := GameConfig.BLOCK_SIZE
 
 var board_site := Vector2i.ZERO
 var had_merged := false

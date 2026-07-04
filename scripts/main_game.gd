@@ -4,6 +4,7 @@ const MergeBlockScene := preload("res://scripts/block.gd")
 
 const GRID_SIZE := GameConfig.GRID_SIZE
 const BLOCK_SIZE := GameConfig.BLOCK_SIZE
+const BOARD_BACKDROP_PADDING := GameConfig.BOARD_BACKDROP_PADDING
 const SAVE_PATH := GameConfig.SAVE_PATH
 const START_DIRECTLY := false
 
@@ -32,6 +33,8 @@ var decor_layer: Control
 var popup_layer: Control
 var score_label: Label
 var best_label: Label
+var castle_status_panel: Control
+var castle_status_label: Label
 var click_player: AudioStreamPlayer
 var merge_player: AudioStreamPlayer
 var combat_system: CombatSystem
@@ -84,7 +87,16 @@ func _load_assets() -> void:
 		"new_record": "res://assets/textrues/mian/newrecord.png",
 		"crown": "res://assets/textrues/mian/Crown.png",
 		"light": "res://assets/textrues/mian/Light.png",
-		"esc": "res://assets/textrues/mian/esc.png"
+		"esc": "res://assets/textrues/mian/esc.png",
+		"slice_board_panel": "res://assets/sliced_20260703_172750/board_panel.png",
+		"slice_status_panel": "res://assets/sliced_20260703_172750/top_status_panel.png",
+		"slice_mini_castle": "res://assets/sliced_20260703_172750/mini_castle_icon.png",
+		"slice_heart": "res://assets/sliced_20260703_172750/heart_icon.png",
+		"slice_shield": "res://assets/sliced_20260703_172750/shield_icon.png",
+		"slice_setting_bg": "res://assets/sliced_20260703_172750/setting_button_bg.png",
+		"slice_setting_icon": "res://assets/sliced_20260703_172750/setting_icon.png",
+		"slice_tip_panel": "res://assets/sliced_20260703_172750/tip_panel.png",
+		"slice_tip_bulb": "res://assets/sliced_20260703_172750/tip_icon_bulb.png"
 	}
 	for key in paths:
 		ui_textures[key] = load(paths[key]) as Texture2D
@@ -128,6 +140,9 @@ func _build_scene() -> void:
 	combat_system = CombatSystem.new()
 	combat_system.name = "CombatSystem"
 	add_child(combat_system)
+	combat_system.setup(game_layer)
+	combat_system.castle_destroyed.connect(_on_castle_destroyed)
+	combat_system.castle_durability_changed.connect(_on_castle_durability_changed)
 
 	logo_node = _make_texture_rect(ui_textures["logo"])
 	logo_node.name = "Logo"
@@ -145,22 +160,29 @@ func _build_scene() -> void:
 	_wire_button_anim(play_button)
 	main_layer.add_child(play_button)
 
-	music_button = _make_texture_button(ui_textures["music"])
+	music_button = _make_texture_button(_texture_or("slice_setting_bg", "music"))
 	music_button.name = "MusicButton"
 	music_button.pressed.connect(_toggle_mute)
 	_wire_button_anim(music_button)
 	main_layer.add_child(music_button)
 
-	var board_bg := _make_texture_rect(ui_textures["game_bg"])
+	var setting_icon := _make_texture_rect(ui_textures["slice_setting_icon"])
+	setting_icon.name = "SettingIcon"
+	setting_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	music_button.add_child(setting_icon)
+
+	var board_bg := _make_texture_rect(_texture_or("slice_board_panel", "game_bg"))
 	board_bg.name = "BoardBackdrop"
-	board_bg.custom_minimum_size = Vector2(690, 690)
+	board_bg.custom_minimum_size = GameConfig.get_board_backdrop_size()
 	game_layer.add_child(board_bg)
 
 	board_layer = Control.new()
 	board_layer.name = "Board"
-	board_layer.custom_minimum_size = Vector2(BLOCK_SIZE * GRID_SIZE, BLOCK_SIZE * GRID_SIZE)
+	board_layer.custom_minimum_size = GameConfig.get_board_size()
 	board_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	game_layer.add_child(board_layer)
+	if combat_system and combat_system.battle_layer:
+		game_layer.move_child(combat_system.battle_layer, board_layer.get_index() + 1)
 
 	score_label = _make_label("0", 56)
 	score_label.name = "Score"
@@ -169,6 +191,16 @@ func _build_scene() -> void:
 	best_label = _make_label("BEST %d" % best_score, 26)
 	best_label.name = "Best"
 	game_layer.add_child(best_label)
+
+	castle_status_panel = _make_status_panel()
+	castle_status_panel.name = "CastleStatusPanel"
+	game_layer.add_child(castle_status_panel)
+
+	castle_status_label = _make_label("20/20", 24)
+	castle_status_label.name = "CastleStatusLabel"
+	castle_status_label.add_theme_color_override("font_color", Color(0.12, 0.24, 0.42, 1.0))
+	castle_status_label.add_theme_color_override("font_shadow_color", Color(1, 1, 1, 0.8))
+	castle_status_panel.add_child(castle_status_label)
 
 	var restart_button := _make_texture_button(ui_textures["restart"])
 	restart_button.name = "RestartButton"
@@ -261,15 +293,19 @@ func _layout_scene() -> void:
 	_set_rect(main_layer.get_node("Title") as Control, Vector2((viewport_size.x - 430.0) * 0.5, viewport_size.y * 0.405), Vector2(430, 80))
 	_set_rect(main_layer.get_node("PlayButton") as Control, Vector2((viewport_size.x - 250.0) * 0.5, viewport_size.y * 0.64), Vector2(250, 170))
 	_set_rect(main_layer.get_node("MusicButton") as Control, Vector2(viewport_size.x - 96.0, 42.0), Vector2(62, 62))
+	if music_button.has_node("SettingIcon"):
+		_set_rect(music_button.get_node("SettingIcon") as Control, Vector2(13, 13), Vector2(36, 36))
 
-	var board_size := Vector2(BLOCK_SIZE * GRID_SIZE, BLOCK_SIZE * GRID_SIZE)
+	var board_size := GameConfig.get_board_size()
 	var board_pos := Vector2((viewport_size.x - board_size.x) * 0.5, viewport_size.y * 0.345)
 	_set_rect(board_layer, board_pos, board_size)
 	if combat_system:
 		combat_system.layout_for_board(board_pos, board_size)
-	_set_rect(game_layer.get_node("BoardBackdrop") as Control, board_pos - Vector2(15, 15), board_size + Vector2(30, 30))
-	_set_rect(score_label, Vector2(0, viewport_size.y * 0.13), Vector2(viewport_size.x, 80))
-	_set_rect(best_label, Vector2(0, viewport_size.y * 0.195), Vector2(viewport_size.x, 44))
+	_set_rect(game_layer.get_node("BoardBackdrop") as Control, board_pos - Vector2.ONE * BOARD_BACKDROP_PADDING, GameConfig.get_board_backdrop_size())
+	_set_rect(score_label, Vector2(24, viewport_size.y - 92.0), Vector2(160, 54))
+	_set_rect(best_label, Vector2(viewport_size.x - 190.0, viewport_size.y - 83.0), Vector2(166, 40))
+	_set_rect(castle_status_panel, Vector2(viewport_size.x - 226.0, 92.0), Vector2(176, 54))
+	_layout_status_panel()
 	_set_rect(game_layer.get_node("RestartButton") as Control, Vector2(viewport_size.x - 105.0, 45.0), Vector2(76, 76))
 	_set_rect(game_layer.get_node("BackButton") as Control, Vector2(30.0, 45.0), Vector2(76, 76))
 	_set_rect(merge_effect, Vector2.ZERO, Vector2(240, 240))
@@ -321,6 +357,40 @@ func _make_texture_button(texture: Texture2D) -> TextureButton:
 	button.focus_mode = Control.FOCUS_NONE
 	return button
 
+func _texture_or(primary_key: String, fallback_key: String) -> Texture2D:
+	if ui_textures.has(primary_key) and ui_textures[primary_key] != null:
+		return ui_textures[primary_key]
+	return ui_textures[fallback_key]
+
+func _make_status_panel() -> Control:
+	if ui_textures.has("slice_status_panel") and ui_textures["slice_status_panel"] != null:
+		var panel := _make_texture_rect(ui_textures["slice_status_panel"])
+		panel.stretch_mode = TextureRect.STRETCH_SCALE
+		for item in [
+			["MiniCastle", "slice_mini_castle"],
+			["HeartIcon", "slice_heart"],
+			["ShieldIcon", "slice_shield"],
+		]:
+			if ui_textures.has(item[1]) and ui_textures[item[1]] != null:
+				var icon := _make_texture_rect(ui_textures[item[1]])
+				icon.name = item[0]
+				icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				panel.add_child(icon)
+		return panel
+	return _make_round_panel(Color(1, 1, 1, 0.92), Color(0.65, 0.76, 0.92, 0.55), 18.0)
+
+func _layout_status_panel() -> void:
+	if castle_status_panel.has_node("MiniCastle"):
+		_set_rect(castle_status_panel.get_node("MiniCastle") as Control, Vector2(9, 5), Vector2(44, 44))
+	if castle_status_panel.has_node("HeartIcon"):
+		_set_rect(castle_status_panel.get_node("HeartIcon") as Control, Vector2(63, 14), Vector2(28, 28))
+	if castle_status_panel.has_node("ShieldIcon"):
+		_set_rect(castle_status_panel.get_node("ShieldIcon") as Control, Vector2(142, 13), Vector2(28, 28))
+	if castle_status_panel.has_node("HeartIcon"):
+		_set_rect(castle_status_label, Vector2(86, 0), Vector2(56, 54))
+	else:
+		_set_rect(castle_status_label, Vector2.ZERO, Vector2(176, 54))
+
 func _make_label(text: String, font_size: int) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -332,6 +402,23 @@ func _make_label(text: String, font_size: int) -> Label:
 	label.add_theme_constant_override("shadow_offset_x", 3)
 	label.add_theme_constant_override("shadow_offset_y", 3)
 	return label
+
+func _make_round_panel(fill_color: Color, border_color: Color, radius: float) -> Panel:
+	var panel := Panel.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill_color
+	style.border_color = border_color
+	style.set_border_width_all(2)
+	style.corner_radius_top_left = int(radius)
+	style.corner_radius_top_right = int(radius)
+	style.corner_radius_bottom_left = int(radius)
+	style.corner_radius_bottom_right = int(radius)
+	style.shadow_color = Color(0.18, 0.28, 0.42, 0.18)
+	style.shadow_size = 8
+	style.shadow_offset = Vector2(0, 3)
+	panel.add_theme_stylebox_override("panel", style)
+	return panel
 
 func show_main_menu() -> void:
 	game_status = GameStatus.NONE
@@ -642,6 +729,17 @@ func _has_same_neighbor(block: MergeBlock) -> bool:
 		if neighbor != null and neighbor.level == block.level:
 			return true
 	return false
+
+func _on_castle_destroyed() -> void:
+	call_deferred("end_game", false)
+
+func _on_castle_durability_changed(current: int, max_value: int) -> void:
+	if castle_status_label == null or not is_instance_valid(castle_status_label):
+		return
+	castle_status_label.text = "%d/%d" % [current, max_value]
+	var ratio := float(current) / float(max_value)
+	var color := Color(0.12, 0.24, 0.42, 1.0) if ratio > 0.5 else (Color(0.92, 0.54, 0.08, 1.0) if ratio > 0.25 else Color(0.9, 0.12, 0.14, 1.0))
+	castle_status_label.add_theme_color_override("font_color", color)
 
 func end_game(_had_pass: bool) -> void:
 	game_status = GameStatus.OVER

@@ -1,0 +1,43 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/castle_view.gd" id="1_view"]
+[ext_resource type="Texture2D" path="res://assets/sliced_20260703_172750/endpoint_castle.png" id="2_castle"]
+[ext_resource type="Texture2D" path="res://assets/sliced_20260703_172750/castle_hit_effect.png" id="3_hit"]
+
+[node name="CastleView" type="Control"]
+layout_mode = 3
+mouse_filter = 2
+script = ExtResource("1_view")
+
+[node name="Icon" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("2_castle")
+
+[node name="HitEffect" type="TextureRect" parent="."]
+visible = false
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("3_hit")
+
+[node name="DurabilityLabel" type="Label" parent="."]
+layout_mode = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.08, 0.27, 0.65, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.9)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+text = "20/20"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DurabilityBack" type="ColorRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.18, 0.23, 0.3, 0.35)
+
+[node name="DurabilityFill" type="ColorRect" parent="DurabilityBack"]
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.28, 0.76, 0.38, 1)

@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/monster_view.gd" id="1_view"]
+
+[node name="MonsterView" type="Control"]
+layout_mode = 3
+mouse_filter = 2
+script = ExtResource("1_view")
+
+[node name="HitAnchor" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="HpAnchor" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="EffectAnchor" type="Control" parent="."]
+layout_mode = 0
+mouse_filter = 2

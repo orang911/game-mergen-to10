@@ -2,7 +2,8 @@ extends RefCounted
 class_name GameConfig
 
 const GRID_SIZE := 5
-const BLOCK_SIZE := 132.0
+const BLOCK_SIZE := 96.0
+const BOARD_BACKDROP_PADDING := 15.0
 const SAVE_PATH := "user://merge_to_10.cfg"
 
 const LEVEL_ATTACK := {
@@ -56,3 +57,25 @@ static func calculate_attack_damage(level: int, merge_count: int) -> float:
 
 static func calculate_target_count(merge_count: int) -> int:
 	return max(1, merge_count - 1)
+
+static func get_board_size() -> Vector2:
+	var side := BLOCK_SIZE * float(GRID_SIZE)
+	return Vector2(side, side)
+
+static func get_board_backdrop_size() -> Vector2:
+	return get_board_size() + Vector2.ONE * BOARD_BACKDROP_PADDING * 2.0
+
+
+const MAX_CASTLE_DURABILITY := 20
+
+const MONSTER_CONFIG := {
+	"small": {"hp": 5, "durability_damage": 1, "speed": 80.0, "scale": 0.75},
+	"medium": {"hp": 12, "durability_damage": 2, "speed": 68.0, "scale": 1.0},
+	"large": {"hp": 25, "durability_damage": 3, "speed": 55.0, "scale": 1.25},
+}
+
+const WAVES := [
+	{"small": 6, "medium": 0, "large": 0, "spawn_interval": 1.0},
+	{"small": 8, "medium": 2, "large": 0, "spawn_interval": 0.9},
+	{"small": 10, "medium": 4, "large": 1, "spawn_interval": 0.8},
+]

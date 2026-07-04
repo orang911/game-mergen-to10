@@ -1,0 +1,261 @@
+[gd_scene format=3 uid="uid://bfuvc3jjgrmsv"]
+
+[ext_resource type="Script" uid="uid://dqyamt87wpbve" path="res://scripts/battle_layer_view.gd" id="1_view"]
+[ext_resource type="PackedScene" uid="uid://cb42xdtaq1b2v" path="res://scenes/combat/monster_path_view.tscn" id="2_path"]
+[ext_resource type="PackedScene" path="res://scenes/combat/castle_view.tscn" id="3_castle"]
+[ext_resource type="PackedScene" path="res://scenes/combat/effect_layer.tscn" id="4_effect"]
+[ext_resource type="Texture2D" uid="uid://dgibem7sghkby" path="res://assets/sliced_20260703_172750/wave_banner.png" id="5_wave"]
+[ext_resource type="Texture2D" uid="uid://clk7ahn44g0rw" path="res://assets/sliced_20260703_172750/entrance_gate.png" id="6_gate"]
+[ext_resource type="Texture2D" uid="uid://ctvaa83n26rle" path="res://assets/sliced_20260703_172750/entrance_label.png" id="7_entrance"]
+[ext_resource type="Texture2D" uid="uid://drsquumhivrax" path="res://assets/sliced_20260703_172750/endpoint_label.png" id="8_endpoint"]
+[ext_resource type="Texture2D" uid="uid://qfdlg55tq7sb" path="res://assets/sliced_20260703_172750/tip_panel.png" id="9_tip_panel"]
+[ext_resource type="Texture2D" uid="uid://bnu223pjdyey3" path="res://assets/sliced_20260703_172750/tip_icon_bulb.png" id="10_tip_icon"]
+[ext_resource type="Texture2D" uid="uid://ddhfjdhxvyxfg" path="res://assets/sliced_20260703_172750/decor_tree_01.png" id="13_tree_01"]
+[ext_resource type="Texture2D" uid="uid://dndvr7iittvvl" path="res://assets/sliced_20260703_172750/decor_tree_02.png" id="14_tree_02"]
+[ext_resource type="Texture2D" uid="uid://cxb5smypydqiy" path="res://assets/sliced_20260703_172750/decor_rock_01.png" id="15_rock_01"]
+[ext_resource type="Texture2D" uid="uid://bfddi57rfby8f" path="res://assets/sliced_20260703_172750/decor_rock_02.png" id="16_rock_02"]
+
+[node name="BattleLayer" type="Control" unique_id=1870031139]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 177.0
+offset_bottom = -764.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(448.5, 258)
+mouse_filter = 2
+script = ExtResource("1_view")
+
+[node name="DecorLayer" type="Control" parent="." unique_id=1671311901]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(448.5, 258)
+mouse_filter = 2
+
+[node name="RockMid" type="TextureRect" parent="DecorLayer" unique_id=757388014]
+layout_mode = 0
+offset_left = 707.0
+offset_top = 370.0
+offset_right = 765.0
+offset_bottom = 410.0
+pivot_offset = Vector2(29, 20)
+mouse_filter = 2
+texture = ExtResource("15_rock_01")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RockRight" type="TextureRect" parent="DecorLayer" unique_id=726647068]
+layout_mode = 0
+offset_left = 751.0
+offset_top = 455.0
+offset_right = 821.0
+offset_bottom = 505.0
+pivot_offset = Vector2(35, 25)
+mouse_filter = 2
+texture = ExtResource("16_rock_02")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TreeLeft" type="TextureRect" parent="DecorLayer" unique_id=1105609956]
+layout_mode = 0
+offset_left = -16.0
+offset_top = 351.0
+offset_right = 84.0
+offset_bottom = 481.0
+pivot_offset = Vector2(50, 65)
+mouse_filter = 2
+texture = ExtResource("13_tree_01")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TreeRight" type="TextureRect" parent="DecorLayer" unique_id=617375163]
+layout_mode = 0
+offset_left = 815.0
+offset_top = 378.0
+offset_right = 901.0
+offset_bottom = 506.0
+pivot_offset = Vector2(43, 64)
+mouse_filter = 2
+texture = ExtResource("14_tree_02")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RockBottom" type="TextureRect" parent="DecorLayer" unique_id=364485220]
+layout_mode = 0
+offset_left = 376.74
+offset_top = 438.0
+offset_right = 454.74
+offset_bottom = 492.0
+pivot_offset = Vector2(39, 27)
+mouse_filter = 2
+texture = ExtResource("15_rock_01")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MonsterPathView" parent="." unique_id=1690294176 instance=ExtResource("2_path")]
+layout_mode = 1
+pivot_offset = Vector2(448.5, 258)
+road_scale = 0.7
+show_debug_path = null
+
+[node name="RouteMarkers" type="Control" parent="." unique_id=1648567214]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(448.5, 258)
+mouse_filter = 2
+
+[node name="EntranceGate" type="TextureRect" parent="RouteMarkers" unique_id=1854757180]
+layout_mode = 0
+offset_left = 52.0
+offset_top = 250.0
+offset_right = 164.0
+offset_bottom = 362.0
+pivot_offset = Vector2(56, 56)
+mouse_filter = 2
+texture = ExtResource("6_gate")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EntranceLabel" type="TextureRect" parent="RouteMarkers" unique_id=657547768]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 208.0
+offset_right = 170.0
+offset_bottom = 250.0
+pivot_offset = Vector2(66, 21)
+mouse_filter = 2
+texture = ExtResource("7_entrance")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EndpointLabel" type="TextureRect" parent="RouteMarkers" unique_id=997982545]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 452.0
+offset_right = 124.0
+offset_bottom = 490.0
+pivot_offset = Vector2(59, 19)
+mouse_filter = 2
+texture = ExtResource("8_endpoint")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MonsterLayer" type="Control" parent="." unique_id=1105969132]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(448.5, 258)
+mouse_filter = 2
+
+[node name="CastleView" parent="." unique_id=696126801 instance=ExtResource("3_castle")]
+custom_minimum_size = Vector2(132, 128)
+layout_mode = 0
+anchors_preset = 0
+offset_left = 66.0
+offset_top = 326.0
+offset_right = 198.0
+offset_bottom = 454.0
+pivot_offset = Vector2(66, 64)
+
+[node name="ProjectileLayer" type="Control" parent="." unique_id=1332241870]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(448.5, 258)
+mouse_filter = 2
+
+[node name="EffectLayer" parent="." unique_id=1262774187 instance=ExtResource("4_effect")]
+layout_mode = 1
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(448.5, 258)
+
+[node name="HudLayer" type="Control" parent="." unique_id=284838234]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(448.5, 258)
+mouse_filter = 2
+
+[node name="WaveBanner" type="TextureRect" parent="HudLayer" unique_id=648765472]
+layout_mode = 0
+offset_left = 313.5
+offset_top = 65.0
+offset_right = 583.5
+offset_bottom = 143.0
+pivot_offset = Vector2(135, 39)
+mouse_filter = 2
+texture = ExtResource("5_wave")
+expand_mode = 1
+
+[node name="WaveLabel" type="Label" parent="HudLayer" unique_id=696297841]
+layout_mode = 0
+offset_left = 318.5
+offset_top = 74.0
+offset_right = 578.5
+offset_bottom = 138.0
+pivot_offset = Vector2(130, 32)
+theme_override_colors/font_color = Color(0.05, 0.28, 0.68, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.95)
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 34
+text = "Wave 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TipPanel" type="TextureRect" parent="HudLayer" unique_id=2006646490]
+layout_mode = 0
+offset_left = 326.5
+offset_top = 366.0
+offset_right = 570.5
+offset_bottom = 418.0
+pivot_offset = Vector2(122, 26)
+mouse_filter = 2
+texture = ExtResource("9_tip_panel")
+expand_mode = 1
+
+[node name="TipIcon" type="TextureRect" parent="HudLayer" unique_id=982812963]
+layout_mode = 0
+offset_left = 272.5
+offset_top = 367.0
+offset_right = 322.5
+offset_bottom = 411.0
+pivot_offset = Vector2(25, 22)
+mouse_filter = 2
+texture = ExtResource("10_tip_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TipLabel" type="Label" parent="HudLayer" unique_id=1908767827]
+layout_mode = 0
+offset_left = 337.5
+offset_top = 368.0
+offset_right = 679.5
+offset_bottom = 418.0
+pivot_offset = Vector2(143, 25)
+theme_override_colors/font_color = Color(0.22, 0.28, 0.43, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.85)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 16
+text = "Merge same numbers to level up
+and stop monsters from reaching the castle!"
+vertical_alignment = 1
