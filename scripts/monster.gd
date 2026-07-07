@@ -6,6 +6,9 @@ const MonsterViewScene := preload("res://scenes/combat/monster_view.tscn")
 signal died(monster: Monster)
 signal reached_goal(monster: Monster, durability_damage: int)
 signal hp_changed(monster: Monster, hp: float, max_hp: float)
+signal status_applied(monster: Monster, element: int, tier: int)
+signal status_ended(monster: Monster, element: int)
+signal status_ticked(monster: Monster, element: int)
 
 var monster_type := "small"
 var max_hp := 5.0
@@ -16,11 +19,12 @@ var alive := true
 var reached := false
 var path_progress := 0.0
 
-var freeze_timer := 0.0
-var burn_timer := 0.0
-var poison_timer := 0.0
-var _burn_dps := 3.0
-var _poison_dps := 1.2
+# Structured status containers: {tier, duration, remaining, ...}
+var poison_status: Dictionary = {}
+var freeze_status: Dictionary = {}
+var burn_status: Dictionary = {}
+var vulnerable_status: Dictionary = {}
+
 var _view: MonsterView
 
 
@@ -72,46 +76,106 @@ func kill() -> void:
 
 
 func get_speed_multiplier() -> float:
-	if freeze_timer > 0.0:
-		return 0.0
+	var mult := 1.0
+	if not freeze_status.is_empty():
+		mult *= max(0.1, 1.0 - (freeze_status.get("slow_percent", 0.0) as float))
+	return mult
+
+
+func apply_element_effect(event: MergeAttackEvent) -> void:
+	var params := event.effect_params
+	var element: int = params["element"]
+	var tier: int = params["tier"]
+	var atk: float = event.damage
+	match element:
+		GameConfig.AttackElement.POISON:
+			poison_status = {
+				"tier": tier,
+				"atk": atk,
+				"duration": params["duration"],
+				"remaining": params["duration"],
+				"dps_ratio": params["dps_ratio"],
+			}
+		GameConfig.AttackElement.FREEZE:
+			freeze_status = {
+				"tier": tier,
+				"duration": params["duration"],
+				"remaining": params["duration"],
+				"slow_percent": params["slow_percent"],
+			}
+		GameConfig.AttackElement.FIRE:
+			burn_status = {
+				"tier": tier,
+				"atk": atk,
+				"duration": params["duration"],
+				"remaining": params["duration"],
+				"splash_radius": params["splash_radius"],
+				"splash_damage_ratio": params["splash_damage_ratio"],
+			}
+		GameConfig.AttackElement.MAGIC:
+			vulnerable_status = {
+				"tier": tier,
+				"duration": 3.0,
+				"remaining": 3.0,
+				"damage_bonus": params["damage_bonus"],
+			}
+	status_applied.emit(self, element, tier)
+
+
+func get_damage_multiplier() -> float:
+	if not vulnerable_status.is_empty():
+		return 1.0 + (vulnerable_status.get("damage_bonus", 0.0) as float)
 	return 1.0
 
 
-func apply_status(element: int) -> void:
-	match element:
-		GameConfig.AttackElement.FIRE:
-			burn_timer = 1.5
-		GameConfig.AttackElement.FREEZE:
-			freeze_timer = 1.0
-		GameConfig.AttackElement.LIGHTNING:
-			pass
-		GameConfig.AttackElement.POISON:
-			poison_timer = 3.0
-
-
 func update_status(delta: float) -> void:
-	if freeze_timer > 0.0:
-		freeze_timer = max(0.0, freeze_timer - delta)
-	if burn_timer > 0.0:
-		burn_timer = max(0.0, burn_timer - delta)
-		hp = max(0.0, hp - _burn_dps * delta)
+	var has_poison := not poison_status.is_empty()
+	var has_burn := not burn_status.is_empty()
+
+	if has_poison:
+		poison_status["remaining"] = max(0.0, poison_status["remaining"] - delta)
+		var atk: float = float(poison_status["atk"])
+		var dps: float = atk * float(poison_status["dps_ratio"])
+		hp = max(0.0, hp - dps * delta)
 		_sync_view()
 		hp_changed.emit(self, hp, max_hp)
+		status_ticked.emit(self, GameConfig.AttackElement.POISON)
 		if hp <= 0.0:
-			modulate = Color(1.0, 0.3, 0.1, 1.0)
 			alive = false
 			died.emit(self)
 			return
-	if poison_timer > 0.0:
-		poison_timer = max(0.0, poison_timer - delta)
-		hp = max(0.0, hp - _poison_dps * delta)
+		if poison_status["remaining"] <= 0.0:
+			status_ended.emit(self, GameConfig.AttackElement.POISON)
+			poison_status.clear()
+
+	if has_burn:
+		burn_status["remaining"] = max(0.0, burn_status["remaining"] - delta)
+		var atk: float = float(burn_status["atk"])
+		var dps: float = atk * float(burn_status["splash_damage_ratio"]) * 0.5
+		hp = max(0.0, hp - dps * delta)
 		_sync_view()
 		hp_changed.emit(self, hp, max_hp)
+		status_ticked.emit(self, GameConfig.AttackElement.FIRE)
 		if hp <= 0.0:
-			modulate = Color(0.3, 0.8, 0.2, 1.0)
 			alive = false
 			died.emit(self)
 			return
+		if burn_status["remaining"] <= 0.0:
+			status_ended.emit(self, GameConfig.AttackElement.FIRE)
+			burn_status.clear()
+
+	if not freeze_status.is_empty():
+		freeze_status["remaining"] = max(0.0, freeze_status["remaining"] - delta)
+		if freeze_status["remaining"] <= 0.0:
+			status_ended.emit(self, GameConfig.AttackElement.FREEZE)
+			freeze_status.clear()
+
+	if not vulnerable_status.is_empty():
+		vulnerable_status["remaining"] = max(0.0, vulnerable_status["remaining"] - delta)
+		if vulnerable_status["remaining"] <= 0.0:
+			status_ended.emit(self, GameConfig.AttackElement.MAGIC)
+			vulnerable_status.clear()
+
 	_sync_view()
 
 
@@ -122,4 +186,8 @@ func is_alive() -> bool:
 func _sync_view() -> void:
 	if _view and is_instance_valid(_view):
 		_view.update_hp(hp, max_hp)
-		_view.update_status(freeze_timer, burn_timer, poison_timer)
+		_view.update_status(
+			freeze_status.get("remaining", 0.0) if not freeze_status.is_empty() else 0.0,
+			burn_status.get("remaining", 0.0) if not burn_status.is_empty() else 0.0,
+			poison_status.get("remaining", 0.0) if not poison_status.is_empty() else 0.0
+		)

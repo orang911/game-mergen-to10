@@ -4,7 +4,6 @@ const MergeBlockScene := preload("res://scripts/block.gd")
 
 const GRID_SIZE := GameConfig.GRID_SIZE
 const BLOCK_SIZE := GameConfig.BLOCK_SIZE
-const BOARD_BACKDROP_PADDING := GameConfig.BOARD_BACKDROP_PADDING
 const SAVE_PATH := GameConfig.SAVE_PATH
 const START_DIRECTLY := false
 
@@ -20,21 +19,19 @@ var score := 0
 var best_score := 0
 var muted := false
 
-var normal_textures: Array[Texture2D] = []
-var selected_textures: Array[Texture2D] = []
+var block_bg_textures: Dictionary[String, Texture2D] = {}
 var ui_textures: Dictionary[String, Texture2D] = {}
 
 var background: TextureRect
 var loading_layer: Control
 var main_layer: Control
 var game_layer: Control
+var battle_background: TextureRect
 var board_layer: Control
 var decor_layer: Control
 var popup_layer: Control
 var score_label: Label
 var best_label: Label
-var castle_status_panel: Control
-var castle_status_label: Label
 var click_player: AudioStreamPlayer
 var merge_player: AudioStreamPlayer
 var combat_system: CombatSystem
@@ -43,8 +40,7 @@ var play_button: TextureButton
 var logo_node: TextureRect
 var loading_bar: ColorRect
 var loading_label: Label
-var merge_effect: TextureRect
-
+var merge_frames: Array[Texture2D] = []
 func _ready() -> void:
 	randomize()
 	_load_save()
@@ -59,13 +55,14 @@ func _ready() -> void:
 		show_loading()
 
 func _load_assets() -> void:
-	for level_index in range(1, 11):
-		var key := "%02d" % level_index
-		normal_textures.append(load("res://assets/textrues/mian/plate_%s_down.png" % key))
-		selected_textures.append(load("res://assets/textrues/mian/plate_%s_up.png" % key))
+	for color_name in GameConfig.BLOCK_BG_PATHS:
+		block_bg_textures[color_name] = load(GameConfig.BLOCK_BG_PATHS[color_name]) as Texture2D
+
+	for i in range(1, 14):
+		merge_frames.append(load("res://assets/effest/texture/couple-%04d.png" % i) as Texture2D)
 
 	var paths: Dictionary[String, String] = {
-		"bg": "res://assets/textrues/bg/bg_01.jpg",
+		"bg": "res://assets/sliced_20260703_172750/login_background.png",
 		"bg_03": "res://assets/textrues/bg/bg_03.png",
 		"bg_04": "res://assets/textrues/bg/bg_04.png",
 		"bg_05": "res://assets/textrues/bg/bg_05.png",
@@ -74,9 +71,8 @@ func _load_assets() -> void:
 		"loading_item_01": "res://assets/textrues/UILoadingPanel/item01.png",
 		"loading_item_02": "res://assets/textrues/UILoadingPanel/item02.png",
 		"game_bg": "res://assets/textrues/mian/bg_02.png",
-		"logo": "res://assets/textrues/mian/logo.png",
-		"title": "res://assets/textrues/mian/Block Puzzle the number to 10.png",
-		"play": "res://assets/textrues/mian/play.png",
+		"logo": "res://assets/sliced_20260703_172750/login_logo.png",
+		"play": "res://assets/sliced_20260703_172750/login_play_button.png",
 		"restart": "res://assets/textrues/mian/Rstart.png",
 		"refresh": "res://assets/textrues/mian/Refresh.png",
 		"back": "res://assets/textrues/mian/back.png",
@@ -88,15 +84,12 @@ func _load_assets() -> void:
 		"crown": "res://assets/textrues/mian/Crown.png",
 		"light": "res://assets/textrues/mian/Light.png",
 		"esc": "res://assets/textrues/mian/esc.png",
-		"slice_board_panel": "res://assets/sliced_20260703_172750/board_panel.png",
-		"slice_status_panel": "res://assets/sliced_20260703_172750/top_status_panel.png",
-		"slice_mini_castle": "res://assets/sliced_20260703_172750/mini_castle_icon.png",
-		"slice_heart": "res://assets/sliced_20260703_172750/heart_icon.png",
-		"slice_shield": "res://assets/sliced_20260703_172750/shield_icon.png",
+		"slice_board_panel": "res://assets/sliced_20260703_172750/merge_board_backplate.png",
 		"slice_setting_bg": "res://assets/sliced_20260703_172750/setting_button_bg.png",
 		"slice_setting_icon": "res://assets/sliced_20260703_172750/setting_icon.png",
 		"slice_tip_panel": "res://assets/sliced_20260703_172750/tip_panel.png",
-		"slice_tip_bulb": "res://assets/sliced_20260703_172750/tip_icon_bulb.png"
+		"slice_tip_bulb": "res://assets/sliced_20260703_172750/tip_icon_bulb.png",
+		"battle_scene_bg": "res://assets/sliced_20260703_172750/game_scene_bg.jpg"
 	}
 	for key in paths:
 		ui_textures[key] = load(paths[key]) as Texture2D
@@ -143,15 +136,22 @@ func _build_scene() -> void:
 	combat_system.setup(game_layer)
 	combat_system.castle_destroyed.connect(_on_castle_destroyed)
 	combat_system.castle_durability_changed.connect(_on_castle_durability_changed)
+	combat_system.back_pressed.connect(over_game)
+
+	battle_background = _make_texture_rect(ui_textures["battle_scene_bg"])
+	battle_background.name = "BattleBackground"
+	game_layer.add_child(battle_background)
+	game_layer.move_child(battle_background, 0)
 
 	logo_node = _make_texture_rect(ui_textures["logo"])
 	logo_node.name = "Logo"
-	logo_node.custom_minimum_size = Vector2(560, 350)
+	logo_node.custom_minimum_size = Vector2(732, 457)
 	main_layer.add_child(logo_node)
 
-	var title := _make_texture_rect(ui_textures["title"])
+	var title := Control.new()
 	title.name = "Title"
-	title.custom_minimum_size = Vector2(430, 80)
+	title.custom_minimum_size = Vector2(562, 105)
+	title.visible = false
 	main_layer.add_child(title)
 
 	play_button = _make_texture_button(ui_textures["play"])
@@ -159,17 +159,6 @@ func _build_scene() -> void:
 	play_button.pressed.connect(_on_play_pressed)
 	_wire_button_anim(play_button)
 	main_layer.add_child(play_button)
-
-	music_button = _make_texture_button(_texture_or("slice_setting_bg", "music"))
-	music_button.name = "MusicButton"
-	music_button.pressed.connect(_toggle_mute)
-	_wire_button_anim(music_button)
-	main_layer.add_child(music_button)
-
-	var setting_icon := _make_texture_rect(ui_textures["slice_setting_icon"])
-	setting_icon.name = "SettingIcon"
-	setting_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	music_button.add_child(setting_icon)
 
 	var board_bg := _make_texture_rect(_texture_or("slice_board_panel", "game_bg"))
 	board_bg.name = "BoardBackdrop"
@@ -180,46 +169,18 @@ func _build_scene() -> void:
 	board_layer.name = "Board"
 	board_layer.custom_minimum_size = GameConfig.get_board_size()
 	board_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board_layer.clip_contents = true
 	game_layer.add_child(board_layer)
 	if combat_system and combat_system.battle_layer:
 		game_layer.move_child(combat_system.battle_layer, board_layer.get_index() + 1)
 
-	score_label = _make_label("0", 56)
+	score_label = _make_label("0", 73)
 	score_label.name = "Score"
 	game_layer.add_child(score_label)
 
-	best_label = _make_label("BEST %d" % best_score, 26)
+	best_label = _make_label("BEST %d" % best_score, 34)
 	best_label.name = "Best"
 	game_layer.add_child(best_label)
-
-	castle_status_panel = _make_status_panel()
-	castle_status_panel.name = "CastleStatusPanel"
-	game_layer.add_child(castle_status_panel)
-
-	castle_status_label = _make_label("20/20", 24)
-	castle_status_label.name = "CastleStatusLabel"
-	castle_status_label.add_theme_color_override("font_color", Color(0.12, 0.24, 0.42, 1.0))
-	castle_status_label.add_theme_color_override("font_shadow_color", Color(1, 1, 1, 0.8))
-	castle_status_panel.add_child(castle_status_label)
-
-	var restart_button := _make_texture_button(ui_textures["restart"])
-	restart_button.name = "RestartButton"
-	restart_button.pressed.connect(replay_game)
-	_wire_button_anim(restart_button)
-	game_layer.add_child(restart_button)
-
-	var back_button := _make_texture_button(ui_textures["back"])
-	back_button.name = "BackButton"
-	back_button.pressed.connect(over_game)
-	_wire_button_anim(back_button)
-	game_layer.add_child(back_button)
-
-	merge_effect = _make_texture_rect(ui_textures["light"])
-	merge_effect.name = "MergeEffect"
-	merge_effect.visible = false
-	merge_effect.modulate = Color(1, 1, 1, 0)
-	merge_effect.pivot_offset = Vector2(120, 120)
-	game_layer.add_child(merge_effect)
 
 	click_player = AudioStreamPlayer.new()
 	click_player.stream = load("res://assets/sound/click.mp3")
@@ -258,11 +219,11 @@ func _build_loading_layer() -> void:
 
 func _build_background_decor() -> void:
 	var decor_data := [
-		["bg_05", Vector2(-110, 1040), Vector2(660, 520), 34.0],
-		["bg_03", Vector2(415, 965), Vector2(405, 405), 42.0],
-		["bg_05", Vector2(210, 1120), Vector2(470, 370), 38.0],
-		["bg_03", Vector2(-165, 710), Vector2(530, 530), 46.0],
-		["bg_04", Vector2(470, 290), Vector2(210, 190), 30.0]
+		["bg_05", Vector2(-144, 1359), Vector2(863, 679), 44.0],
+		["bg_03", Vector2(542, 1261), Vector2(529, 529), 55.0],
+		["bg_05", Vector2(274, 1463), Vector2(614, 483), 50.0],
+		["bg_03", Vector2(-216, 928), Vector2(693, 693), 60.0],
+		["bg_04", Vector2(614, 379), Vector2(274, 248), 39.0]
 	]
 	for i in range(decor_data.size()):
 		var item: Array = decor_data[i]
@@ -278,38 +239,46 @@ func _build_background_decor() -> void:
 func _layout_scene() -> void:
 	var viewport_size := size
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
-		viewport_size = Vector2(720, 1280)
+		viewport_size = Vector2(941, 1672)
 
+	var design_size := Vector2(941.0, 1672.0)
+	var scale_factor := minf(viewport_size.x / design_size.x, viewport_size.y / design_size.y)
+
+	# Full-screen layers (not affected by game scaling)
 	background.size = viewport_size
 	var loading_bg := loading_layer.get_node("LoadingBg") as Control
 	_set_rect(loading_bg, Vector2.ZERO, viewport_size)
-	_set_rect(loading_layer.get_node("LoadingLogo") as Control, Vector2((viewport_size.x - 558.0) * 0.5, viewport_size.y * 0.19), Vector2(558, 351))
-	_set_rect(loading_layer.get_node("LoadingTrack") as Control, Vector2((viewport_size.x - 560.0) * 0.5, viewport_size.y * 0.74), Vector2(560, 50))
-	_set_rect(loading_bar, Vector2((viewport_size.x - 540.0) * 0.5, viewport_size.y * 0.745), Vector2(1, 30))
-	_set_rect(loading_layer.get_node("LoadingCap") as Control, Vector2((viewport_size.x - 560.0) * 0.5, viewport_size.y * 0.74), Vector2(560, 50))
-	_set_rect(loading_label, Vector2(0, viewport_size.y * 0.735), Vector2(viewport_size.x, 60))
+	_set_rect(loading_layer.get_node("LoadingLogo") as Control, Vector2((viewport_size.x - 729.0) * 0.5, viewport_size.y * 0.19), Vector2(729, 459))
+	_set_rect(loading_layer.get_node("LoadingTrack") as Control, Vector2((viewport_size.x - 732.0) * 0.5, viewport_size.y * 0.74), Vector2(732, 65))
+	_set_rect(loading_bar, Vector2((viewport_size.x - 706.0) * 0.5, viewport_size.y * 0.745), Vector2(1, 39))
+	_set_rect(loading_layer.get_node("LoadingCap") as Control, Vector2((viewport_size.x - 732.0) * 0.5, viewport_size.y * 0.74), Vector2(732, 65))
+	_set_rect(loading_label, Vector2(0, viewport_size.y * 0.735), Vector2(viewport_size.x, 78))
 
-	_set_rect(logo_node, Vector2((viewport_size.x - 558.0) * 0.5, viewport_size.y * 0.13), Vector2(558, 351))
-	_set_rect(main_layer.get_node("Title") as Control, Vector2((viewport_size.x - 430.0) * 0.5, viewport_size.y * 0.405), Vector2(430, 80))
-	_set_rect(main_layer.get_node("PlayButton") as Control, Vector2((viewport_size.x - 250.0) * 0.5, viewport_size.y * 0.64), Vector2(250, 170))
-	_set_rect(main_layer.get_node("MusicButton") as Control, Vector2(viewport_size.x - 96.0, 42.0), Vector2(62, 62))
-	if music_button.has_node("SettingIcon"):
-		_set_rect(music_button.get_node("SettingIcon") as Control, Vector2(13, 13), Vector2(36, 36))
+	_set_rect(logo_node, Vector2((viewport_size.x - 860.0) * 0.5, viewport_size.y * 0.07), Vector2(860, 644))
+	_set_rect(main_layer.get_node("Title") as Control, Vector2((viewport_size.x - 562.0) * 0.5, viewport_size.y * 0.405), Vector2(562, 105))
+	_set_rect(main_layer.get_node("PlayButton") as Control, Vector2((viewport_size.x - 581.0) * 0.5, viewport_size.y * 0.76), Vector2(581, 234))
+
+	# Game layer: letterboxed at design aspect ratio, all children work in 941x1672 coords
+	game_layer.position = (viewport_size - design_size * scale_factor) * 0.5
+	game_layer.scale = Vector2(scale_factor, scale_factor)
+	game_layer.size = design_size
+
+	# Battle background fills actual screen (reverse the scale so it covers viewport)
+	_set_rect(battle_background, Vector2.ZERO, viewport_size / scale_factor)
 
 	var board_size := GameConfig.get_board_size()
-	var board_pos := Vector2((viewport_size.x - board_size.x) * 0.5, viewport_size.y * 0.345)
+	var road_size := GameConfig.PATH_ROAD_IMAGE_SIZE * GameConfig.PATH_ROAD_SCALE
+	var board_pos := GameConfig.BOARD_GRID_POS
+	var combat_board_pos := Vector2(
+		board_pos.x,
+		GameConfig.PATH_ROAD_TARGET_BOTTOM_Y - board_size.y * 0.5 - road_size.y * 0.5 - GameConfig.PATH_ROAD_OFFSET.y
+	)
 	_set_rect(board_layer, board_pos, board_size)
 	if combat_system:
-		combat_system.layout_for_board(board_pos, board_size)
-	_set_rect(game_layer.get_node("BoardBackdrop") as Control, board_pos - Vector2.ONE * BOARD_BACKDROP_PADDING, GameConfig.get_board_backdrop_size())
-	_set_rect(score_label, Vector2(24, viewport_size.y - 92.0), Vector2(160, 54))
-	_set_rect(best_label, Vector2(viewport_size.x - 190.0, viewport_size.y - 83.0), Vector2(166, 40))
-	_set_rect(castle_status_panel, Vector2(viewport_size.x - 226.0, 92.0), Vector2(176, 54))
-	_layout_status_panel()
-	_set_rect(game_layer.get_node("RestartButton") as Control, Vector2(viewport_size.x - 105.0, 45.0), Vector2(76, 76))
-	_set_rect(game_layer.get_node("BackButton") as Control, Vector2(30.0, 45.0), Vector2(76, 76))
-	_set_rect(merge_effect, Vector2.ZERO, Vector2(240, 240))
-
+		combat_system.layout_for_board(combat_board_pos, board_size, board_pos)
+	_set_rect(game_layer.get_node("BoardBackdrop") as Control, GameConfig.get_board_plate_position(board_pos), GameConfig.get_board_backdrop_size())
+	_set_rect(score_label, Vector2(31, design_size.y - 120.0), Vector2(209, 71))
+	_set_rect(best_label, Vector2(design_size.x - 248.0, design_size.y - 108.0), Vector2(217, 52))
 	for block in block_map.values():
 		if block:
 			block.position = _position_for_site(block.board_site)
@@ -362,35 +331,6 @@ func _texture_or(primary_key: String, fallback_key: String) -> Texture2D:
 		return ui_textures[primary_key]
 	return ui_textures[fallback_key]
 
-func _make_status_panel() -> Control:
-	if ui_textures.has("slice_status_panel") and ui_textures["slice_status_panel"] != null:
-		var panel := _make_texture_rect(ui_textures["slice_status_panel"])
-		panel.stretch_mode = TextureRect.STRETCH_SCALE
-		for item in [
-			["MiniCastle", "slice_mini_castle"],
-			["HeartIcon", "slice_heart"],
-			["ShieldIcon", "slice_shield"],
-		]:
-			if ui_textures.has(item[1]) and ui_textures[item[1]] != null:
-				var icon := _make_texture_rect(ui_textures[item[1]])
-				icon.name = item[0]
-				icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-				panel.add_child(icon)
-		return panel
-	return _make_round_panel(Color(1, 1, 1, 0.92), Color(0.65, 0.76, 0.92, 0.55), 18.0)
-
-func _layout_status_panel() -> void:
-	if castle_status_panel.has_node("MiniCastle"):
-		_set_rect(castle_status_panel.get_node("MiniCastle") as Control, Vector2(9, 5), Vector2(44, 44))
-	if castle_status_panel.has_node("HeartIcon"):
-		_set_rect(castle_status_panel.get_node("HeartIcon") as Control, Vector2(63, 14), Vector2(28, 28))
-	if castle_status_panel.has_node("ShieldIcon"):
-		_set_rect(castle_status_panel.get_node("ShieldIcon") as Control, Vector2(142, 13), Vector2(28, 28))
-	if castle_status_panel.has_node("HeartIcon"):
-		_set_rect(castle_status_label, Vector2(86, 0), Vector2(56, 54))
-	else:
-		_set_rect(castle_status_label, Vector2.ZERO, Vector2(176, 54))
-
 func _make_label(text: String, font_size: int) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -425,7 +365,7 @@ func show_main_menu() -> void:
 	loading_layer.visible = false
 	main_layer.visible = true
 	game_layer.visible = false
-	decor_layer.visible = true
+	decor_layer.visible = false
 	_clear_popup()
 	_update_mute_visual()
 	_animate_main_menu()
@@ -445,7 +385,7 @@ func show_loading() -> void:
 func _set_loading_progress(value: float) -> void:
 	var progress := clampf(value, 0.0, 1.0)
 	if loading_bar:
-		loading_bar.size.x = 540.0 * progress
+		loading_bar.size.x = 706.0 * progress
 	if loading_label:
 		loading_label.text = "%d%%" % int(progress * 100.0)
 
@@ -525,7 +465,7 @@ func first_create_blocks() -> void:
 
 func _create_block(site: Vector2i, start_level: int, drop_in: bool, drop_delay: float = 0.0) -> MergeBlock:
 	var block := MergeBlockScene.new() as MergeBlock
-	block.setup(start_level, normal_textures, selected_textures)
+	block.setup(start_level, block_bg_textures)
 	block.board_site = site
 	block.name = "Block_%d" % block_count
 	block.block_pressed.connect(_on_block_pressed)
@@ -545,7 +485,7 @@ func _create_block(site: Vector2i, start_level: int, drop_in: bool, drop_delay: 
 	return block
 
 func _position_for_site(site: Vector2i) -> Vector2:
-	return Vector2(site.x * BLOCK_SIZE, (GRID_SIZE - 1 - site.y) * BLOCK_SIZE)
+	return GameConfig.get_block_position_for_site(site)
 
 func _on_block_pressed(block: MergeBlock) -> void:
 	if game_status != GameStatus.START:
@@ -562,7 +502,7 @@ func select_next_blocks(clicked: MergeBlock) -> void:
 		block.selected = false
 	selected_blocks.clear()
 
-	if clicked.level >= 10:
+	if clicked.level >= GameConfig.MAX_BLOCK_LEVEL:
 		return
 
 	_flood_select(clicked, clicked.level)
@@ -597,7 +537,6 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 		return
 
 	_play_merge()
-	_play_merge_effect(clicked)
 	game_status = GameStatus.PAUSE
 
 	var merge_group: Array[MergeBlock] = []
@@ -630,12 +569,15 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 	clicked.selected = false
 	clicked.had_merged = false
 	clicked.level += 1
+	_play_merge_effect(clicked)
 	current_level = max(current_level, clicked.level)
+	if combat_system and combat_system.crystal_system:
+		combat_system.crystal_system.notify_merge_level(clicked.level)
 	_dispatch_merge_attack(clicked, merged_count)
 	_refresh_score(merged_count, old_level)
 	_pulse(clicked)
 
-	if clicked.level >= 10:
+	if clicked.level >= GameConfig.MAX_BLOCK_LEVEL:
 		await get_tree().create_timer(0.16).timeout
 		_remove_block(clicked, true, clicked.position)
 		await get_tree().create_timer(0.18).timeout
@@ -705,7 +647,7 @@ func check_fail() -> bool:
 	for y in range(GRID_SIZE):
 		for x in range(GRID_SIZE):
 			var block := _block_at(Vector2i(x, y))
-			if block == null or block.level >= 10:
+			if block == null or block.level >= GameConfig.MAX_BLOCK_LEVEL:
 				continue
 			if _has_same_neighbor(block):
 				return false
@@ -716,7 +658,7 @@ func _ensure_any_match() -> void:
 		return
 	var first := _block_at(Vector2i(0, 0))
 	var second := _block_at(Vector2i(1, 0))
-	if first != null and second != null and first.level < 10:
+	if first != null and second != null and first.level < GameConfig.MAX_BLOCK_LEVEL:
 		second.level = first.level
 
 func _has_same_neighbor(block: MergeBlock) -> bool:
@@ -734,12 +676,8 @@ func _on_castle_destroyed() -> void:
 	call_deferred("end_game", false)
 
 func _on_castle_durability_changed(current: int, max_value: int) -> void:
-	if castle_status_label == null or not is_instance_valid(castle_status_label):
-		return
-	castle_status_label.text = "%d/%d" % [current, max_value]
-	var ratio := float(current) / float(max_value)
-	var color := Color(0.12, 0.24, 0.42, 1.0) if ratio > 0.5 else (Color(0.92, 0.54, 0.08, 1.0) if ratio > 0.25 else Color(0.9, 0.12, 0.14, 1.0))
-	castle_status_label.add_theme_color_override("font_color", color)
+	if combat_system and combat_system.battle_layer and is_instance_valid(combat_system.battle_layer):
+		combat_system.battle_layer.set_castle_status(current, max_value)
 
 func end_game(_had_pass: bool) -> void:
 	game_status = GameStatus.OVER
@@ -778,25 +716,22 @@ func _show_success_popup() -> void:
 	popup_layer.add_child(shade)
 
 	var light := _make_texture_rect(ui_textures["light"])
-	_set_rect(light, Vector2((size.x - 720.0) * 0.5, size.y * 0.08), Vector2(720, 568))
+	_set_rect(light, Vector2((size.x - 941.0) * 0.5, size.y * 0.08), Vector2(941, 742))
 	light.modulate = Color(1, 1, 1, 0)
 	popup_layer.add_child(light)
 
 	var popup := _make_texture_rect(ui_textures["success"])
 	popup.name = "SuccessPanel"
-	_set_rect(popup, Vector2((size.x - 668.0) * 0.5, size.y * 0.22), Vector2(668, 816))
+	_set_rect(popup, Vector2((size.x - 873.0) * 0.5, size.y * 0.22), Vector2(873, 1066))
 	popup.scale = Vector2.ZERO
 	popup_layer.add_child(popup)
 
-	var icon := TextureRect.new()
-	icon.texture = normal_textures[9]
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_set_rect(icon, Vector2(250, 210), Vector2(168, 168))
+	var icon := _make_block_preview(GameConfig.MAX_BLOCK_LEVEL, Vector2(220, 220))
+	icon.position = Vector2(327, 275)
 	popup.add_child(icon)
 
 	var continue_button := _make_texture_button(ui_textures["continue"])
-	_set_rect(continue_button, Vector2(139, 570), Vector2(390, 160))
+	_set_rect(continue_button, Vector2(182, 745), Vector2(510, 209))
 	continue_button.pressed.connect(func(): _play_click(); _clear_popup())
 	_wire_button_anim(continue_button)
 	popup.add_child(continue_button)
@@ -809,51 +744,48 @@ func _show_success_popup() -> void:
 func _show_account_popup() -> void:
 	_clear_popup()
 	popup_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var popup := _make_popup_panel(Vector2(610, 700))
+	var popup := _make_popup_panel(Vector2(797, 915))
 	popup_layer.add_child(popup)
 
 	var title := _make_label("GAME OVER", 48)
-	_set_rect(title, Vector2(0, 55), Vector2(610, 70))
+	_set_rect(title, Vector2(0, 72), Vector2(797, 91))
 	popup.add_child(title)
 
 	var score_text := _make_label("SCORE  %d" % score, 40)
-	_set_rect(score_text, Vector2(0, 150), Vector2(610, 60))
+	_set_rect(score_text, Vector2(0, 196), Vector2(797, 78))
 	popup.add_child(score_text)
 
 	var best_text := _make_label("BEST  %d" % best_score, 34)
-	_set_rect(best_text, Vector2(0, 215), Vector2(610, 52))
+	_set_rect(best_text, Vector2(0, 281), Vector2(797, 68))
 	popup.add_child(best_text)
 
-	var block_icon := TextureRect.new()
-	block_icon.texture = normal_textures[clampi(current_level - 1, 0, 9)]
-	block_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	block_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_set_rect(block_icon, Vector2(239, 285), Vector2(132, 132))
+	var block_icon := _make_block_preview(clampi(current_level, 1, GameConfig.MAX_BLOCK_LEVEL), Vector2(173, 173))
+	block_icon.position = Vector2(312, 373)
 	popup.add_child(block_icon)
 
 	var crown := _make_texture_rect(ui_textures["crown"])
-	_set_rect(crown, Vector2(180, 225), Vector2(45, 39))
+	_set_rect(crown, Vector2(235, 294), Vector2(59, 51))
 	popup.add_child(crown)
 
 	if score >= best_score and score > 0:
 		var record := _make_texture_rect(ui_textures["new_record"])
-		_set_rect(record, Vector2(175, 432), Vector2(259, 37))
+		_set_rect(record, Vector2(229, 565), Vector2(338, 48))
 		popup.add_child(record)
 
-	var revive_button := _make_text_button("CONTINUE", Vector2(250, 76))
-	_set_rect(revive_button, Vector2(180, 485), Vector2(250, 76))
+	var revive_button := _make_text_button("CONTINUE", Vector2(327, 99))
+	_set_rect(revive_button, Vector2(235, 634), Vector2(327, 99))
 	revive_button.pressed.connect(resurrect)
 	_wire_button_anim(revive_button)
 	popup.add_child(revive_button)
 
 	var restart_button := _make_texture_button(ui_textures["restart"])
-	_set_rect(restart_button, Vector2(112, 570), Vector2(155, 120))
+	_set_rect(restart_button, Vector2(146, 745), Vector2(203, 157))
 	restart_button.pressed.connect(replay_game)
 	_wire_button_anim(restart_button)
 	popup.add_child(restart_button)
 
 	var home_button := _make_texture_button(ui_textures["esc"])
-	_set_rect(home_button, Vector2(485, 22), Vector2(77, 66))
+	_set_rect(home_button, Vector2(634, 29), Vector2(101, 86))
 	home_button.pressed.connect(over_game)
 	_wire_button_anim(home_button)
 	popup.add_child(home_button)
@@ -881,6 +813,35 @@ func _make_popup_shade() -> ColorRect:
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	return shade
+
+func _make_block_preview(level: int, preview_size: Vector2) -> Control:
+	var container := Control.new()
+	container.size = preview_size
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var bg := TextureRect.new()
+	bg.texture = block_bg_textures.get(GameConfig.get_block_color_name(level))
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_SCALE
+	bg.size = preview_size
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(bg)
+
+	var label := TextureRect.new()
+	label.texture = load(GameConfig.get_label_texture_path(level)) as Texture2D
+	label.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	label.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tex_sz: Vector2 = label.texture.get_size() if label.texture else Vector2.ZERO
+	var label_max: float = preview_size.x * GameConfig.BLOCK_LABEL_FILL
+	var s: float = label_max / maxf(tex_sz.x, tex_sz.y)
+	var ls: Vector2 = tex_sz * s
+	label.position = (preview_size - ls) * 0.5
+	label.size = ls
+	container.add_child(label)
+
+	return container
+
 
 func _make_text_button(text: String, button_size: Vector2) -> Button:
 	var button := Button.new()
@@ -933,17 +894,31 @@ func _pulse(block: MergeBlock) -> void:
 	tween.tween_property(block, "scale", Vector2.ONE, 0.1)
 
 func _play_merge_effect(block: MergeBlock) -> void:
-	var board_pos := board_layer.position + block.position + Vector2(BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.5)
-	merge_effect.visible = true
-	merge_effect.position = board_pos - Vector2(120, 120)
-	merge_effect.scale = Vector2(0.28, 0.28)
-	merge_effect.rotation = 0
-	merge_effect.modulate = Color(1, 1, 1, 0.32)
-	var tween := create_tween()
-	tween.parallel().tween_property(merge_effect, "scale", Vector2(0.58, 0.58), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(merge_effect, "rotation", TAU * 0.035, 0.18)
-	tween.parallel().tween_property(merge_effect, "modulate:a", 0.0, 0.18)
-	tween.tween_callback(func(): merge_effect.visible = false)
+	if merge_frames.is_empty():
+		return
+	var center := board_layer.position + block.position + Vector2(BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.5)
+	var tex_sz := merge_frames[0].get_size()
+	var fx_size := tex_sz * 1.1
+	var fx := TextureRect.new()
+	fx.name = "MergeFx"
+	fx.texture = merge_frames[0]
+	fx.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fx.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	fx.position = center - fx_size * 0.5
+	fx.size = fx_size
+	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	game_layer.add_child(fx)
+
+	_play_effect_frames(fx)
+
+func _play_effect_frames(fx: TextureRect) -> void:
+	for i in range(1, merge_frames.size()):
+		await get_tree().create_timer(0.02).timeout
+		if not is_instance_valid(fx):
+			return
+		fx.texture = merge_frames[i]
+	if is_instance_valid(fx):
+		fx.queue_free()
 
 func _block_at(site: Vector2i) -> MergeBlock:
 	if site.x < 0 or site.y < 0 or site.x >= GRID_SIZE or site.y >= GRID_SIZE:

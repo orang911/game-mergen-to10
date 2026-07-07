@@ -43,3 +43,33 @@ func play_monster_reached_goal(monster: Monster) -> void:
 
 func play_castle_damage(_amount: int) -> void:
 	pass
+
+
+# -- Element FX placeholders (hook points for future particle / sprite effects) --
+
+func play_element_launch(_req: ElementFxRequest) -> void:
+	pass
+
+
+func play_element_hit(_req: ElementFxRequest) -> void:
+	pass
+
+
+func play_element_chain(_req: ElementFxRequest) -> void:
+	pass
+
+
+func play_element_area(_req: ElementFxRequest) -> void:
+	pass
+
+
+func play_status_apply(_req: ElementFxRequest) -> void:
+	pass
+
+
+func play_status_tick(_req: ElementFxRequest) -> void:
+	pass
+
+
+func play_status_end(_req: ElementFxRequest) -> void:
+	pass

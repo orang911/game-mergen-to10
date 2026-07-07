@@ -28,6 +28,7 @@ func play_merge_attack(event: MergeAttackEvent, targets: Array = []) -> void:
 		if bolt == null:
 			bolt = MergeBolt.new()
 		bolt.name = "MergeBolt"
+		bolt.apply_event(event)
 		bolt.start_pos = event.origin - parent_layer.global_position
 		bolt.end_pos = target.global_position + target.size * 0.5 - parent_layer.global_position
 		parent_layer.add_child(bolt)
@@ -38,11 +39,30 @@ func play_merge_attack(event: MergeAttackEvent, targets: Array = []) -> void:
 		tween.tween_callback(bolt.queue_free)
 
 
-func play_chain(from_global: Vector2, to_global: Vector2) -> void:
+func play_crystal_bolt(from_global: Vector2, to_global: Vector2) -> void:
+	if parent_layer == null or not is_instance_valid(parent_layer):
+		return
+	var bolt := ProjectileViewScene.instantiate() as MergeBolt
+	if bolt == null:
+		bolt = MergeBolt.new()
+	bolt.name = "CrystalBolt"
+	bolt.start_pos = from_global - parent_layer.global_position
+	bolt.end_pos = to_global - parent_layer.global_position
+	parent_layer.add_child(bolt)
+	parent_layer.move_child(bolt, parent_layer.get_child_count() - 1)
+	var tween := bolt.create_tween()
+	tween.tween_property(bolt, "progress", 1.0, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(bolt, "modulate:a", 0.0, 0.12)
+	tween.tween_callback(bolt.queue_free)
+
+
+func play_chain(from_global: Vector2, to_global: Vector2, event: MergeAttackEvent = null) -> void:
 	if parent_layer == null or not is_instance_valid(parent_layer):
 		return
 	var chain := ChainBolt.new()
 	chain.name = "ChainBolt"
+	if event:
+		chain.apply_event(event)
 	chain.start_pos = from_global - parent_layer.global_position
 	chain.end_pos = to_global - parent_layer.global_position
 	parent_layer.add_child(chain)

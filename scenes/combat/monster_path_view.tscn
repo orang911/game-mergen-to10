@@ -1,9 +1,8 @@
-[gd_scene format=3 uid="uid://cb42xdtaq1b2v"]
+[gd_scene load_steps=2 format=3 uid="uid://cb42xdtaq1b2v"]
 
 [ext_resource type="Script" uid="uid://bx5rvruylsuxj" path="res://scripts/battle_path_view.gd" id="1_path"]
-[ext_resource type="Texture2D" uid="uid://85l155pk1xv2" path="res://assets/sliced_20260703_172750/path_road_tile.png" id="2_road"]
 
-[node name="MonsterPathView" type="Control" unique_id=1304439821]
+[node name="MonsterPathView" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,14 +11,3 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_path")
-
-[node name="RoadImage" type="TextureRect" parent="." unique_id=862688825]
-layout_mode = 0
-offset_left = -14.0
-offset_top = -102.0
-offset_right = 602.0
-offset_bottom = 877.0
-mouse_filter = 2
-texture = ExtResource("2_road")
-expand_mode = 1
-stretch_mode = 5

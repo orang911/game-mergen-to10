@@ -5,7 +5,6 @@ class_name BoardGridPreview
 
 const BLOCK_SIZE := GameConfig.BLOCK_SIZE
 const GRID_SIZE := GameConfig.GRID_SIZE
-const BOARD_BACKDROP_PADDING := GameConfig.BOARD_BACKDROP_PADDING
 
 @export var show_labels := true:
 	set(value):
@@ -26,10 +25,10 @@ func _draw() -> void:
 	if _bg_texture:
 		draw_texture_rect(_bg_texture, Rect2(Vector2.ZERO, size), false)
 
-	var offset := Vector2.ONE * BOARD_BACKDROP_PADDING
+	var offset := GameConfig.get_board_grid_offset_in_plate()
 	for y in range(GRID_SIZE):
 		for x in range(GRID_SIZE):
-			var pos := offset + Vector2(float(x) * BLOCK_SIZE, float(GRID_SIZE - 1 - y) * BLOCK_SIZE)
+			var pos := offset + GameConfig.get_block_position_for_site(Vector2i(x, y))
 			var cell := Rect2(pos, Vector2(BLOCK_SIZE, BLOCK_SIZE))
 			draw_rect(cell, Color(0.2, 0.18, 0.15, 0.35), false, 1.5)
 			if show_labels:

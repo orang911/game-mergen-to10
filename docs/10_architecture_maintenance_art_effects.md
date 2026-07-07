@@ -185,6 +185,9 @@ scripts/battle_layer_view.gd
 维护建议：
 
 - 纯换图优先改场景资源。
+- `battle_layer.tscn` 是战斗层手动布局入口。`use_manual_layout=true`（默认）时，入口、出口、城堡、HUD、装饰节点的位置以场景保存值为准，运行时不会被代码覆盖。直接在 Godot 编辑器里拖拽节点即可。
+- `BoardGuide` 是编辑器专用棋盘参考框（半透明蓝框），运行时自动隐藏，仅用于对齐参考。
+- 以下节点仍由代码控制，不可手拖：`MonsterPathView`、`MonsterLayer`、`ProjectileLayer`、`EffectLayer`（它们需要跟随棋盘坐标或铺满全屏）。
 - 改位置、大小、跟随棋盘布局时改 `battle_layer_view.gd`。
 - 战斗层节点都应保持 `mouse_filter = IGNORE`，避免挡住棋盘点击。
 
