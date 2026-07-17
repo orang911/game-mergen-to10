@@ -5,6 +5,7 @@ signal wave_started(wave_index: int)
 signal spawn_requested(monster_type: String)
 signal wave_spawn_finished(wave_index: int)
 signal wave_cleared(wave_index: int)
+signal level_completed
 
 var waves: Array = []
 var current_wave_index := -1
@@ -17,6 +18,7 @@ var monsters_are_clear := true
 var running := false
 var _cycle := 0
 var total_waves_cleared := 0
+var awaiting_reward := false
 
 func setup(wave_config: Array) -> void:
 	waves = wave_config
@@ -40,6 +42,7 @@ func reset() -> void:
 	total_waves_cleared = 0
 	spawn_timer = 0.0
 	monsters_are_clear = true
+	awaiting_reward = false
 
 func notify_all_monsters_cleared() -> void:
 	monsters_are_clear = true
@@ -48,11 +51,18 @@ func notify_all_monsters_cleared() -> void:
 func is_wave_active() -> bool:
 	return spawning or waiting_for_clear
 
+func continue_to_next_wave() -> void:
+	if not awaiting_reward:
+		return
+	awaiting_reward = false
+	_start_next_wave()
+
 func _start_next_wave() -> void:
 	current_wave_index += 1
 	if current_wave_index >= waves.size():
-		current_wave_index = 0
-		_cycle += 1
+		running = false
+		level_completed.emit()
+		return
 	running = true
 	spawning = true
 	waiting_for_clear = false
@@ -102,5 +112,10 @@ func _try_clear_wave() -> void:
 		return
 	waiting_for_clear = false
 	total_waves_cleared += 1
+	running = false
+	if current_wave_index >= waves.size() - 1:
+		awaiting_reward = false
+		level_completed.emit()
+		return
+	awaiting_reward = true
 	wave_cleared.emit(current_wave_index)
-	_start_next_wave()

@@ -38,7 +38,7 @@ func _apply_element_visuals() -> void:
 			chain_color = Color(0.2, 0.75, 0.2, 0.55); chain_core_color = Color(0.5, 0.95, 0.4, 0.8)
 		GameConfig.AttackElement.FREEZE:
 			chain_color = Color(0.35, 0.7, 1.0, 0.55); chain_core_color = Color(0.75, 0.9, 1.0, 0.8)
-		GameConfig.AttackElement.MAGIC:
+		GameConfig.AttackElement.CRITICAL:
 			chain_color = Color(0.55, 0.2, 0.85, 0.55); chain_core_color = Color(0.8, 0.5, 1.0, 0.8)
 		GameConfig.AttackElement.FIRE:
 			chain_color = Color(0.9, 0.35, 0.1, 0.55); chain_core_color = Color(1.0, 0.6, 0.2, 0.8)

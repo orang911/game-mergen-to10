@@ -1,5 +1,7 @@
 # 实现路线图 / Implementation Roadmap
 
+> 本路线图描述目标阶段；截至 2026-07-15，阶段 1-3 已完成，阶段 4 基本完成，当前执行重点转为版本收口和阶段 5 反馈打磨。可执行任务以 `12_execution_plan_2026-07-15.md` 为准。
+
 ## 阶段 0：结构整理 / Phase 0: Structure Cleanup
 
 目标：

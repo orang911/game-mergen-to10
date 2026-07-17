@@ -18,13 +18,12 @@ var speed := 80.0
 var alive := true
 var reached := false
 var path_progress := 0.0
+var death_source := ""
 
 # Structured status containers: {tier, duration, remaining, ...}
 var poison_status: Dictionary = {}
 var freeze_status: Dictionary = {}
 var burn_status: Dictionary = {}
-var vulnerable_status: Dictionary = {}
-
 var _view: MonsterView
 
 
@@ -46,6 +45,12 @@ func setup(config: Dictionary) -> void:
 	pivot_offset = Vector2(size.x * 0.5, _view._base_size)
 
 
+func get_path_anchor_offset() -> Vector2:
+	# Keep the monster body centered on the road. The HP bar extends below
+	# the body and must not pull the movement anchor upward.
+	return Vector2(size.x * 0.5, _view._base_size * 0.5)
+
+
 func update_movement(delta: float, total_path_length: float) -> void:
 	if not alive or reached:
 		return
@@ -56,7 +61,7 @@ func update_movement(delta: float, total_path_length: float) -> void:
 		reached_goal.emit(self, durability_damage)
 
 
-func apply_damage(amount: float) -> void:
+func apply_damage(amount: float, source: String = "normal") -> void:
 	if not alive:
 		return
 	hp = max(0.0, hp - amount)
@@ -64,14 +69,16 @@ func apply_damage(amount: float) -> void:
 	hp_changed.emit(self, hp, max_hp)
 	if hp <= 0.0:
 		alive = false
+		death_source = source
 		died.emit(self)
 
 
-func kill() -> void:
+func kill(source: String = "system") -> void:
 	if not alive:
 		return
 	alive = false
 	hp = 0.0
+	death_source = source
 	died.emit(self)
 
 
@@ -82,7 +89,7 @@ func get_speed_multiplier() -> float:
 	return mult
 
 
-func apply_element_effect(event: MergeAttackEvent) -> void:
+func apply_element_effect(event: MergeAttackEvent, source: String = "normal") -> void:
 	var params := event.effect_params
 	var element: int = params["element"]
 	var tier: int = params["tier"]
@@ -95,6 +102,7 @@ func apply_element_effect(event: MergeAttackEvent) -> void:
 				"duration": params["duration"],
 				"remaining": params["duration"],
 				"dps_ratio": params["dps_ratio"],
+				"source": source,
 			}
 		GameConfig.AttackElement.FREEZE:
 			freeze_status = {
@@ -111,21 +119,13 @@ func apply_element_effect(event: MergeAttackEvent) -> void:
 				"remaining": params["duration"],
 				"splash_radius": params["splash_radius"],
 				"splash_damage_ratio": params["splash_damage_ratio"],
+				"source": source,
 			}
-		GameConfig.AttackElement.MAGIC:
-			vulnerable_status = {
-				"tier": tier,
-				"duration": 3.0,
-				"remaining": 3.0,
-				"damage_bonus": params["damage_bonus"],
-			}
+		GameConfig.AttackElement.CRITICAL:
+			return  # Critical is instant, no persistent status
+		_:
+			return
 	status_applied.emit(self, element, tier)
-
-
-func get_damage_multiplier() -> float:
-	if not vulnerable_status.is_empty():
-		return 1.0 + (vulnerable_status.get("damage_bonus", 0.0) as float)
-	return 1.0
 
 
 func update_status(delta: float) -> void:
@@ -142,6 +142,7 @@ func update_status(delta: float) -> void:
 		status_ticked.emit(self, GameConfig.AttackElement.POISON)
 		if hp <= 0.0:
 			alive = false
+			death_source = str(poison_status.get("source", "normal"))
 			died.emit(self)
 			return
 		if poison_status["remaining"] <= 0.0:
@@ -158,6 +159,7 @@ func update_status(delta: float) -> void:
 		status_ticked.emit(self, GameConfig.AttackElement.FIRE)
 		if hp <= 0.0:
 			alive = false
+			death_source = str(burn_status.get("source", "normal"))
 			died.emit(self)
 			return
 		if burn_status["remaining"] <= 0.0:
@@ -169,12 +171,6 @@ func update_status(delta: float) -> void:
 		if freeze_status["remaining"] <= 0.0:
 			status_ended.emit(self, GameConfig.AttackElement.FREEZE)
 			freeze_status.clear()
-
-	if not vulnerable_status.is_empty():
-		vulnerable_status["remaining"] = max(0.0, vulnerable_status["remaining"] - delta)
-		if vulnerable_status["remaining"] <= 0.0:
-			status_ended.emit(self, GameConfig.AttackElement.MAGIC)
-			vulnerable_status.clear()
 
 	_sync_view()
 

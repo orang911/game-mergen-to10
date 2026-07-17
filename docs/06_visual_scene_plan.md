@@ -6,8 +6,8 @@
 Main
 ├─ Background
 ├─ Decor
-├─ Loading
 ├─ MainMenu
+│  └─ LoadingView
 ├─ Game
 │  ├─ BattleLayer
 │  │  ├─ MonsterPath
@@ -83,7 +83,15 @@ func build_monster_path(board_pos: Vector2, board_size: Vector2) -> void:
 - 启动必需资源优先加载。
 - 战斗、怪物、弹道、特效资源可延后加载。
 - 大图和音频尽量按场景或阶段拆分。
-- Loading 层需要能显示真实加载进度或阶段提示。
+- `LoadingView` 负责启动阶段淡入和主菜单展示；真实资源进度接入前，使用约 1.2 秒的阶段动画。
+
+## LoadingView / 启动主菜单
+
+- 场景：`scenes/ui/loading_view.tscn`；脚本：`scripts/loading_view.gd`。
+- 资源统一放在 `assets/UI/loading/`，背景、Logo、水晶、五个数字方块、怪物和 PLAY 按钮使用语义化文件名。
+- 设计坐标以 `768×1364` 为基准，按视口比例居中缩放到运行窗口。
+- PLAY 是唯一可交互元素；装饰元素忽略鼠标输入。
+- Logo、水晶、方块、怪物和 PLAY 使用低幅度、不同周期的浮动/呼吸动画；进入游戏或离开菜单时统一清理 Tween。
 
 ## 视觉拆分原则 / Visual Split Principles
 
@@ -93,3 +101,11 @@ func build_monster_path(board_pos: Vector2, board_size: Vector2) -> void:
 - 水晶表现放进 `CrystalView`。
 - 弹道表现放进 `ProjectileSystem` / `ProjectileView`。
 - 通用反馈放进 `EffectSystem`。
+
+## 合成攻击行提示 / Merge Attack Row Prompt
+
+- `MergeAttackPromptView` 实例化在 `EffectLayer/FloatingText` 下，位于棋盘/弹道之上、HUD 之下，忽略鼠标。
+- 横幅尺寸 640×64，在可视棋盘区域水平居中；数字区域为 (435, 3, 160, 58)。
+- 逻辑行 y=4..0 分别映射到 941×1672 设计坐标系中的顶部目标值 642, 750, 858, 966, 1074。
+- 动画：向上平移 24 px；0.18s 淡入/入场，0.30s 停留，0.27s 淡出。
+- 临时节点名称以 `Effect_` 开头，确保 reset/restart 时一次性清理所有实例。

@@ -31,6 +31,7 @@ func _ready() -> void:
 	_shadow_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_shadow_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	_shadow_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_shadow_rect.visible = false
 	_shadow_rect.modulate = GameConfig.BLOCK_SHADOW_COLOR
 	add_child(_shadow_rect)
 
@@ -59,11 +60,17 @@ func _load_textures() -> void:
 func _refresh() -> void:
 	if _bg_rect == null or not is_instance_valid(_bg_rect):
 		return
+	modulate = Color.WHITE
+	self_modulate = Color.WHITE
+	_bg_rect.modulate = Color.WHITE
+	_bg_rect.self_modulate = Color.WHITE
+	_bg_rect.material = null
 
 	var color_name := GameConfig.get_block_color_name(level)
 	var bg_tex: Texture2D = _bg_textures.get(color_name)
 	if bg_tex:
 		_bg_rect.texture = bg_tex
+		_bg_rect.modulate = GameConfig.get_block_color_tint(color_name)
 		_bg_rect.size = VISUAL_SIZE
 		_bg_rect.position = (size - _bg_rect.size) * 0.5
 	if _shadow_rect and bg_tex:

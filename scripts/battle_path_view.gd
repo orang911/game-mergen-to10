@@ -2,7 +2,7 @@
 extends Control
 class_name BattlePathView
 
-const SLICE_DIR := "res://assets/sliced_20260703_172750/"
+const ROAD_TEXTURE_PATH := "res://assets/UI/游戏核心/layer_003.png"
 
 var board_pos := Vector2.ZERO
 var board_size := Vector2.ZERO
@@ -12,19 +12,13 @@ var end_offset := 64.0
 
 var _road_texture: Texture2D
 
-@export var road_scale := GameConfig.PATH_ROAD_SCALE:
-	set(value):
-		road_scale = value
-		queue_redraw()
-@export var road_offset := GameConfig.PATH_ROAD_OFFSET:
-	set(value):
-		road_offset = value
-		queue_redraw()
-@export var draw_road_texture := false:
+# Road scale and offset live in GameConfig so the texture, centerline and
+# monsters cannot acquire independent transforms.
+@export var draw_road_texture := true:
 	set(value):
 		draw_road_texture = value
 		queue_redraw()
-@export var show_debug_path := true:
+@export var show_debug_path := false:
 	set(value):
 		show_debug_path = value
 		queue_redraw()
@@ -32,7 +26,9 @@ var _road_texture: Texture2D
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_road_texture = load(SLICE_DIR + "path_road_tile.png") as Texture2D
+	var road_path := ROAD_TEXTURE_PATH
+	if ResourceLoader.exists(road_path):
+		_road_texture = load(road_path) as Texture2D
 	if Engine.is_editor_hint():
 		board_pos = Vector2(40, 60)
 		board_size = GameConfig.get_board_size()
@@ -57,11 +53,11 @@ func _draw() -> void:
 	if board_size.x <= 0.0 or board_size.y <= 0.0:
 		return
 
-	# --- road image (only when debugging, new bg JPG already includes road) ---
+	# The texture and the movement path must use one rect. Do not derive the
+	# draw size from the old merged-background frame: that made the road image
+	# and monster centerline drift apart when the whole design was scaled.
 	if draw_road_texture and _road_texture:
-		var center := board_pos + board_size * 0.5
-		var tex_size := _road_texture.get_size() * road_scale
-		var draw_rect := Rect2(center - tex_size * 0.5 + road_offset, tex_size)
+		var draw_rect := GameConfig.get_path_road_rect(board_pos, board_size)
 		draw_texture_rect(_road_texture, draw_rect, false)
 
 	# --- debug path ---

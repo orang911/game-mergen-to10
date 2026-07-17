@@ -17,6 +17,11 @@
 | `08_open_questions.md` | 待讨论问题 / Open questions。 |
 | `09_decision_log.md` | 决策记录 / Decision log。 |
 | `10_architecture_maintenance_art_effects.md` | 架构维护、美术替换与特效添加指南 / Architecture, art, and effects maintenance guide。 |
+| `12_execution_plan_2026-07-15.md` | 当前执行计划、优先级与验收清单 / Current execution plan and acceptance checklist。 |
+| `13_skill_imprint_mechanism.md` | 技能印记机制 / Skill imprint mechanism。 |
+| `14_initial_card_catalog.md` | 首批 9 张卡牌名称与效果 / Initial nine-card catalog。 |
+| `15_unified_card_wave_rules_2026-07-16.md` | 统一卡池、中心能量选择、五波节点奖励与 20 波关卡规则。 |
+| `16_crystal_tower_card_design_2026-07-17.md` | 水晶塔辅助攻击定位、8 张物品化水晶卡与魔法蒸汽城堡美术规则。 |
 
 ## 当前核心方向 / Current Core Direction
 
@@ -25,6 +30,13 @@
 - 新增持续攻击水晶，用于承载玩家本局成长后的基础战力，解决后期低级合成攻击断档。
 - 怪物沿棋盘外圈回形路径移动，到达终点扣除城堡耐久。
 - 战斗、弹道、特效、怪物、波次、城堡耐久都应从主棋盘逻辑中拆出。
+
+## 当前工作基线 / Current Work Baseline
+
+- 核心战斗、能量技能印记和波次水晶强化闭环已经落地；当前重点转为移动端实机冒烟、视觉细调和数值打磨。
+- `main_game.gd` 仍然是较大的集中式流程脚本；棋盘/合成系统的进一步拆分属于中期重构，不应阻塞当前版本收口。
+- 技能印记与九张卡牌的当前运行规则见 `13_skill_imprint_mechanism.md` 和 `14_initial_card_catalog.md`。
+- 已确认但尚待代码替换的 8 张水晶塔物品卡与 13 张目标总卡池见 `16_crystal_tower_card_design_2026-07-17.md`。
 
 ## 维护规则 / Maintenance Rules
 

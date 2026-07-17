@@ -95,7 +95,7 @@ MainGame
 | --- | --- | --- |
 | `assets/textrues/mian/` | 原主界面、按钮、方块、棋盘资源 | 保留旧资源路径，替换同名图片最稳。 |
 | `assets/textrues/bg/` | 背景装饰 | 替换背景和主菜单装饰时看这里。 |
-| `assets/textrues/UILoadingPanel/` | Loading 页面 | 替换加载页背景、Logo、进度条。 |
+| `assets/UI/loading/` | Loading / 主菜单页面 | 背景、Logo、水晶、数字方块、怪物、PLAY 按钮及其轻量动画资源。 |
 | `assets/sliced_20260703_172750/` | 新拆分战斗层素材 | 战斗 UI、怪物、城堡、路径、提示面板优先放这里。 |
 | `assets/sound/` | 点击和合成音效 | 后续攻击、命中、死亡、城堡受击音效也建议放这里。 |
 | `assets/effest/` | 旧 Cocos 特效资源 | 可以作为视觉参考，Godot 中建议逐步转成场景或脚本特效。 |
@@ -271,7 +271,7 @@ scripts/castle_view.gd
 
 ## 添加持续攻击水晶 / Adding The Continuous Attack Crystal
 
-水晶还未完全落地时，建议按下面结构加入：
+水晶已经落地；以下内容作为结构维护和后续扩展参考：
 
 ```text
 scenes/combat/crystal_view.tscn

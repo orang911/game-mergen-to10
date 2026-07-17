@@ -42,7 +42,7 @@ func spawn_monster(monster_type: String) -> Monster:
 	var monster := Monster.new()
 	monster.setup(config)
 	monster.path_progress = 0.0
-	monster.position = path_system.get_spawn_position() - monster.size * 0.5
+	monster.position = path_system.get_spawn_position() - monster.get_path_anchor_offset()
 	monster.died.connect(_on_monster_died)
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	parent_layer.add_child(monster)
@@ -78,7 +78,7 @@ func _process(delta: float) -> void:
 		if monster.is_alive() and not monster.reached:
 			monster.update_status(delta)
 			monster.update_movement(delta, total_length)
-			monster.position = path_system.position_at_progress(monster.path_progress) - monster.size * 0.5
+			monster.position = path_system.position_at_progress(monster.path_progress) - monster.get_path_anchor_offset()
 		elif monster.reached:
 			_pending_remove.append(monster)
 	for monster in _pending_remove:

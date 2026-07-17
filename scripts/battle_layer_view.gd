@@ -22,6 +22,8 @@ const DESIGN_SIZE := Vector2(941, 1672)
 @onready var _castle_status_label := get_node_or_null("DesignRoot/HudLayer/CastleStatusPanel/CastleStatusLabel") as Label
 @onready var _crystal_panel := get_node_or_null("DesignRoot/CrystalPanel") as Control
 @onready var _back_button := get_node_or_null("DesignRoot/HudLayer/BackButton") as TextureButton
+@onready var _gate_view := get_node_or_null("DesignRoot/DecorLayer/Gate") as Control
+@onready var _castle_view := get_node_or_null("DesignRoot/DecorLayer/Castle") as Control
 
 var _castle_anchor_position := Vector2.ZERO
 
@@ -34,13 +36,14 @@ func _ready() -> void:
 	custom_minimum_size = DESIGN_SIZE
 	size = DESIGN_SIZE
 	if _tip_label:
-		_tip_label.text = "Merge same numbers to level up\nand stop monsters from reaching the castle!"
+		_tip_label.text = "合成相同数字升级，阻止敌人抵达城堡！"
 	if _board_guide:
 		_board_guide.visible = Engine.is_editor_hint()
 	if _design_root:
 		_design_root.layout_mode = 0
 		_design_root.position = Vector2.ZERO
 		_design_root.size = DESIGN_SIZE
+	_apply_runtime_layer_order()
 	if _back_button:
 		_back_button.pressed.connect(func(): back_pressed.emit())
 	if Engine.is_editor_hint():
@@ -79,7 +82,7 @@ func set_wave_text(text_value: String) -> void:
 	if _wave_label == null:
 		_wave_label = get_node_or_null("DesignRoot/HudLayer/WaveLabel") as Label
 	if _wave_label:
-		_wave_label.text = text_value
+		_wave_label.text = text_value.replace("Wave ", "第 ") + (" 波" if text_value.begins_with("Wave ") else "")
 
 
 func set_castle_status(current: int, max_value: int) -> void:
@@ -91,6 +94,7 @@ func set_castle_status(current: int, max_value: int) -> void:
 
 func layout_for_board(board_pos: Vector2, board_size: Vector2, path_margin: float, spawn_pos: Vector2, goal_pos: Vector2, visual_board_pos: Vector2) -> void:
 	var viewport_size := _viewport_size()
+	_apply_runtime_layer_order()
 
 	# BattleLayer root fills viewport at runtime
 	_set_rect(self, Vector2.ZERO, viewport_size)
@@ -115,13 +119,41 @@ func layout_for_board(board_pos: Vector2, board_size: Vector2, path_margin: floa
 
 	if _board_guide:
 		_set_rect(_board_guide, visual_board_pos, board_size)
+	if _gate_view:
+		var gate_rect := GameConfig.get_path_gate_rect(board_pos, board_size)
+		_gate_view.scale = Vector2.ONE
+		_set_rect(_gate_view, gate_rect.position, gate_rect.size)
 	_layout_crystal(visual_board_pos, board_size)
 	_castle_anchor_position = goal_pos
+	if _castle_view:
+		_set_rect(_castle_view, Vector2(290, 445), Vector2(120, 116))
+
+
+func _apply_runtime_layer_order() -> void:
+	_set_canvas_z(_design_root, 0)
+	_set_canvas_z(_board_guide, 1)
+	_set_canvas_z(_decor_layer, 2)
+	_set_canvas_z(_path_view, 5)
+	_set_canvas_z(_monster_layer, 10)
+	# The entrance is foreground artwork: it covers the road seam and hides
+	# monsters until they actually emerge from the doorway.
+	_set_canvas_z(_gate_view, 12)
+	_set_canvas_z(_crystal_panel, 15)
+	_set_canvas_z(_projectile_layer, 20)
+	_set_canvas_z(_effect_layer, 30)
+	_set_canvas_z(_hud_layer, 40)
+
+
+func _set_canvas_z(node: CanvasItem, z: int) -> void:
+	if node == null:
+		return
+	node.z_as_relative = false
+	node.z_index = z
 
 
 func _layout_hud(viewport_size: Vector2) -> void:
 	if _wave_banner:
-		_set_rect(_wave_banner, Vector2((viewport_size.x - 353.0) * 0.5, 85.0), Vector2(353, 102))
+		_set_rect(_wave_banner, Vector2((viewport_size.x - 253.0) * 0.5, 24.0), Vector2(253, 73))
 	if _wave_label:
 		_set_rect(_wave_label, Vector2((viewport_size.x - 340.0) * 0.5, 97.0), Vector2(340, 84))
 
@@ -187,7 +219,7 @@ func _viewport_size() -> Vector2:
 func _show_editor_preview() -> void:
 	var preview_board_size := GameConfig.get_board_size()
 	var preview_visual_board_pos := GameConfig.BOARD_GRID_POS
-	var road_size := GameConfig.PATH_ROAD_IMAGE_SIZE * GameConfig.PATH_ROAD_SCALE
+	var road_size := GameConfig.get_path_layout_size()
 	var preview_path_board_pos := Vector2(
 		preview_visual_board_pos.x,
 		GameConfig.PATH_ROAD_TARGET_BOTTOM_Y - preview_board_size.y * 0.5 - road_size.y * 0.5 - GameConfig.PATH_ROAD_OFFSET.y

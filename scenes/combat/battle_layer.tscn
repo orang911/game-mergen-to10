@@ -4,19 +4,28 @@
 [ext_resource type="PackedScene" uid="uid://cb42xdtaq1b2v" path="res://scenes/combat/monster_path_view.tscn" id="2_path"]
 [ext_resource type="PackedScene" path="res://scenes/combat/effect_layer.tscn" id="4_effect"]
 [ext_resource type="Texture2D" uid="uid://f6pblkqxnuiy" path="res://assets/sliced_20260703_172750/top_status_panel.png" id="5_status"]
-[ext_resource type="Texture2D" uid="uid://dgibem7sghkby" path="res://assets/sliced_20260703_172750/wave_banner.png" id="5_wave"]
 [ext_resource type="Texture2D" uid="uid://x2blb7yywfg6" path="res://assets/sliced_20260703_172750/mini_castle_icon.png" id="6_castle_icon"]
 [ext_resource type="Texture2D" uid="uid://ul4rp4tyvqvh" path="res://assets/sliced_20260703_172750/heart_icon.png" id="7_heart"]
 [ext_resource type="Texture2D" uid="uid://c7ma6ln76ssqy" path="res://assets/sliced_20260703_172750/shield_icon.png" id="8_shield"]
 [ext_resource type="Texture2D" uid="uid://qfdlg55tq7sb" path="res://assets/sliced_20260703_172750/tip_panel.png" id="9_tip_panel"]
-[ext_resource type="Texture2D" uid="uid://du7rqyxdxaqgg" path="res://assets/sliced_20260703_172750/setting_button_bg.png" id="9_uhvvx"]
 [ext_resource type="Texture2D" uid="uid://bnu223pjdyey3" path="res://assets/sliced_20260703_172750/tip_icon_bulb.png" id="10_tip_icon"]
-[ext_resource type="Texture2D" uid="uid://dykhpa3161nau" path="res://assets/sliced_20260703_172750/crystal_tower.png" id="17_crystal_tower"]
-[ext_resource type="Texture2D" uid="uid://b4vt0omo0oull" path="res://assets/sliced_20260703_172750/ChatGPT-Image-2026年7月5日-下午07_51_33.png" id="17_i32j0"]
 [ext_resource type="Texture2D" uid="uid://cfs6ms0w6oqld" path="res://assets/sliced_20260703_172750/crystal_atk_panel.png" id="18_crystal_panel"]
 [ext_resource type="Texture2D" uid="uid://cjihr3pfbao2c" path="res://assets/sliced_20260703_172750/crystal_shield.png" id="19_crystal_shield"]
 [ext_resource type="Script" uid="uid://dqwf3smdsirnc" path="res://scripts/crystal_view.gd" id="20_crystal_view"]
 [ext_resource type="Texture2D" uid="uid://c2cq1eoos2jqv" path="res://assets/textrues/mian/back.png" id="21_back"]
+[ext_resource type="Texture2D" uid="uid://3hvrmrhclrqg" path="res://assets/UI/base_layers/base_009.png" id="22_base_009"]
+[ext_resource type="Texture2D" uid="uid://ba30kpxyat1p4" path="res://assets/UI/顶部UI/layer_001.png" id="23_top_timer"]
+[ext_resource type="Texture2D" uid="uid://dsd4idttyyvw1" path="res://assets/UI/顶部UI/layer_002.png" id="24_top_fill"]
+[ext_resource type="Texture2D" uid="uid://e3yu4pgbdf16" path="res://assets/UI/顶部UI/layer_003.png" id="25_top_track"]
+[ext_resource type="Texture2D" uid="uid://bxdpmwit8bl1s" path="res://assets/UI/顶部UI/layer_004.png" id="26_top_level"]
+[ext_resource type="Texture2D" uid="uid://nblscjqhen2y" path="res://assets/UI/顶部UI/layer_005.png" id="27_top_pause"]
+[ext_resource type="Texture2D" uid="uid://be6emut888ro1" path="res://assets/UI/顶部UI/layer_006.png" id="28_top_background"]
+[ext_resource type="Texture2D" uid="uid://cw14xv7gklg0m" path="res://assets/UI/游戏核心/layer_002.png" id="29_gate"]
+[ext_resource type="PackedScene" path="res://scenes/combat/castle_view.tscn" id="30_castle"]
+
+[sub_resource type="SystemFont" id="SystemFont_crystal_symbols"]
+font_names = PackedStringArray("Segoe UI Symbol", "Segoe UI Emoji", "Apple Symbols", "Apple Color Emoji", "Noto Sans Symbols 2", "Noto Sans Symbols", "Noto Color Emoji")
+subpixel_positioning = 0
 
 [node name="BattleLayer" type="Control" unique_id=1220117414]
 custom_minimum_size = Vector2(941, 1672)
@@ -30,67 +39,108 @@ script = ExtResource("1_view")
 metadata/_edit_vertical_guides_ = [485.0]
 
 [node name="DesignRoot" type="Control" parent="." unique_id=1853463677]
+z_as_relative = false
 anchors_preset = 0
 offset_right = 941.0
 offset_bottom = 1672.0
 mouse_filter = 2
 
 [node name="BoardGuide" type="ColorRect" parent="DesignRoot" unique_id=1491960948]
+z_index = 1
+z_as_relative = false
 layout_mode = 0
-offset_left = 175.5
+offset_left = 160.5
 offset_top = 630.0
-offset_right = 765.5
-offset_bottom = 1220.0
-pivot_offset = Vector2(295, 295)
+offset_right = 760.5
+offset_bottom = 1230.0
+pivot_offset = Vector2(300, 300)
 mouse_filter = 2
 color = Color(0.25, 0.55, 0.95, 0.15)
 
 [node name="DecorLayer" type="Control" parent="DesignRoot" unique_id=1411788450]
+z_index = 2
+z_as_relative = false
 anchors_preset = 0
 offset_right = 941.0
 offset_bottom = 1672.0
 mouse_filter = 2
 
+[node name="Gate" type="TextureRect" parent="DesignRoot/DecorLayer" unique_id=1385949603]
+z_index = 12
+z_as_relative = false
+layout_mode = 0
+offset_left = 72.77002
+offset_top = 161.11253
+offset_right = 472.915
+offset_bottom = 297.67755
+scale = Vector2(1, 1)
+pivot_offset = Vector2(200.0725, 68.2825)
+mouse_filter = 2
+texture = ExtResource("29_gate")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Castle" parent="DesignRoot/DecorLayer" unique_id=2038795382 instance=ExtResource("30_castle")]
+z_index = 6
+layout_mode = 0
+anchors_preset = 0
+offset_left = 290.0
+offset_top = 445.0
+offset_right = 410.0
+offset_bottom = 561.0
+pivot_offset = Vector2(60, 58)
+
 [node name="HudLayer" type="Control" parent="DesignRoot" unique_id=1380257583]
+z_index = 40
+z_as_relative = false
 anchors_preset = 0
 offset_right = 941.0
 offset_bottom = 1672.0
 mouse_filter = 2
+
+[node name="TopUiBackground" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=358539599]
+layout_mode = 0
+offset_right = 941.0
+offset_bottom = 210.0
+mouse_filter = 2
+texture = ExtResource("28_top_background")
+expand_mode = 1
 
 [node name="WaveBanner" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=1684430199]
 layout_mode = 0
-offset_left = 287.00003
-offset_top = 31.999977
-offset_right = 640.0
-offset_bottom = 133.99997
-scale = Vector2(0.72, 0.72)
-pivot_offset = Vector2(176.5, 51)
+offset_left = 338.0
+offset_top = 24.0
+offset_right = 591.0
+offset_bottom = 97.0
+pivot_offset = Vector2(126.5, 36.5)
 mouse_filter = 2
-texture = ExtResource("5_wave")
+texture = ExtResource("23_top_timer")
 expand_mode = 1
 
 [node name="WaveLabel" type="Label" parent="DesignRoot/HudLayer" unique_id=1087736179]
+visible = false
 layout_mode = 0
 offset_left = 293.50003
-offset_top = 43.999977
+offset_top = 149.99998
 offset_right = 633.5
-offset_bottom = 127.99996
+offset_bottom = 233.99997
 scale = Vector2(0.72, 0.72)
 pivot_offset = Vector2(170, 42)
 theme_override_colors/font_color = Color(0.05, 0.28, 0.68, 1)
 theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.95)
 theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 34
-text = "Wave 1"
+text = "第 1 波"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="TipPanel" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=1667621014]
+visible = false
 layout_mode = 0
 offset_left = 339.0
-offset_top = 1477.0
+offset_top = 1581.0
 offset_right = 658.0
-offset_bottom = 1545.0
+offset_bottom = 1649.0
 scale = Vector2(1.2, 1)
 pivot_offset = Vector2(159.5, 34)
 mouse_filter = 2
@@ -98,11 +148,12 @@ texture = ExtResource("9_tip_panel")
 expand_mode = 1
 
 [node name="TipIcon" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=1514016015]
+visible = false
 layout_mode = 0
 offset_left = 240.0
-offset_top = 1477.0
+offset_top = 1581.0
 offset_right = 305.0
-offset_bottom = 1535.0
+offset_bottom = 1639.0
 pivot_offset = Vector2(32.5, 29)
 mouse_filter = 2
 texture = ExtResource("10_tip_icon")
@@ -110,26 +161,27 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="TipLabel" type="Label" parent="DesignRoot/HudLayer" unique_id=842278297]
+visible = false
 layout_mode = 0
 offset_left = 325.5
-offset_top = 1479.0
+offset_top = 1583.0
 offset_right = 699.5
-offset_bottom = 1544.0
+offset_bottom = 1648.0
 pivot_offset = Vector2(187, 32.5)
 theme_override_colors/font_color = Color(0.22, 0.28, 0.43, 1)
 theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.85)
 theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 16
-text = "Merge same numbers to level up
-and stop monsters from reaching the castle!"
+text = "合成相同数字升级，阻止敌人抵达城堡！"
 vertical_alignment = 1
 
 [node name="CastleStatusPanel" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=229310176]
+visible = false
 layout_mode = 0
 offset_left = 631.0
-offset_top = 62.0
+offset_top = 166.0
 offset_right = 902.0
-offset_bottom = 127.0
+offset_bottom = 231.0
 mouse_filter = 2
 texture = ExtResource("5_status")
 expand_mode = 1
@@ -183,16 +235,19 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="BackButton" type="TextureButton" parent="DesignRoot/HudLayer" unique_id=100934020]
+process_mode = 3
 layout_mode = 0
-offset_left = 28.0
-offset_top = 39.999996
-offset_right = 153.0
-offset_bottom = 159.0
-scale = Vector2(0.76, 0.76)
-texture_normal = ExtResource("9_uhvvx")
+offset_left = 37.0
+offset_top = 24.0
+offset_right = 131.0
+offset_bottom = 100.0
+texture_normal = ExtResource("27_top_pause")
+texture_pressed = ExtResource("27_top_pause")
+texture_hover = ExtResource("27_top_pause")
 stretch_mode = 5
 
 [node name="TextureRect" type="TextureRect" parent="DesignRoot/HudLayer/BackButton" unique_id=1556774123]
+visible = false
 layout_mode = 0
 offset_left = 30.0
 offset_top = 33.0
@@ -204,66 +259,117 @@ texture = ExtResource("21_back")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="TopTrack" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=382259548]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 110.0
+offset_right = 879.0
+offset_bottom = 145.0
+mouse_filter = 2
+texture = ExtResource("25_top_track")
+expand_mode = 1
+
+[node name="TopFill" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=1520600528]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 112.0
+offset_right = 762.0
+offset_bottom = 143.0
+mouse_filter = 2
+texture = ExtResource("24_top_fill")
+expand_mode = 1
+
+[node name="TopLevel" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=819679911]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 145.0
+offset_right = 142.0
+offset_bottom = 185.0
+mouse_filter = 2
+texture = ExtResource("26_top_level")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="CrystalPanel" type="Control" parent="DesignRoot" unique_id=2086643997]
+z_index = 15
+z_as_relative = false
 anchors_preset = 0
-offset_left = 380.5
-offset_top = 440.0
-offset_right = 560.5
-offset_bottom = 665.0
+offset_left = 370.5
+offset_top = 420.0
+offset_right = 550.5
+offset_bottom = 645.0
 pivot_offset = Vector2(90, 112.5)
 mouse_filter = 2
 script = ExtResource("20_crystal_view")
 
 [node name="Tower" type="TextureRect" parent="DesignRoot/CrystalPanel" unique_id=219789568]
+visible = false
 layout_mode = 0
-offset_left = 13.0
-offset_top = 31.0
-offset_right = 167.0
-offset_bottom = 193.0
+offset_left = 29.5
+offset_top = 41.0
+offset_right = 150.5
+offset_bottom = 225.0
+scale = Vector2(0.75, 0.75)
+pivot_offset = Vector2(60.5, 184)
 mouse_filter = 2
-texture = ExtResource("17_crystal_tower")
+texture = ExtResource("22_base_009")
 expand_mode = 1
 stretch_mode = 5
 
 [node name="AtkPanel" type="TextureRect" parent="DesignRoot/CrystalPanel" unique_id=1143008324]
+visible = false
 layout_mode = 0
-offset_left = 133.0
-offset_top = 13.0
-offset_right = 219.0
-offset_bottom = 84.0
-scale = Vector2(2.3999977, 2.3999977)
+offset_left = 112.375
+offset_top = 16.0
+offset_right = 550.375
+offset_bottom = 297.0
+scale = Vector2(1e-05, 1e-05)
+pivot_offset = Vector2(23, 140)
 mouse_filter = 2
 texture = ExtResource("18_crystal_panel")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="AtkLabelLv" type="Label" parent="DesignRoot/CrystalPanel" unique_id=574754217]
+[node name="AtkLabelLv" type="Label" parent="DesignRoot/CrystalPanel/AtkPanel" unique_id=574754217]
+visible = false
 layout_mode = 0
-offset_left = 141.0
-offset_top = 16.0
-offset_right = 214.0
-offset_bottom = 39.0
-scale = Vector2(2.3999977, 2.3999977)
-theme_override_colors/font_color = Color(0.95, 0.82, 0.35, 1)
-theme_override_font_sizes/font_size = 13
+offset_left = 72.0
+offset_top = 38.0
+offset_right = 330.0
+offset_bottom = 105.0
+theme_override_colors/font_color = Color(0.18, 0.25, 0.36, 1)
+theme_override_font_sizes/font_size = 36
 text = "Lv 1"
-horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="AtkLabelVal" type="Label" parent="DesignRoot/CrystalPanel" unique_id=1770844229]
+[node name="AtkLabelVal" type="Label" parent="DesignRoot/CrystalPanel/AtkPanel" unique_id=1770844229]
+visible = false
 layout_mode = 0
-offset_left = 141.0
-offset_top = 42.0
-offset_right = 214.0
-offset_bottom = 71.0
-scale = Vector2(2.3999977, 2.3999977)
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 15
-text = "ATK 2"
-horizontal_alignment = 1
+offset_left = 72.0
+offset_top = 105.0
+offset_right = 330.0
+offset_bottom = 177.0
+theme_override_colors/font_color = Color(0.18, 0.25, 0.36, 1)
+theme_override_fonts/font = SubResource("SystemFont_crystal_symbols")
+theme_override_font_sizes/font_size = 32
+text = "⚔ ATK: 2"
+vertical_alignment = 1
+
+[node name="AtkLabelSpd" type="Label" parent="DesignRoot/CrystalPanel/AtkPanel" unique_id=1305763000]
+visible = false
+layout_mode = 0
+offset_left = 72.0
+offset_top = 177.0
+offset_right = 330.0
+offset_bottom = 250.0
+theme_override_colors/font_color = Color(0.18, 0.25, 0.36, 1)
+theme_override_fonts/font = SubResource("SystemFont_crystal_symbols")
+theme_override_font_sizes/font_size = 32
+text = "◷ SPD: 0.56/s"
 vertical_alignment = 1
 
 [node name="ShieldBadge" type="TextureRect" parent="DesignRoot/CrystalPanel" unique_id=84695730]
+visible = false
 layout_mode = 0
 offset_left = 64.0
 offset_top = 166.0
@@ -275,6 +381,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="ShieldLabel" type="Label" parent="DesignRoot/CrystalPanel" unique_id=841708575]
+visible = false
 layout_mode = 0
 offset_left = 64.0
 offset_top = 173.0
@@ -287,6 +394,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="MonsterPathView" parent="." unique_id=565554800 instance=ExtResource("2_path")]
+z_index = 5
+z_as_relative = false
 layout_mode = 0
 anchors_preset = 0
 anchor_right = 0.0
@@ -296,9 +405,10 @@ offset_bottom = 1672.0
 grow_horizontal = 1
 grow_vertical = 1
 pivot_offset = Vector2(470.5, 836)
-show_debug_path = false
 
 [node name="ProjectileLayer" type="Control" parent="." unique_id=749060220]
+z_index = 20
+z_as_relative = false
 anchors_preset = 0
 offset_right = 941.0
 offset_bottom = 1672.0
@@ -306,6 +416,8 @@ pivot_offset = Vector2(470.5, 836)
 mouse_filter = 2
 
 [node name="EffectLayer" parent="." unique_id=1677030784 instance=ExtResource("4_effect")]
+z_index = 30
+z_as_relative = false
 layout_mode = 0
 anchors_preset = 0
 anchor_right = 0.0
@@ -315,16 +427,10 @@ offset_bottom = 1672.0
 pivot_offset = Vector2(470.5, 836)
 
 [node name="MonsterLayer" type="Control" parent="." unique_id=667333144]
+z_index = 10
+z_as_relative = false
 anchors_preset = 0
 offset_right = 941.0
 offset_bottom = 1672.0
 pivot_offset = Vector2(470.5, 836)
 mouse_filter = 2
-
-[node name="ChatGptImage2026年7月5日下午075133" type="Sprite2D" parent="." unique_id=346433729]
-visible = false
-modulate = Color(0.9046107, 0.6661447, 0.95783335, 1)
-z_index = -1
-position = Vector2(468, 837)
-texture = ExtResource("17_i32j0")
-metadata/_edit_lock_ = true
