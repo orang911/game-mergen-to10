@@ -13,6 +13,9 @@ var running := false
 var _pending_remove: Array[Monster] = []
 var _delayed_free: Array[Monster] = []
 
+const SPAWN_INTRO_START_SCALE := 0.12
+const SPAWN_INTRO_DURATION := 0.22
+
 func setup(p_path: PathSystem, p_parent: Control) -> void:
 	path_system = p_path
 	parent_layer = p_parent
@@ -46,6 +49,11 @@ func spawn_monster(monster_type: String) -> Monster:
 	monster.died.connect(_on_monster_died)
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	parent_layer.add_child(monster)
+	# Keep the monster in front of the entrance artwork and let it emerge from
+	# the portal with a short scale-in animation.
+	monster.scale = Vector2.ONE * SPAWN_INTRO_START_SCALE
+	var spawn_intro := monster.create_tween()
+	spawn_intro.tween_property(monster, "scale", Vector2.ONE, SPAWN_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	monsters.append(monster)
 	monster_spawned.emit(monster)
 	return monster

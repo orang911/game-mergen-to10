@@ -88,9 +88,9 @@ func build_monster_path(board_pos: Vector2, board_size: Vector2) -> void:
 ## LoadingView / 启动主菜单
 
 - 场景：`scenes/ui/loading_view.tscn`；脚本：`scripts/loading_view.gd`。
-- 资源统一放在 `assets/UI/loading/`，背景、Logo、水晶、五个数字方块、怪物和 PLAY 按钮使用语义化文件名。
-- 设计坐标以 `768×1364` 为基准，按视口比例居中缩放到运行窗口。
-- PLAY 是唯一可交互元素；装饰元素忽略鼠标输入。
+- 资源统一放在 `assets/UI/登录页/`，当前使用完整登录页效果图作为整屏主视觉。
+- 设计坐标以效果图原始 `967×1626` 为基准，按视口等比覆盖并居中裁切。
+- “开始游戏”是当前唯一可交互元素；账号与设置图标暂时仅作为效果图视觉。
 - Logo、水晶、方块、怪物和 PLAY 使用低幅度、不同周期的浮动/呼吸动画；进入游戏或离开菜单时统一清理 Tween。
 
 ## 视觉拆分原则 / Visual Split Principles

@@ -22,6 +22,7 @@
 | `14_initial_card_catalog.md` | 首批 9 张卡牌名称与效果 / Initial nine-card catalog。 |
 | `15_unified_card_wave_rules_2026-07-16.md` | 统一卡池、中心能量选择、五波节点奖励与 20 波关卡规则。 |
 | `16_crystal_tower_card_design_2026-07-17.md` | 水晶塔辅助攻击定位、8 张物品化水晶卡与魔法蒸汽城堡美术规则。 |
+| `17_target_card_catalog_2026-07-17.md` | 下一轮待实现的 8 张棋盘道具卡、8 张水晶装备卡及旧卡迁移表。 |
 
 ## 当前核心方向 / Current Core Direction
 
@@ -36,7 +37,7 @@
 - 核心战斗、能量技能印记和波次水晶强化闭环已经落地；当前重点转为移动端实机冒烟、视觉细调和数值打磨。
 - `main_game.gd` 仍然是较大的集中式流程脚本；棋盘/合成系统的进一步拆分属于中期重构，不应阻塞当前版本收口。
 - 技能印记与九张卡牌的当前运行规则见 `13_skill_imprint_mechanism.md` 和 `14_initial_card_catalog.md`。
-- 已确认但尚待代码替换的 8 张水晶塔物品卡与 13 张目标总卡池见 `16_crystal_tower_card_design_2026-07-17.md`。
+- 已确认但尚待代码替换的 16 张目标卡池见 `17_target_card_catalog_2026-07-17.md`。
 
 ## 维护规则 / Maintenance Rules
 

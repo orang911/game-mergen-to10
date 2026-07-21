@@ -15,6 +15,7 @@ const BLOCK_SHADOW_SCALE := Vector2(0.97, 0.97)
 const BLOCK_SHADOW_COLOR := Color(0.05, 0.12, 0.20, 0.24)
 const BOARD_GRID_SIZE := Vector2(600.0, 600.0)
 const BOARD_GRID_POS := Vector2(160.5, 630.0)
+const BOARD_VISUAL_OFFSET := Vector2(-4.0, 0.0)
 const BOARD_GRID_BOTTOM_Y := 1235.0
 const BOARD_PLATE_SIZE := Vector2(600.0, 600.0)
 const BOARD_PLATE_OFFSET := Vector2(5.0, 0.0)
@@ -42,6 +43,9 @@ const CARD_SKILL_FLY_DURATION := 0.38
 const CARD_CRYSTAL_FLY_DURATION := 0.42
 const CARD_PANEL_FADE_OUT := 0.16
 const CARD_MASK_FADE_OUT := 0.18
+const CARD_FLIP_DURATION := 0.36
+const CARD_FLIP_STAGGER := 0.10
+const MAX_CARD_LEVEL := 5
 
 const CRYSTAL_DAMAGE_UP_STEP := 0.25
 const CRYSTAL_INTERVAL_MULTIPLIER := 0.8
@@ -51,48 +55,61 @@ const FROST_STAR_TARGETS := 3
 const FROST_STAR_SLOW_RATIO := 0.25
 const FROST_STAR_SLOW_DURATION := 2.0
 
-const SKILL_CARD_IDS := ["core_ascension", "frequency_convergence", "fragment_reforge", "board_echo", "frost_star"]
-const CRYSTAL_CARD_IDS := ["star_core", "rapid_pulse", "element_prism", "double_refraction"]
+const SKILL_CARD_IDS := CardCatalog.BOARD_CARD_IDS
+const CRYSTAL_CARD_IDS := CardCatalog.CRYSTAL_CARD_IDS
 const ALL_CARD_IDS := SKILL_CARD_IDS + CRYSTAL_CARD_IDS
 const LEVEL_WAVE_COUNT := 20
 const MILESTONE_ENTRY_WAVES := [5, 10, 15, 20]
 
 const CARD_QUALITY_COMMON := 1
-const CARD_QUALITY_RARE := 2
-const CARD_QUALITY_EPIC := 3
-const CARD_QUALITY_NAMES := {1: "普通", 2: "优秀", 3: "稀有"}
+const CARD_QUALITY_RARE := 3
+const CARD_QUALITY_EPIC := 5
+const CARD_QUALITY_NAMES := {1: "1星", 2: "2星", 3: "3星", 4: "4星", 5: "5星"}
 const CARD_QUALITY_COLORS := {
 	1: Color(0.72, 0.84, 0.94),
-	2: Color(0.25, 0.72, 1.0),
-	3: Color(0.75, 0.40, 1.0),
+	2: Color(0.40, 0.78, 1.0),
+	3: Color(0.45, 0.86, 0.62),
+	4: Color(0.75, 0.40, 1.0),
+	5: Color(1.0, 0.78, 0.16),
 }
 
-const CRYSTAL_DAMAGE_UP_BY_QUALITY := {1: 0.15, 2: 0.25, 3: 0.35}
-const CRYSTAL_INTERVAL_BY_QUALITY := {1: 0.90, 2: 0.82, 3: 0.75}
-const CRYSTAL_EXTRA_TARGETS_BY_QUALITY := {1: 1, 2: 1, 3: 2}
-const CRYSTAL_ELEMENT_WAVES_BY_QUALITY := {1: 1, 2: 2, 3: 3}
+# First-pass conservative balance. Every table is indexed by permanent card
+# level (1..5) so later tuning remains data-only.
+const ASCENSION_EXTRA_LEVELS := [1, 1, 1, 2, 2]
+const TWIN_MOLD_TARGETS := [1, 1, 1, 2, 2]
+const CASTLE_CANNON_DAMAGE := [1.60, 1.90, 2.20, 2.50, 2.80]
+const DRAGON_CATAPULT_TARGETS := [2, 2, 3, 3, 4]
+const DRAGON_CATAPULT_DAMAGE := [0.70, 0.80, 0.90, 1.00, 1.10]
+const DRAGON_CATAPULT_BURN_RATIO := [0.10, 0.13, 0.16, 0.19, 0.22]
+const DRAGON_CATAPULT_BURN_DURATION := [1.8, 2.1, 2.4, 2.7, 3.0]
+const FROST_BELL_DAMAGE := [0.25, 0.30, 0.35, 0.40, 0.50]
+const FROST_BELL_SLOW := [0.18, 0.22, 0.26, 0.30, 0.35]
+const FROST_BELL_DURATION := [1.5, 1.75, 2.0, 2.25, 2.5]
+const THUNDER_BALLISTA_TARGETS := [2, 2, 3, 3, 4]
+const THUNDER_BALLISTA_DAMAGE := [0.60, 0.70, 0.80, 0.90, 1.00]
+const THUNDER_BALLISTA_CHAIN_RATIO := [0.35, 0.40, 0.45, 0.50, 0.55]
 
-const SKILL_CARD_TEXTURES := {
-	"core_ascension": "res://assets/UI/card/棋盘卡_001.png",
-	"frequency_convergence": "res://assets/UI/card/棋盘卡_002.png",
-	"fragment_reforge": "res://assets/UI/card/棋盘卡_003.png",
-	"board_echo": "res://assets/UI/card/棋盘卡_004.png",
-	"frost_star": "res://assets/UI/card/棋盘卡_005.png",
-}
+const CRYSTAL_FIRE_DPS_RATIO := [0.10, 0.13, 0.16, 0.19, 0.22]
+const CRYSTAL_FIRE_DURATION := [1.5, 2.0, 2.5, 3.0, 3.5]
+const CRYSTAL_FROST_SLOW := [0.15, 0.20, 0.25, 0.30, 0.35]
+const CRYSTAL_FROST_DURATION := [1.2, 1.5, 1.8, 2.1, 2.4]
+const CRYSTAL_POISON_DPS_RATIO := [0.10, 0.13, 0.16, 0.19, 0.22]
+const CRYSTAL_POISON_DURATION := [2.5, 3.0, 3.5, 4.0, 4.5]
+const CRYSTAL_THUNDER_CHAIN_RATIO := [0.25, 0.30, 0.35, 0.40, 0.45]
+const CRYSTAL_DAMAGE_UP_BY_LEVEL := [0.10, 0.14, 0.18, 0.22, 0.26]
+const CRYSTAL_INTERVAL_BY_LEVEL := [0.95, 0.93, 0.91, 0.89, 0.87]
+const CRYSTAL_EXTRA_TARGETS_BY_LEVEL := [1, 1, 1, 2, 2]
+const CRYSTAL_PIERCE_DAMAGE_RATIO := [0.35, 0.40, 0.45, 0.50, 0.55]
 
 const SKILL_IMPRINT_TEXTURES := {
-	"core_ascension": "res://assets/UI/棋盘印记/晶核跃升.png",
-	"frequency_convergence": "res://assets/UI/棋盘印记/同频汇聚.png",
-	"fragment_reforge": "res://assets/UI/棋盘印记/碎片重铸.png",
-	"board_echo": "res://assets/UI/棋盘印记/棋盘回响.png",
-	"frost_star": "res://assets/UI/棋盘印记/寒星冲击.png",
-}
-
-const CRYSTAL_CARD_TEXTURES := {
-	"star_core": "res://assets/UI/card/水晶卡_001.png",
-	"rapid_pulse": "res://assets/UI/card/水晶卡_002.png",
-	"element_prism": "res://assets/UI/card/水晶卡_003.png",
-	"double_refraction": "res://assets/UI/card/水晶卡_004.png",
+	"ascension_hammer": "res://assets/UI/棋盘印记/晶核跃升.png",
+	"unity_dial": "res://assets/UI/棋盘印记/同频汇聚.png",
+	"fate_shuffler": "res://assets/UI/棋盘印记/棋盘回响.png",
+	"twin_mold": "res://assets/UI/棋盘印记/碎片重铸.png",
+	"castle_cannon": "res://assets/UI/棋盘印记/寒星冲击.png",
+	"dragon_catapult": "res://assets/UI/棋盘印记/寒星冲击.png",
+	"frost_bell": "res://assets/UI/棋盘印记/寒星冲击.png",
+	"thunder_ballista": "res://assets/UI/棋盘印记/寒星冲击.png",
 }
 const TEXT_BLOCK_DIR := "res://assets/sliced_20260703_172750/core_blocks_split/text/"
 
@@ -207,11 +224,22 @@ const ELEMENT_FX := {
 	"ice": {
 		"projectile": "res://assets/fx/elements/ice/projectile_core.png",
 		"hit": "res://assets/fx/elements/ice/hit_spritesheet.png",
-		"trail": "res://assets/fx/elements/shared/trail_soft_white.png",
-		"trail_color": Color(0.35, 0.72, 1.0, 0.82),
+		"trail": "res://assets/fx/elements/ice/libai_sdx_trail01.png",
+		"trail_shader": "res://shaders/ice_projectile_trail.gdshader",
+		"trail_color": Color.WHITE,
+		"trail_tail_color": Color(0.05, 0.22, 0.88, 1.0),
+		"trail_middle_color": Color(0.05, 0.78, 1.0, 1.0),
+		"trail_head_color": Color(0.82, 0.97, 1.0, 1.0),
+		"trail_opacity": 0.92,
+		"trail_flow_speed": 2.8,
+		"trail_distortion": 0.038,
+		"trail_head_softness": 0.10,
 		"core_size": Vector2(70.0, 70.0),
-		"trail_size": Vector2(165.0, 42.0),
-		"trail_offset": Vector2(-72.0, 0.0),
+		"trail_size": Vector2(195.0, 64.0),
+		"trail_offset": Vector2(-88.0, 0.0),
+		# The requested in-game facing is the reverse of the source shard's pointed
+		# end, so use the opposite 90-degree correction from the first pass.
+		"rotation_offset": PI * 0.5,
 		"hit_size": Vector2(160.0, 160.0),
 	},
 	"lightning": {
@@ -223,6 +251,9 @@ const ELEMENT_FX := {
 		"trail_size": Vector2(165.0, 42.0),
 		"trail_offset": Vector2(-72.0, 0.0),
 		"hit_size": Vector2(170.0, 170.0),
+		"hit_grid": Vector2i(4, 4),
+		"hit_frame_count": 10,
+		"hit_fps": 18.0,
 	},
 	"critical": {
 		"projectile": "res://assets/fx/elements/arcane/projectile_core.png",
@@ -252,6 +283,14 @@ const LAUNCH_FLASH_DURATION := 0.12
 const ELEMENT_HIT_GRID := Vector2i(4, 4)
 const ELEMENT_HIT_FRAME_COUNT := 16
 const ELEMENT_HIT_FPS := 18.0
+
+# Lightning always has one primary target. Larger merge groups convert their
+# former extra primary targets into stronger damage and a longer, gentler
+# chain. Ratios are centralized here for later balance tuning.
+const LIGHTNING_DAMAGE_PER_EXTRA_MERGE := 0.20
+const LIGHTNING_BOUNCES_PER_EXTRA_MERGE := 1
+const LIGHTNING_RETENTION_PER_EXTRA_MERGE := 0.05
+const LIGHTNING_MAX_RETENTION := 0.90
 
 static func is_critical(roll: float, chance: float) -> bool:
 	return roll < chance
@@ -372,8 +411,17 @@ static func get_base_attack(level: int) -> int:
 
 static func calculate_attack_damage(level: int, merge_count: int) -> float:
 	var base_damage := float(get_base_attack(level))
-	var bonus: float = 1.0 + float(max(0, merge_count - 2)) * 0.2
+	var bonus: float = 1.0 + float(max(0, merge_count - 2)) * LIGHTNING_DAMAGE_PER_EXTRA_MERGE
 	return base_damage * bonus
+
+
+static func calculate_lightning_bounces(base_bounces: int, merge_count: int) -> int:
+	return maxi(0, base_bounces + max(0, merge_count - 2) * LIGHTNING_BOUNCES_PER_EXTRA_MERGE)
+
+
+static func calculate_lightning_retention(base_retention: float, merge_count: int) -> float:
+	var improved := base_retention + float(max(0, merge_count - 2)) * LIGHTNING_RETENTION_PER_EXTRA_MERGE
+	return clampf(improved, 0.0, LIGHTNING_MAX_RETENTION)
 
 static func calculate_target_count(merge_count: int) -> int:
 	return max(1, merge_count - 1)
@@ -431,10 +479,13 @@ static func get_path_points_for_board(board_pos: Vector2, board_size: Vector2) -
 
 const MAX_CASTLE_DURABILITY := 20
 
+const MONSTER_SPEED_MULTIPLIER := 2.0
+const WAVE_MONSTER_COUNT_MULTIPLIER := 2
+
 const MONSTER_CONFIG := {
-	"small": {"hp": 5, "durability_damage": 1, "speed": 80.0, "scale": 0.75},
-	"medium": {"hp": 12, "durability_damage": 2, "speed": 68.0, "scale": 1.0},
-	"large": {"hp": 25, "durability_damage": 3, "speed": 55.0, "scale": 1.25},
+	"small": {"hp": 5, "durability_damage": 1, "speed": 80.0 * MONSTER_SPEED_MULTIPLIER, "scale": 0.75},
+	"medium": {"hp": 12, "durability_damage": 2, "speed": 68.0 * MONSTER_SPEED_MULTIPLIER, "scale": 1.0},
+	"large": {"hp": 25, "durability_damage": 3, "speed": 55.0 * MONSTER_SPEED_MULTIPLIER, "scale": 1.25},
 }
 
 static func get_level_waves() -> Array:
@@ -442,9 +493,9 @@ static func get_level_waves() -> Array:
 	for wave_number in range(1, LEVEL_WAVE_COUNT + 1):
 		var stage := floori(float(wave_number - 1) / 5.0)
 		result.append({
-			"small": 5 + wave_number + stage,
-			"medium": maxi(0, floori(float(wave_number - 2) / 2.0)),
-			"large": maxi(0, floori(float(wave_number - 4) / 4.0)),
+			"small": (5 + wave_number + stage) * WAVE_MONSTER_COUNT_MULTIPLIER,
+			"medium": maxi(0, floori(float(wave_number - 2) / 2.0)) * WAVE_MONSTER_COUNT_MULTIPLIER,
+			"large": maxi(0, floori(float(wave_number - 4) / 4.0)) * WAVE_MONSTER_COUNT_MULTIPLIER,
 			"spawn_interval": maxf(0.42, 1.02 - float(wave_number - 1) * 0.025),
 		})
 	return result

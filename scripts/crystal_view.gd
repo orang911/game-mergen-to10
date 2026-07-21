@@ -4,6 +4,10 @@ class_name CrystalView
 
 const ATTACK_INTERVAL := CrystalSystem.ATTACK_INTERVAL
 const PANEL_DISPLAY_SCALE := Vector2(0.5, 0.5)
+const FIXED_TOWER_SIZE_START_LEVEL := 6
+const FIXED_TOWER_VISUAL_HEIGHT := 220.0
+const HIGH_LEVEL_UPGRADE_PULSE := 1.06
+const HIGH_LEVEL_REWARD_PULSE := 1.08
 
 const TOWER_VISUALS := {
 	1: {"texture": preload("res://assets/UI/base_layers/base_009.png"), "scale": 0.75},
@@ -196,7 +200,10 @@ func _update_display() -> void:
 			_tower.position = Vector2((panel_sz.x - tex_sz.x) / 2.0, panel_sz.y - tex_sz.y)
 			_tower.pivot_offset = Vector2(tex_sz.x / 2.0, tex_sz.y)
 			_tower.size = tex_sz
-			_tower.scale = Vector2.ONE * float(data["scale"])
+			var display_scale := float(data["scale"])
+			if _crystal_level >= FIXED_TOWER_SIZE_START_LEVEL:
+				display_scale = FIXED_TOWER_VISUAL_HEIGHT / tex_sz.y
+			_tower.scale = Vector2.ONE * display_scale
 			_tower.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			_tower.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
@@ -218,8 +225,9 @@ func _play_upgrade_animation(_old_level: int) -> void:
 
 	if _tower:
 		var base := _tower.scale
+		var pulse_multiplier := HIGH_LEVEL_UPGRADE_PULSE if _crystal_level >= FIXED_TOWER_SIZE_START_LEVEL else 1.12
 		_upgrade_tween = create_tween()
-		_upgrade_tween.tween_property(_tower, "scale", base * 1.12, 0.12)
+		_upgrade_tween.tween_property(_tower, "scale", base * pulse_multiplier, 0.12)
 		_upgrade_tween.tween_property(_tower, "scale", base, 0.18)
 
 	if _shield:
@@ -245,8 +253,9 @@ func play_reward_absorb() -> void:
 	play_attack_flash()
 	if _tower:
 		var tower_base := _tower.scale
+		var pulse_multiplier := HIGH_LEVEL_REWARD_PULSE if _crystal_level >= FIXED_TOWER_SIZE_START_LEVEL else 1.16
 		var tower_pulse := create_tween()
-		tower_pulse.tween_property(_tower, "scale", tower_base * 1.16, 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tower_pulse.tween_property(_tower, "scale", tower_base * pulse_multiplier, 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tower_pulse.tween_property(_tower, "scale", tower_base, 0.20).set_trans(Tween.TRANS_SINE)
 	if _shield:
 		var shield_base := _shield.scale

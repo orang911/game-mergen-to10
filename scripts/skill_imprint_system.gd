@@ -49,7 +49,7 @@ func force_finish_fx() -> void:
 func choose_skill(skill_id: String, quality: int = 1) -> void:
 	if not GameConfig.SKILL_CARD_IDS.has(skill_id):
 		return
-	pending_skills.append({"id": skill_id, "quality": clampi(quality, 1, 3)})
+	pending_skills.append({"id": skill_id, "quality": clampi(quality, 1, GameConfig.MAX_CARD_LEVEL)})
 	energy = 0
 	_choice_requested = false
 	energy_changed.emit(energy, GameConfig.SKILL_ENERGY_MAX)
@@ -59,7 +59,7 @@ func choose_skill(skill_id: String, quality: int = 1) -> void:
 func enqueue_skill(skill_id: String, quality: int = 1) -> void:
 	if not GameConfig.SKILL_CARD_IDS.has(skill_id):
 		return
-	pending_skills.append({"id": skill_id, "quality": clampi(quality, 1, 3)})
+	pending_skills.append({"id": skill_id, "quality": clampi(quality, 1, GameConfig.MAX_CARD_LEVEL)})
 	_emit_pending_changed()
 
 

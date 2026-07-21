@@ -117,8 +117,9 @@ func apply_element_effect(event: MergeAttackEvent, source: String = "normal") ->
 				"atk": atk,
 				"duration": params["duration"],
 				"remaining": params["duration"],
-				"splash_radius": params["splash_radius"],
-				"splash_damage_ratio": params["splash_damage_ratio"],
+				"splash_radius": params.get("splash_radius", 0.0),
+				"splash_damage_ratio": params.get("splash_damage_ratio", 0.0),
+				"dps_ratio": params.get("dps_ratio", float(params.get("splash_damage_ratio", 0.0)) * 0.5),
 				"source": source,
 			}
 		GameConfig.AttackElement.CRITICAL:
@@ -152,7 +153,7 @@ func update_status(delta: float) -> void:
 	if has_burn:
 		burn_status["remaining"] = max(0.0, burn_status["remaining"] - delta)
 		var atk: float = float(burn_status["atk"])
-		var dps: float = atk * float(burn_status["splash_damage_ratio"]) * 0.5
+		var dps: float = atk * float(burn_status.get("dps_ratio", 0.0))
 		hp = max(0.0, hp - dps * delta)
 		_sync_view()
 		hp_changed.emit(self, hp, max_hp)

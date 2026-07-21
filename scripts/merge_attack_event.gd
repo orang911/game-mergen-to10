@@ -31,7 +31,20 @@ static func from_merge(source_level: int, result_level: int, count: int, attack_
 	event.origin = attack_origin
 	event.origin_position = attack_origin
 	event.damage = float(event.atk)
-	event.target_count = GameConfig.calculate_target_count(count)
 	event.effect_params = GameConfig.get_element_effect_params(source_level)
+	if event.element == GameConfig.AttackElement.LIGHTNING:
+		event.target_count = 1
+		event.damage = GameConfig.calculate_attack_damage(result_level, count)
+		event.atk = roundi(event.damage)
+		event.effect_params["chain_count"] = GameConfig.calculate_lightning_bounces(
+			int(event.effect_params.get("chain_count", 0)),
+			count
+		)
+		event.effect_params["chain_damage_ratio"] = GameConfig.calculate_lightning_retention(
+			float(event.effect_params.get("chain_damage_ratio", 0.5)),
+			count
+		)
+	else:
+		event.target_count = GameConfig.calculate_target_count(count)
 	event.board_row = merge_row
 	return event

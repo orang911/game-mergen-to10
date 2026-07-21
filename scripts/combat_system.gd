@@ -30,6 +30,9 @@ var effect_layer: Control
 
 var battle_layer: BattleLayerView
 var game_layer: Control
+var _current_wave_total := 0
+var run_kills := 0
+var run_leaks := 0
 
 
 func setup(p_game_layer: Control) -> void:
@@ -91,16 +94,21 @@ func _connect_signals() -> void:
 
 	monster_system.monster_spawned.connect(func(_monster: Monster):
 		wave_system.monsters_are_clear = false
+		_refresh_wave_progress()
 	)
 	monster_system.monster_died.connect(func(monster: Monster):
+		run_kills += 1
 		if monster.death_source == "normal":
 			normal_attack_kill.emit(monster.global_position + monster.size * 0.5)
+		_refresh_wave_progress()
 	)
 
 	monster_system.monster_reached_goal.connect(func(monster: Monster, durability_damage: int):
+		run_leaks += 1
 		if effect_system:
 			effect_system.play_monster_reached_goal(monster)
 		castle_system.damage(durability_damage)
+		_refresh_wave_progress()
 	)
 
 	castle_system.castle_destroyed.connect(func():
@@ -116,6 +124,7 @@ func _connect_signals() -> void:
 
 	wave_system.wave_started.connect(func(wave_index: int):
 		wave_started.emit(wave_index)
+		_current_wave_total = wave_system.spawn_queue.size()
 		var display := ""
 		if wave_system._cycle > 0:
 			display = "%d-%d" % [wave_system._cycle + 1, wave_index + 1]
@@ -123,11 +132,13 @@ func _connect_signals() -> void:
 			display = str(wave_index + 1)
 		if battle_layer and is_instance_valid(battle_layer):
 			battle_layer.set_wave_text("Wave " + display)
+			battle_layer.set_wave_progress(_current_wave_total, _current_wave_total)
 		if crystal_system:
 			crystal_system.notify_wave_started()
 	)
 
 	wave_system.wave_cleared.connect(func(wave_index: int):
+		_refresh_wave_progress()
 		if crystal_system:
 			crystal_system.notify_wave_cleared()
 		wave_cleared.emit(wave_index)
@@ -145,10 +156,14 @@ func start_run() -> void:
 	castle_system.reset()
 	if crystal_system:
 		crystal_system.start()
+	if battle_layer and is_instance_valid(battle_layer):
+		battle_layer.start_run_hud()
 	wave_system.start_first_wave()
 
 func stop_run() -> void:
 	running = false
+	if battle_layer and is_instance_valid(battle_layer):
+		battle_layer.stop_run_hud()
 	wave_system.stop()
 	monster_system.stop()
 	if crystal_system:
@@ -156,6 +171,9 @@ func stop_run() -> void:
 	reset()
 
 func reset() -> void:
+	_current_wave_total = 0
+	run_kills = 0
+	run_leaks = 0
 	wave_system.reset()
 	monster_system.reset()
 	if projectile_system:
@@ -165,7 +183,14 @@ func reset() -> void:
 	if crystal_system:
 		crystal_system.reset()
 	if battle_layer and is_instance_valid(battle_layer):
-		battle_layer.set_wave_text("")
+		battle_layer.reset_run_hud()
+
+
+func _refresh_wave_progress() -> void:
+	if battle_layer == null or not is_instance_valid(battle_layer) or wave_system == null or monster_system == null:
+		return
+	var remaining := wave_system.spawn_queue.size() + monster_system.get_alive_monsters().size()
+	battle_layer.set_wave_progress(remaining, _current_wave_total)
 
 func layout_for_board(new_board_pos: Vector2, new_board_size: Vector2, new_visual_board_pos: Vector2) -> void:
 	board_pos = new_board_pos
@@ -208,14 +233,13 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 		return
 	if effect_system:
 		effect_system.play_element_launch(ElementFxRequest.make_launch(event))
-	if projectile_system:
+	if projectile_system and not is_lightning:
 		projectile_system.play_merge_attack(event, all_sorted.slice(0, event.target_count))
 
 	var chain_pool_start := event.target_count
 	for i in range(min(event.target_count, all_sorted.size())):
 		var target: Monster = all_sorted[i]
-		var delay: float = ProjectileSystem.MERGE_BOLT_DURATION + i * 0.07
-		var target_center_global: Vector2 = target.global_position + target.size * 0.5
+		var delay: float = float(i) * ProjectileSystem.LIGHTNING_LINK_STAGGER if is_lightning else ProjectileSystem.MERGE_BOLT_DURATION + float(i) * ProjectileSystem.MULTI_SHOT_STAGGER
 
 		var my_chain_targets: Array[Monster] = []
 		if is_lightning:
@@ -225,11 +249,13 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 					my_chain_targets.append(all_sorted[ci_idx])
 			chain_pool_start += chain_count
 
-		get_tree().create_timer(delay).timeout.connect(func():
-			if not is_instance_valid(target):
+		var resolve_hit := func():
+			if not running or not is_instance_valid(target):
 				return
 			var hit_center: Vector2 = target.global_position + target.size * 0.5
 			var target_alive := target.is_alive()
+			if is_lightning and target_alive and projectile_system:
+				projectile_system.play_lightning_link(event.origin_position, hit_center, event, null, target)
 
 			if target_alive:
 				var final_damage: float = event.damage
@@ -245,21 +271,8 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 					effect_system.play_element_hit(event.element_key, hit_center + Vector2(0.0, -10.0), event.element_tier)
 					effect_system.play_monster_hit(target)
 
-			# Lightning chain
-			for ci in range(my_chain_targets.size()):
-				var chain: Monster = my_chain_targets[ci]
-				if not is_instance_valid(chain) or not chain.is_alive():
-					continue
-				var chain_damage: float = event.damage * float(event.effect_params.get("chain_damage_ratio", 0.5))
-				if projectile_system:
-					projectile_system.play_chain(hit_center, chain.global_position + chain.size * 0.5, event)
-				chain.apply_damage(chain_damage)
-				var chain_pos := chain.global_position + chain.size * 0.5
-				normal_attack_hit.emit(chain_pos)
-				if chain.is_alive():
-					chain.apply_element_effect(event)
-				if effect_system:
-					effect_system.play_monster_hit(chain)
+			if is_lightning and not my_chain_targets.is_empty():
+				_play_merge_lightning_chain(event, target, my_chain_targets, hit_center)
 
 			# Fire splash (triggered from hit point, independent of primary target survival)
 			if is_fire and splash_radius > 0.0:
@@ -277,7 +290,175 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 							nearby.apply_element_effect(event)
 						if effect_system:
 							effect_system.play_monster_hit(nearby)
-		)
+		if delay <= 0.0:
+			resolve_hit.call()
+		else:
+			get_tree().create_timer(delay).timeout.connect(resolve_hit)
+
+
+func _play_merge_lightning_chain(event: MergeAttackEvent, first_target: Monster, chain_targets: Array[Monster], first_hit_pos: Vector2) -> void:
+	var source_target := first_target
+	var source_pos := first_hit_pos
+	var hop_damage := event.damage
+	var retention := float(event.effect_params.get("chain_damage_ratio", 0.5))
+	for chain_target in chain_targets:
+		await get_tree().create_timer(ProjectileSystem.LIGHTNING_LINK_STAGGER).timeout
+		if not running:
+			return
+		if not is_instance_valid(chain_target) or not chain_target.is_alive():
+			continue
+		var source_control: Control = source_target if source_target != null and is_instance_valid(source_target) else null
+		if source_control:
+			source_pos = source_target.global_position + source_target.size * 0.5
+		var chain_pos := chain_target.global_position + chain_target.size * 0.5
+		if projectile_system:
+			projectile_system.play_chain(source_pos, chain_pos, event, source_control, chain_target)
+		hop_damage *= retention
+		chain_target.apply_damage(hop_damage)
+		normal_attack_hit.emit(chain_pos)
+		if chain_target.is_alive():
+			chain_target.apply_element_effect(event)
+		if effect_system:
+			# Every chain segment owns an impact, not only the primary A -> B hit.
+			# Play it when this hop first appears and resolves its damage.
+			effect_system.play_element_hit(event.element_key, chain_pos + Vector2(0.0, -10.0), event.element_tier)
+			effect_system.play_monster_hit(chain_target)
+		source_target = chain_target
+		source_pos = chain_pos
+
+
+func trigger_card_attack(card_id: String, trigger_level: int, card_level: int, origin: Vector2) -> void:
+	if not running or monster_system == null:
+		return
+	var level := clampi(card_level, 1, GameConfig.MAX_CARD_LEVEL)
+	var base_damage := float(GameConfig.get_base_attack(trigger_level))
+	match card_id:
+		"castle_cannon":
+			var targets := monster_system.get_front_monsters(1)
+			var damage := base_damage * float(GameConfig.CASTLE_CANNON_DAMAGE[level - 1])
+			_play_skill_strike(targets, damage, "critical", origin, {})
+		"dragon_catapult":
+			var target_count := int(GameConfig.DRAGON_CATAPULT_TARGETS[level - 1])
+			var targets := monster_system.get_front_monsters(target_count)
+			var damage := base_damage * float(GameConfig.DRAGON_CATAPULT_DAMAGE[level - 1])
+			var params := {
+				"duration": float(GameConfig.DRAGON_CATAPULT_BURN_DURATION[level - 1]),
+				"dps_ratio": float(GameConfig.DRAGON_CATAPULT_BURN_RATIO[level - 1]),
+				"splash_radius": 0.0,
+				"splash_damage_ratio": 0.0,
+			}
+			_play_skill_strike(targets, damage, "fire", origin, params)
+		"frost_bell":
+			var targets := monster_system.get_alive_monsters()
+			var damage := base_damage * float(GameConfig.FROST_BELL_DAMAGE[level - 1])
+			var params := {
+				"slow_percent": float(GameConfig.FROST_BELL_SLOW[level - 1]),
+				"duration": float(GameConfig.FROST_BELL_DURATION[level - 1]),
+			}
+			_play_skill_strike(targets, damage, "ice", origin, params)
+		"thunder_ballista":
+			var target_count := int(GameConfig.THUNDER_BALLISTA_TARGETS[level - 1])
+			var targets := monster_system.get_front_monsters(target_count)
+			var damage := base_damage * float(GameConfig.THUNDER_BALLISTA_DAMAGE[level - 1])
+			var chain_ratio := float(GameConfig.THUNDER_BALLISTA_CHAIN_RATIO[level - 1])
+			_play_ballista_strike(targets, damage, chain_ratio, origin, level)
+
+
+func _play_skill_strike(targets: Array[Monster], damage: float, element_key: String, origin: Vector2, overrides: Dictionary) -> void:
+	if targets.is_empty():
+		return
+	var event := _make_skill_event(element_key, damage, origin, targets.size())
+	for key in overrides:
+		event.effect_params[key] = overrides[key]
+	if effect_system:
+		effect_system.play_element_launch(ElementFxRequest.make_launch(event))
+	if projectile_system:
+		projectile_system.play_merge_attack(event, targets)
+	for i in range(targets.size()):
+		var target := targets[i]
+		if not is_instance_valid(target) or not target.is_alive():
+			continue
+		var hit_delay := ProjectileSystem.MERGE_BOLT_DURATION + float(i) * ProjectileSystem.MULTI_SHOT_STAGGER if element_key == "ice" else 0.0
+		if hit_delay > 0.0:
+			_schedule_skill_hit(event, target, damage, element_key, hit_delay)
+		else:
+			_resolve_skill_hit(event, target, damage, element_key)
+
+
+func _schedule_skill_hit(event: MergeAttackEvent, target: Monster, damage: float, element_key: String, delay: float) -> void:
+	await get_tree().create_timer(delay).timeout
+	if not running:
+		return
+	_resolve_skill_hit(event, target, damage, element_key)
+
+
+func _resolve_skill_hit(event: MergeAttackEvent, target: Monster, damage: float, element_key: String) -> void:
+	if not is_instance_valid(target) or not target.is_alive():
+		return
+	target.apply_damage(damage, "skill")
+	var hit_pos := target.global_position + target.size * 0.5
+	if target.is_alive() and element_key != "critical":
+		target.apply_element_effect(event, "skill")
+	if effect_system:
+		effect_system.play_element_hit(element_key, hit_pos, event.element_tier)
+		effect_system.play_monster_hit(target)
+
+
+func _play_ballista_strike(targets: Array[Monster], damage: float, chain_ratio: float, origin: Vector2, level: int) -> void:
+	if targets.is_empty():
+		return
+	var event := _make_skill_event("lightning", damage, origin, targets.size())
+	event.element_tier = level
+	var first_target := targets[0]
+	if not is_instance_valid(first_target) or not first_target.is_alive():
+		return
+	if projectile_system:
+		projectile_system.play_merge_attack(event, [first_target])
+	var first_hit_pos := first_target.global_position + first_target.size * 0.5
+	first_target.apply_damage(damage, "skill")
+	if effect_system:
+		effect_system.play_element_hit("lightning", first_hit_pos, level)
+		effect_system.play_monster_hit(first_target)
+	var chain_targets: Array[Monster] = []
+	for i in range(1, targets.size()):
+		chain_targets.append(targets[i])
+	if not chain_targets.is_empty():
+		_play_ballista_chain_sequence(event, first_target, chain_targets, damage * chain_ratio, level, first_hit_pos)
+
+
+func _play_ballista_chain_sequence(event: MergeAttackEvent, first_target: Monster, targets: Array[Monster], damage: float, level: int, first_hit_pos: Vector2) -> void:
+	var source_target := first_target
+	var source_pos := first_hit_pos
+	for target in targets:
+		await get_tree().create_timer(ProjectileSystem.LIGHTNING_LINK_STAGGER).timeout
+		if not running:
+			return
+		if not is_instance_valid(target) or not target.is_alive():
+			continue
+		var source_control: Control = source_target if source_target != null and is_instance_valid(source_target) else null
+		if source_control:
+			source_pos = source_target.global_position + source_target.size * 0.5
+		var hit_pos := target.global_position + target.size * 0.5
+		if projectile_system:
+			projectile_system.play_chain(source_pos, hit_pos, event, source_control, target)
+		target.apply_damage(damage, "skill")
+		if effect_system:
+			effect_system.play_element_hit("lightning", hit_pos, level)
+			effect_system.play_monster_hit(target)
+		source_target = target
+		source_pos = hit_pos
+
+
+func _make_skill_event(element_key: String, damage: float, origin: Vector2, target_count: int) -> MergeAttackEvent:
+	var source_level := maxi(1, GameConfig.ELEMENT_ORDER.find(element_key) + 1)
+	var event := MergeAttackEvent.from_merge(source_level, source_level, 2, origin, 0)
+	event.element_key = element_key
+	event.element = int(GameConfig.ELEMENT_KEY_TO_ATTACK.get(element_key, GameConfig.AttackElement.POISON))
+	event.damage = damage
+	event.atk = roundi(damage)
+	event.target_count = maxi(1, target_count)
+	event.effect_params = GameConfig.get_element_effect_params(source_level)
+	return event
 
 
 func apply_crystal_upgrade(card_id: String, element_key: String = "", quality: int = 1) -> void:
@@ -288,21 +469,3 @@ func apply_crystal_upgrade(card_id: String, element_key: String = "", quality: i
 func continue_after_wave_reward() -> void:
 	if wave_system:
 		wave_system.continue_to_next_wave()
-
-
-func trigger_frost_star(trigger_level: int, quality: int = 1) -> void:
-	var q := clampi(quality, 1, 3)
-	var targets := monster_system.get_front_monsters(q + 1)
-	var damage: float = float(GameConfig.get_base_attack(trigger_level)) * [0.8, 1.0, 1.25][q - 1]
-	for target in targets:
-		if not is_instance_valid(target) or not target.is_alive():
-			continue
-		var event := MergeAttackEvent.from_merge(2, trigger_level, 2, target.global_position, 0)
-		event.damage = damage
-		event.effect_params["slow_percent"] = [0.20, 0.25, 0.30][q - 1]
-		event.effect_params["duration"] = [1.5, 2.0, 2.5][q - 1]
-		target.apply_damage(damage, "skill")
-		if target.is_alive():
-			target.apply_element_effect(event, "skill")
-		if effect_system:
-			effect_system.play_monster_hit(target)

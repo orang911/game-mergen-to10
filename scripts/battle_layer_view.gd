@@ -5,6 +5,8 @@ class_name BattleLayerView
 signal back_pressed
 
 const DESIGN_SIZE := Vector2(941, 1672)
+const TOP_FILL_POS := Vector2(40.0, 112.0)
+const TOP_FILL_SIZE := Vector2(837.0, 31.0)
 
 @onready var _design_root := get_node_or_null("DesignRoot") as Control
 @onready var _board_guide := get_node_or_null("DesignRoot/BoardGuide") as Control
@@ -15,17 +17,23 @@ const DESIGN_SIZE := Vector2(941, 1672)
 @onready var _effect_layer := get_node_or_null("EffectLayer") as Control
 @onready var _hud_layer := get_node_or_null("DesignRoot/HudLayer") as Control
 @onready var _wave_label := get_node_or_null("DesignRoot/HudLayer/WaveLabel") as Label
+@onready var _wave_count_label := get_node_or_null("DesignRoot/HudLayer/WaveCountLabel") as Label
+@onready var _time_label := get_node_or_null("DesignRoot/HudLayer/TimeLabel") as Label
 @onready var _wave_banner := get_node_or_null("DesignRoot/HudLayer/WaveBanner") as Control
-@onready var _tip_panel := get_node_or_null("DesignRoot/HudLayer/TipPanel") as Control
-@onready var _tip_icon := get_node_or_null("DesignRoot/HudLayer/TipIcon") as Control
-@onready var _tip_label := get_node_or_null("DesignRoot/HudLayer/TipLabel") as Label
+@onready var _top_fill_clip := get_node_or_null("DesignRoot/HudLayer/TopFillClip") as Control
+@onready var _top_fill := get_node_or_null("DesignRoot/HudLayer/TopFillClip/TopFill") as TextureRect
 @onready var _castle_status_label := get_node_or_null("DesignRoot/HudLayer/CastleStatusPanel/CastleStatusLabel") as Label
 @onready var _crystal_panel := get_node_or_null("DesignRoot/CrystalPanel") as Control
 @onready var _back_button := get_node_or_null("DesignRoot/HudLayer/BackButton") as TextureButton
 @onready var _gate_view := get_node_or_null("DesignRoot/DecorLayer/Gate") as Control
+@onready var _gate_portal_effect := get_node_or_null("DesignRoot/DecorLayer/GatePortalEffect") as GatePortalEffect
 @onready var _castle_view := get_node_or_null("DesignRoot/DecorLayer/Castle") as Control
 
 var _castle_anchor_position := Vector2.ZERO
+var _elapsed_seconds := 0.0
+var _last_display_second := -1
+var _timer_running := false
+var _castle_durability_ratio := 1.0
 
 @export var use_manual_layout := false
 
@@ -35,8 +43,6 @@ func _ready() -> void:
 	layout_mode = 0
 	custom_minimum_size = DESIGN_SIZE
 	size = DESIGN_SIZE
-	if _tip_label:
-		_tip_label.text = "合成相同数字升级，阻止敌人抵达城堡！"
 	if _board_guide:
 		_board_guide.visible = Engine.is_editor_hint()
 	if _design_root:
@@ -46,8 +52,18 @@ func _ready() -> void:
 	_apply_runtime_layer_order()
 	if _back_button:
 		_back_button.pressed.connect(func(): back_pressed.emit())
+	_refresh_time_label()
 	if Engine.is_editor_hint():
 		call_deferred("_show_editor_preview")
+
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint() or not _timer_running:
+		return
+	_elapsed_seconds += delta
+	var display_second := floori(_elapsed_seconds)
+	if display_second != _last_display_second:
+		_refresh_time_label()
 
 
 func get_path_view() -> Control:
@@ -82,7 +98,48 @@ func set_wave_text(text_value: String) -> void:
 	if _wave_label == null:
 		_wave_label = get_node_or_null("DesignRoot/HudLayer/WaveLabel") as Label
 	if _wave_label:
-		_wave_label.text = text_value.replace("Wave ", "第 ") + (" 波" if text_value.begins_with("Wave ") else "")
+		_wave_label.text = "第%s波" % text_value.trim_prefix("Wave ") if text_value.begins_with("Wave ") else text_value
+
+
+func set_wave_progress(remaining: int, total: int) -> void:
+	if _wave_count_label == null:
+		_wave_count_label = get_node_or_null("DesignRoot/HudLayer/WaveCountLabel") as Label
+	if _wave_count_label:
+		_wave_count_label.text = "(%d/%d)" % [maxi(0, remaining), maxi(0, total)]
+
+
+func start_run_hud() -> void:
+	_elapsed_seconds = 0.0
+	_last_display_second = -1
+	_timer_running = true
+	set_wave_progress(0, 0)
+	_refresh_time_label()
+
+
+func stop_run_hud() -> void:
+	_timer_running = false
+
+
+func get_elapsed_seconds() -> float:
+	return _elapsed_seconds
+
+
+func reset_run_hud() -> void:
+	_timer_running = false
+	_elapsed_seconds = 0.0
+	_last_display_second = -1
+	set_wave_text("")
+	set_wave_progress(0, 0)
+	_refresh_time_label()
+
+
+func _refresh_time_label() -> void:
+	if _time_label == null:
+		_time_label = get_node_or_null("DesignRoot/HudLayer/TimeLabel") as Label
+	var total_seconds := maxi(0, floori(_elapsed_seconds))
+	_last_display_second = total_seconds
+	if _time_label:
+		_time_label.text = "%02d:%02d" % [total_seconds / 60, total_seconds % 60]
 
 
 func set_castle_status(current: int, max_value: int) -> void:
@@ -90,11 +147,14 @@ func set_castle_status(current: int, max_value: int) -> void:
 		_castle_status_label = get_node_or_null("DesignRoot/HudLayer/CastleStatusPanel/CastleStatusLabel") as Label
 	if _castle_status_label:
 		_castle_status_label.text = "%d/%d" % [current, max_value]
+	_castle_durability_ratio = clampf(float(current) / float(maxi(1, max_value)), 0.0, 1.0)
+	_layout_castle_fill()
 
 
 func layout_for_board(board_pos: Vector2, board_size: Vector2, path_margin: float, spawn_pos: Vector2, goal_pos: Vector2, visual_board_pos: Vector2) -> void:
 	var viewport_size := _viewport_size()
 	_apply_runtime_layer_order()
+	_layout_hud(viewport_size)
 
 	# BattleLayer root fills viewport at runtime
 	_set_rect(self, Vector2.ZERO, viewport_size)
@@ -134,9 +194,10 @@ func _apply_runtime_layer_order() -> void:
 	_set_canvas_z(_board_guide, 1)
 	_set_canvas_z(_decor_layer, 2)
 	_set_canvas_z(_path_view, 5)
-	_set_canvas_z(_monster_layer, 10)
-	# The entrance is foreground artwork: it covers the road seam and hides
-	# monsters until they actually emerge from the doorway.
+	_set_canvas_z(_monster_layer, 13)
+	_set_canvas_z(_gate_portal_effect, 11)
+	# Monsters stay in front of the entrance; their scale-in intro makes them
+	# appear to emerge from the portal instead of popping through the gate.
 	_set_canvas_z(_gate_view, 12)
 	_set_canvas_z(_crystal_panel, 15)
 	_set_canvas_z(_projectile_layer, 20)
@@ -153,9 +214,25 @@ func _set_canvas_z(node: CanvasItem, z: int) -> void:
 
 func _layout_hud(viewport_size: Vector2) -> void:
 	if _wave_banner:
-		_set_rect(_wave_banner, Vector2((viewport_size.x - 253.0) * 0.5, 24.0), Vector2(253, 73))
+		_set_rect(_wave_banner, Vector2(185.0, 24.0), Vector2(420, 76))
 	if _wave_label:
-		_set_rect(_wave_label, Vector2((viewport_size.x - 340.0) * 0.5, 97.0), Vector2(340, 84))
+		_set_rect(_wave_label, Vector2(205.0, 22.0), Vector2(118, 79))
+	if _wave_count_label:
+		_set_rect(_wave_count_label, Vector2(312.0, 24.0), Vector2(111, 75))
+	if _time_label:
+		_set_rect(_time_label, Vector2(447.0, 19.0), Vector2(141, 83))
+	_layout_castle_fill()
+
+
+func _layout_castle_fill() -> void:
+	if _top_fill_clip == null:
+		_top_fill_clip = get_node_or_null("DesignRoot/HudLayer/TopFillClip") as Control
+	if _top_fill == null:
+		_top_fill = get_node_or_null("DesignRoot/HudLayer/TopFillClip/TopFill") as TextureRect
+	if _top_fill_clip:
+		_set_rect(_top_fill_clip, TOP_FILL_POS, Vector2(TOP_FILL_SIZE.x * _castle_durability_ratio, TOP_FILL_SIZE.y))
+	if _top_fill:
+		_set_rect(_top_fill, Vector2.ZERO, TOP_FILL_SIZE)
 
 
 func _layout_decor(viewport_size: Vector2) -> void:
@@ -194,8 +271,6 @@ func _configure_texture_rects(root: Node) -> void:
 		_configure_texture_rects(child)
 	if _wave_banner and is_instance_valid(_wave_banner):
 		(_wave_banner as TextureRect).stretch_mode = TextureRect.STRETCH_SCALE
-	if _tip_panel and is_instance_valid(_tip_panel):
-		(_tip_panel as TextureRect).stretch_mode = TextureRect.STRETCH_SCALE
 
 
 func _set_full_rect(node: Control, node_size: Vector2) -> void:
@@ -225,4 +300,7 @@ func _show_editor_preview() -> void:
 		GameConfig.PATH_ROAD_TARGET_BOTTOM_Y - preview_board_size.y * 0.5 - road_size.y * 0.5 - GameConfig.PATH_ROAD_OFFSET.y
 	)
 	layout_for_board(preview_path_board_pos, preview_board_size, 99.0, preview_path_board_pos + Vector2(-16, -99), preview_path_board_pos + Vector2(-125, -16), preview_visual_board_pos)
-	set_wave_text("Wave 1")
+	set_wave_text("Wave 8")
+	set_wave_progress(8, 200)
+	_elapsed_seconds = 45.0
+	_refresh_time_label()

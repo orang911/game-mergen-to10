@@ -3,11 +3,13 @@ class_name EnergyHud
 
 signal gain_fx_batch_finished
 
-const PANEL_SIZE := Vector2(868.0, 206.0)
-const ENERGY_FRAME_POS := Vector2(34.0, 139.0)
-const ENERGY_FRAME_SIZE := Vector2(340.0, 35.0)
-const ENERGY_FILL_POS := Vector2(37.0, 142.0)
-const ENERGY_FILL_MAX_WIDTH := 334.0
+const PANEL_SIZE := Vector2(913.0, 210.0)
+const PANEL_SOURCE_REGION := Rect2(46.0, 15.0, 867.0, 199.0)
+const ENERGY_FRAME_POS := Vector2(35.0, 145.0)
+const ENERGY_FRAME_SIZE := Vector2(360.0, 35.0)
+const ENERGY_FILL_POS := Vector2(37.0, 147.0)
+const ENERGY_FILL_SIZE := Vector2(356.0, 32.0)
+const ENERGY_SEGMENT_X: Array[float] = [70.0, 135.0, 200.0, 265.0]
 
 var _fill_clip: Control
 var _fill: TextureRect
@@ -28,11 +30,13 @@ func _ready() -> void:
 	size = PANEL_SIZE
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build()
-	set_process(true)
+	set_process(false)
 
 
 func _build() -> void:
-	var panel := _texture("res://assets/UI/底部UI/layer_001.png")
+	# The supplied reference contains the exact yellow-title panel as one clean
+	# region. Keep that region at one uniform scale so its frame is not squashed.
+	var panel := _texture_from_atlas("res://assets/UI/底部UI/效果图.png", PANEL_SOURCE_REGION)
 	panel.size = PANEL_SIZE
 	add_child(panel)
 
@@ -40,27 +44,39 @@ func _build() -> void:
 	_fill_clip.name = "EnergyFillClip"
 	_fill_clip.clip_contents = true
 	_fill_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_set_rect(_fill_clip, ENERGY_FILL_POS, Vector2(ENERGY_FILL_MAX_WIDTH, 29))
+	_set_rect(_fill_clip, ENERGY_FILL_POS, ENERGY_FILL_SIZE)
 	add_child(_fill_clip)
 
-	_fill = _texture("res://assets/UI/顶部UI/layer_002.png")
-	_fill.size = Vector2(ENERGY_FILL_MAX_WIDTH, 29)
-	var shader := load("res://shaders/energy_fill.gdshader") as Shader
-	var material := ShaderMaterial.new()
-	material.shader = shader
-	_fill.material = material
+	_fill = _texture("res://assets/UI/底部UI/能量.png")
+	_fill.size = ENERGY_FILL_SIZE
 	_fill_clip.add_child(_fill)
 
+	# The fill is drawn over the empty slot, so redraw its four dividers above
+	# the fill. This keeps all five cells readable at every energy percentage.
+	for divider_x in ENERGY_SEGMENT_X:
+		var divider := ColorRect.new()
+		divider.color = Color(0.035, 0.075, 0.16, 0.92)
+		divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_set_rect(divider, ENERGY_FILL_POS + Vector2(divider_x, 1.0), Vector2(2.0, 30.0))
+		add_child(divider)
+
+	var best_label := _label("BEST", 22, Color(0.62, 0.66, 0.76))
+	best_label.add_theme_color_override("font_outline_color", Color(0.12, 0.14, 0.22, 0.9))
+	best_label.add_theme_constant_override("outline_size", 2)
+	_set_rect(best_label, Vector2(315.0, 145.0), Vector2(78.0, 35.0))
+	add_child(best_label)
+
 	_pending_icon = _texture("")
-	_set_rect(_pending_icon, Vector2(16, 58), Vector2(102, 76))
+	_set_rect(_pending_icon, Vector2(17, 61), Vector2(107, 80))
 	add_child(_pending_icon)
 
 	_energy_label = _label("0 / 100", 18, Color(0.92, 0.96, 1.0))
-	_set_rect(_energy_label, Vector2(118, 139), Vector2(180, 35))
+	_set_rect(_energy_label, Vector2(124, 147), Vector2(190, 37))
+	_energy_label.visible = false
 	add_child(_energy_label)
 
 	_ready_label = _label("", 17, Color(0.88, 0.98, 1.0))
-	_set_rect(_ready_label, Vector2(70, 174), Vector2(260, 28))
+	_set_rect(_ready_label, Vector2(74, 183), Vector2(274, 29))
 	add_child(_ready_label)
 
 	_refresh()
@@ -84,11 +100,11 @@ func set_pending_skill(skill_id: String, quality: int = 1) -> void:
 	else:
 		_pending_icon.texture = load(GameConfig.SKILL_IMPRINT_TEXTURES.get(skill_id, "")) as Texture2D
 		_pending_icon.modulate = Color.WHITE
-		_ready_label.text = "下次合成触发 · %s" % GameConfig.CARD_QUALITY_NAMES.get(quality, "普通")
+		_ready_label.text = "下次合成触发 · %s" % GameConfig.CARD_QUALITY_NAMES.get(quality, "1星")
 
 
 func get_energy_target_global() -> Vector2:
-	return global_position + ENERGY_FRAME_POS + Vector2(65.0, ENERGY_FRAME_SIZE.y * 0.5)
+	return global_position + ENERGY_FRAME_POS + Vector2(70.0, ENERGY_FRAME_SIZE.y * 0.5)
 
 
 func get_skill_target_global() -> Vector2:
@@ -148,11 +164,10 @@ func _play_full_feedback() -> void:
 
 
 func _play_arrival_feedback() -> void:
-	if _fill and _fill.material is ShaderMaterial:
-		var mat := _fill.material as ShaderMaterial
-		mat.set_shader_parameter("arrival_flash", 1.0)
-		var tween := create_tween()
-		tween.tween_method(func(v: float): mat.set_shader_parameter("arrival_flash", v), 1.0, 0.0, GameConfig.ENERGY_ARRIVAL_FLASH_DURATION)
+	if _fill:
+		var fill_flash := create_tween()
+		fill_flash.tween_property(_fill, "modulate", Color(1.25, 1.25, 1.25, 1.0), 0.05)
+		fill_flash.tween_property(_fill, "modulate", Color.WHITE, GameConfig.ENERGY_ARRIVAL_FLASH_DURATION)
 	var pulse := create_tween()
 	pulse.tween_property(self, "scale", Vector2(1.04, 1.04), 0.08)
 	pulse.tween_property(self, "scale", Vector2.ONE, 0.12)
@@ -165,11 +180,9 @@ func _refresh() -> void:
 	if _fill_clip == null:
 		return
 	var ratio := clampf(float(_visual_energy) / float(_maximum), 0.0, 1.0)
-	_fill_clip.size.x = ENERGY_FILL_MAX_WIDTH * ratio
+	_fill_clip.size.x = ENERGY_FILL_SIZE.x * ratio
 	_energy_label.text = "%d / %d" % [_visual_energy, _maximum]
 	var full := _visual_energy >= _maximum
-	if _fill and _fill.material is ShaderMaterial:
-		(_fill.material as ShaderMaterial).set_shader_parameter("full_pulse", 1.0 if full else 0.0)
 	if full and _ready_label.text.is_empty():
 		_ready_label.text = "技能就绪"
 	elif not full and _ready_label.text == "技能就绪":
@@ -178,18 +191,22 @@ func _refresh() -> void:
 		_was_full_visual = false
 
 
-func _process(delta: float) -> void:
-	_shimmer = fmod(_shimmer + delta * 0.18, 1.0)
-	if _fill and _fill.material is ShaderMaterial:
-		(_fill.material as ShaderMaterial).set_shader_parameter("shimmer_offset", _shimmer)
-
-
 func _texture(path: String) -> TextureRect:
 	var node := TextureRect.new()
 	node.texture = load(path) as Texture2D if not path.is_empty() else null
 	node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	node.stretch_mode = TextureRect.STRETCH_SCALE
 	node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return node
+
+
+func _texture_from_atlas(path: String, region: Rect2) -> TextureRect:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = load(path) as Texture2D
+	atlas.region = region
+	atlas.filter_clip = true
+	var node := _texture("")
+	node.texture = atlas
 	return node
 
 

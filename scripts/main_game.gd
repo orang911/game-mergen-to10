@@ -5,6 +5,8 @@ const LoadingViewScene := preload("res://scenes/ui/loading_view.tscn")
 const MergeTrailGhostScene := preload("res://scripts/merge_trail_ghost.gd")
 const EnergyHudScene := preload("res://scripts/energy_hud.gd")
 const CardChoiceModalScene := preload("res://scripts/card_choice_modal.gd")
+const BoardShadowLayerScene := preload("res://scripts/board_shadow_layer.gd")
+const SettlementViewScene := preload("res://scripts/settlement_view.gd")
 
 const GRID_SIZE := GameConfig.GRID_SIZE
 const BLOCK_SIZE := GameConfig.BLOCK_SIZE
@@ -32,6 +34,7 @@ var loading_view: LoadingView
 var game_layer: Control
 var battle_background: TextureRect
 var board_layer: Control
+var board_shadow_layer: BoardShadowLayer
 var decor_layer: Control
 var popup_layer: Control
 var score_label: Label
@@ -41,7 +44,6 @@ var merge_player: AudioStreamPlayer
 var combat_system: CombatSystem
 var music_button: TextureButton
 var bottom_ui: Control
-var bottom_buttons_art: TextureRect
 var _manual_paused := false
 var merge_frames: Array[Texture2D] = []
 var skill_imprint_system: SkillImprintSystem
@@ -51,6 +53,15 @@ var active_card_modal: CardChoiceModal
 var _wave_reward_pending := false
 var _skill_choice_pending := false
 var _wave_waiting_to_continue := false
+var _board_settlement_active := false
+var _card_levels: Dictionary = {}
+var _seen_card_ids: Array[String] = []
+var _run_merge_count := 0
+var _run_max_merge_size := 0
+var _best_score_at_run_start := 0
+var _run_card_counts: Dictionary = {}
+var _run_card_levels: Dictionary = {}
+var _run_card_order: Array[String] = []
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	randomize()
@@ -73,7 +84,7 @@ func _load_assets() -> void:
 		merge_frames.append(load("res://assets/effest/texture/couple-%04d.png" % i) as Texture2D)
 
 	var paths: Dictionary[String, String] = {
-		"bg": "res://assets/UI/loading/loading_background.jpg",
+		"bg": "res://assets/UI/登录页/登录页_晶核守卫_效果图_v1.png",
 		"bg_03": "res://assets/sliced_20260703_172750/decor_cloud_01.png",
 		"bg_04": "res://assets/sliced_20260703_172750/decor_cloud_02.png",
 		"bg_05": "res://assets/sliced_20260703_172750/decor_tree_01.png",
@@ -90,13 +101,8 @@ func _load_assets() -> void:
 		"light": "res://assets/textrues/mian/Light.png",
 		"esc": "res://assets/textrues/mian/esc.png",
 		"slice_board_panel": "res://assets/UI/游戏核心/合成底板.png",
-		"slice_setting_bg": "res://assets/sliced_20260703_172750/setting_button_bg.png",
-		"slice_setting_icon": "res://assets/sliced_20260703_172750/setting_icon.png",
-		"slice_tip_panel": "res://assets/sliced_20260703_172750/tip_panel.png",
-		"slice_tip_bulb": "res://assets/sliced_20260703_172750/tip_icon_bulb.png",
 		"battle_scene_bg": "res://assets/UI/游戏核心/layer_004.png",
-		"bottom_bg": "res://assets/UI/底部UI/layer_003.png",
-		"bottom_buttons": "res://assets/UI/底部UI/layer_002.png"
+		"bottom_bg": "res://assets/UI/底部UI/layer_003.png"
 	}
 	for key in paths:
 		ui_textures[key] = load(paths[key]) as Texture2D
@@ -132,6 +138,8 @@ func _build_scene() -> void:
 	popup_layer = Control.new()
 	popup_layer.name = "Popups"
 	popup_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	popup_layer.z_as_relative = false
+	popup_layer.z_index = 200
 	popup_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(popup_layer)
 
@@ -142,14 +150,15 @@ func _build_scene() -> void:
 	combat_system.castle_destroyed.connect(_on_castle_destroyed)
 	combat_system.castle_durability_changed.connect(_on_castle_durability_changed)
 	combat_system.back_pressed.connect(_toggle_manual_pause)
+	var top_home_button := combat_system.battle_layer.get_node_or_null("DesignRoot/HudLayer/HomeButton") as TextureButton
+	music_button = combat_system.battle_layer.get_node_or_null("DesignRoot/HudLayer/MusicButton") as TextureButton
+	if top_home_button:
+		top_home_button.pressed.connect(over_game)
+	if music_button:
+		music_button.pressed.connect(_toggle_mute)
 	combat_system.normal_attack_kill.connect(_on_normal_attack_kill)
 	combat_system.wave_cleared.connect(_on_wave_cleared)
 	combat_system.level_completed.connect(func(): end_game(true))
-	for tip_path in ["DesignRoot/HudLayer/TipPanel", "DesignRoot/HudLayer/TipIcon", "DesignRoot/HudLayer/TipLabel"]:
-		var tip_node := combat_system.battle_layer.get_node_or_null(tip_path) as CanvasItem
-		if tip_node:
-			tip_node.visible = false
-
 	battle_background = _make_texture_rect(ui_textures["battle_scene_bg"])
 	battle_background.name = "BattleBackground"
 	game_layer.add_child(battle_background)
@@ -165,11 +174,18 @@ func _build_scene() -> void:
 	board_layer = Control.new()
 	board_layer.name = "Board"
 	board_layer.z_as_relative = false
-	board_layer.z_index = 7
+	board_layer.z_index = 8
 	board_layer.custom_minimum_size = GameConfig.get_board_size()
 	board_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	board_layer.clip_contents = true
 	game_layer.add_child(board_layer)
+
+	board_shadow_layer = BoardShadowLayerScene.new() as BoardShadowLayer
+	board_shadow_layer.name = "GlobalBlockShadow"
+	board_shadow_layer.z_as_relative = false
+	board_shadow_layer.z_index = 7
+	board_layer.add_child(board_shadow_layer)
+	board_shadow_layer.configure(GameConfig.get_board_size())
 	if combat_system and combat_system.battle_layer:
 		game_layer.move_child(combat_system.battle_layer, board_layer.get_index() + 1)
 
@@ -257,21 +273,24 @@ func _layout_scene() -> void:
 	# rect and its centerline are derived from the same source-size rect in
 	# GameConfig, while this virtual frame preserves the board relationship.
 	var road_size := GameConfig.get_path_layout_size()
-	var board_pos := GameConfig.BOARD_GRID_POS
+	var board_anchor_pos := GameConfig.BOARD_GRID_POS
+	var board_pos := board_anchor_pos + GameConfig.BOARD_VISUAL_OFFSET
 	var combat_board_pos := Vector2(
-		board_pos.x,
+		board_anchor_pos.x,
 		GameConfig.PATH_ROAD_TARGET_BOTTOM_Y - board_size.y * 0.5 - road_size.y * 0.5 - GameConfig.PATH_ROAD_OFFSET.y
 	)
 	_set_rect(board_layer, board_pos, board_size)
+	if board_shadow_layer:
+		board_shadow_layer.configure(board_size)
 	if combat_system:
 		combat_system.layout_for_board(combat_board_pos, board_size, board_pos)
 	_set_rect(game_layer.get_node("BoardBackdrop") as Control, GameConfig.get_board_plate_position(board_pos), GameConfig.get_board_backdrop_size())
 	_set_rect(score_label, Vector2(31, design_size.y - 68.0), Vector2(190, 55))
 	_set_rect(best_label, Vector2(design_size.x - 231.0, design_size.y - 61.0), Vector2(200, 42))
 	if bottom_ui:
-		_set_rect(bottom_ui, Vector2(0, 1324), Vector2(941, 348))
+		_set_rect(bottom_ui, Vector2(0, 1360), Vector2(941, 312))
 	if energy_hud:
-		_set_rect(energy_hud, Vector2((design_size.x - 868.0) * 0.5, 1339.0), Vector2(868, 206))
+		_set_rect(energy_hud, Vector2((design_size.x - 913.0) * 0.5, 1414.0), Vector2(913, 210))
 	if modal_layer:
 		_set_rect(modal_layer, Vector2.ZERO, design_size)
 	for block in block_map.values():
@@ -324,38 +343,8 @@ func _build_bottom_ui() -> void:
 
 	var background_art := _make_texture_rect(ui_textures["bottom_bg"])
 	background_art.name = "Background"
-	_set_rect(background_art, Vector2.ZERO, Vector2(941, 348))
+	_set_rect(background_art, Vector2.ZERO, Vector2(941, 312))
 	bottom_ui.add_child(background_art)
-
-	bottom_buttons_art = _make_texture_rect(ui_textures["bottom_buttons"])
-	bottom_buttons_art.name = "ButtonsArt"
-	_set_rect(bottom_buttons_art, Vector2(82, 240), Vector2(811, 91))
-	bottom_ui.add_child(bottom_buttons_art)
-
-	var home_button := _make_hotspot_button()
-	home_button.name = "HomeButton"
-	_set_rect(home_button, Vector2(82, 240), Vector2(175, 91))
-	home_button.pressed.connect(over_game)
-	bottom_ui.add_child(home_button)
-
-	var play_button := _make_hotspot_button()
-	play_button.name = "PlayPauseButton"
-	_set_rect(play_button, Vector2(307, 240), Vector2(354, 91))
-	play_button.pressed.connect(_toggle_manual_pause)
-	bottom_ui.add_child(play_button)
-
-	music_button = _make_hotspot_button()
-	music_button.name = "MusicButton"
-	_set_rect(music_button, Vector2(702, 240), Vector2(191, 91))
-	music_button.pressed.connect(_toggle_mute)
-	bottom_ui.add_child(music_button)
-
-func _make_hotspot_button() -> TextureButton:
-	var button := TextureButton.new()
-	button.ignore_texture_size = true
-	button.focus_mode = Control.FOCUS_NONE
-	button.process_mode = Node.PROCESS_MODE_ALWAYS
-	return button
 
 func _toggle_manual_pause() -> void:
 	if game_layer == null or not game_layer.visible:
@@ -451,6 +440,7 @@ func start_game() -> void:
 	decor_layer.visible = true
 	game_layer.modulate = Color(1, 1, 1, 0)
 	_clear_game_world()
+	_reset_run_statistics()
 	score = 0
 	_update_score_label()
 	first_create_blocks()
@@ -468,6 +458,7 @@ func replay_game() -> void:
 	game_status = GameStatus.PAUSE
 	_clear_popup()
 	_clear_game_world()
+	_reset_run_statistics()
 	score = 0
 	_update_score_label()
 	first_create_blocks()
@@ -574,6 +565,7 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 		combat_system.crystal_system.hide_attack_tip()
 	_play_merge()
 	game_status = GameStatus.PAUSE
+	_board_settlement_active = true
 
 	var merge_group: Array[MergeBlock] = []
 	for block in selected_blocks:
@@ -582,12 +574,18 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 	var prepared_skill: Dictionary = skill_imprint_system.consume_pending_skill() if skill_imprint_system else {}
 	var triggered_imprints: Array[Dictionary] = []
 	if not clicked.skill_imprint_id.is_empty():
-		triggered_imprints.append(clicked.take_skill_imprint())
+		var clicked_imprint := clicked.take_skill_imprint()
+		clicked_imprint["trigger_level"] = clicked.level
+		triggered_imprints.append(clicked_imprint)
 	for block in merge_group:
 		if block != clicked and not block.skill_imprint_id.is_empty():
-			triggered_imprints.append(block.take_skill_imprint())
+			var block_imprint := block.take_skill_imprint()
+			block_imprint["trigger_level"] = block.level
+			triggered_imprints.append(block_imprint)
 
 	var merged_count: int = merge_group.size()
+	_run_merge_count += 1
+	_run_max_merge_size = maxi(_run_max_merge_size, merged_count)
 	var source_level: int = clicked.level
 	var result_level: int = source_level + 1
 
@@ -646,8 +644,10 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 		await get_tree().create_timer(0.12).timeout
 		await _fall_and_fill()
 
+	_board_settlement_active = false
 	if game_status == GameStatus.PAUSE:
 		game_status = GameStatus.START
+	call_deferred("_try_open_card_choice")
 
 func _refresh_score(merge_count: int, level_value: int) -> void:
 	score += (merge_count - 1) * level_value * 2
@@ -671,6 +671,7 @@ func _update_score_label() -> void:
 	best_label.text = "BEST %d" % best_score
 
 func _fall_and_fill() -> void:
+	var moved_existing_block := false
 	for x in range(GRID_SIZE):
 		var write_y := 0
 		for y in range(GRID_SIZE):
@@ -679,15 +680,33 @@ func _fall_and_fill() -> void:
 				continue
 			if y != write_y:
 				_move_block_to(block, Vector2i(x, write_y))
+				moved_existing_block = true
 			write_y += 1
+	# Finish compacting the surviving blocks before new blocks enter from the
+	# top. Running both tween groups together can visually freeze overlapping
+	# blocks when a card modal pauses the tree mid-settlement.
+	if moved_existing_block:
+		await get_tree().create_timer(0.14).timeout
 
 	var create_level := 4 if current_level > 4 else 3
+	var created_block := false
 	for y in range(GRID_SIZE):
 		for x in range(GRID_SIZE):
 			if index_map[y][x] == -1:
 				_create_block(Vector2i(x, y), randi_range(1, create_level), true)
+				created_block = true
 
-	await get_tree().create_timer(0.32).timeout
+	if created_block:
+		await get_tree().create_timer(0.32).timeout
+	_snap_blocks_to_grid()
+
+
+func _snap_blocks_to_grid() -> void:
+	for y in range(GRID_SIZE):
+		for x in range(GRID_SIZE):
+			var block := _block_at(Vector2i(x, y))
+			if block and is_instance_valid(block):
+				block.position = _position_for_site(block.board_site)
 
 func _move_block_to(block: MergeBlock, new_site: Vector2i) -> void:
 	var old_site := block.board_site
@@ -735,16 +754,20 @@ func _on_castle_durability_changed(current: int, max_value: int) -> void:
 		combat_system.battle_layer.set_castle_status(current, max_value)
 
 func end_game(_had_pass: bool) -> void:
+	if game_status == GameStatus.OVER:
+		return
 	game_status = GameStatus.OVER
 	_reset_card_runtime()
+	var settlement_stats := _collect_settlement_stats(_had_pass)
 	if combat_system:
 		combat_system.stop_run()
 	_clear_merge_trails()
-	_show_account_popup()
+	_show_account_popup(_had_pass, settlement_stats)
 
 func resurrect() -> void:
 	_play_click()
 	_clear_popup()
+	game_status = GameStatus.PAUSE
 	var min_level := 0
 	for block in block_map.values():
 		if block == null:
@@ -761,10 +784,9 @@ func resurrect() -> void:
 			_remove_block(block, true, block.position)
 	await get_tree().create_timer(0.18).timeout
 	await _fall_and_fill()
-	if game_status != GameStatus.OVER:
-		if combat_system:
-			combat_system.start_run()
-		game_status = GameStatus.START
+	if combat_system:
+		combat_system.start_run()
+	game_status = GameStatus.START
 
 func _show_success_popup() -> void:
 	_clear_popup()
@@ -798,54 +820,80 @@ func _show_success_popup() -> void:
 	tween.parallel().tween_property(light, "rotation", TAU, 8.0).set_trans(Tween.TRANS_LINEAR)
 	tween.parallel().tween_property(popup, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-func _show_account_popup() -> void:
+func _show_account_popup(won: bool, settlement_stats: Dictionary) -> void:
 	_clear_popup()
-	popup_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var popup := _make_popup_panel(Vector2(797, 915))
-	popup_layer.add_child(popup)
+	popup_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	var settlement := SettlementViewScene.new() as SettlementView
+	settlement.name = "SettlementView"
+	popup_layer.add_child(settlement)
+	settlement.retry_pressed.connect(replay_game)
+	settlement.revive_pressed.connect(resurrect)
+	settlement.home_pressed.connect(over_game)
+	settlement.setup(won, settlement_stats)
 
-	var title := _make_label("GAME OVER", 48)
-	_set_rect(title, Vector2(0, 72), Vector2(797, 91))
-	popup.add_child(title)
 
-	var score_text := _make_label("SCORE  %d" % score, 40)
-	_set_rect(score_text, Vector2(0, 196), Vector2(797, 78))
-	popup.add_child(score_text)
+func _reset_run_statistics() -> void:
+	_run_merge_count = 0
+	_run_max_merge_size = 0
+	_best_score_at_run_start = best_score
+	_run_card_counts.clear()
+	_run_card_levels.clear()
+	_run_card_order.clear()
 
-	var best_text := _make_label("BEST  %d" % best_score, 34)
-	_set_rect(best_text, Vector2(0, 281), Vector2(797, 68))
-	popup.add_child(best_text)
 
-	var block_icon := _make_block_preview(clampi(current_level, 1, GameConfig.MAX_BLOCK_LEVEL), Vector2(173, 173))
-	block_icon.position = Vector2(312, 373)
-	popup.add_child(block_icon)
+func _collect_settlement_stats(won: bool) -> Dictionary:
+	var waves_cleared := 0
+	var wave_total := 0
+	var elapsed := 0.0
+	var kills := 0
+	var leaks := 0
+	var castle := 0
+	var castle_max := GameConfig.MAX_CASTLE_DURABILITY
+	if combat_system:
+		kills = combat_system.run_kills
+		leaks = combat_system.run_leaks
+		if combat_system.wave_system:
+			waves_cleared = combat_system.wave_system.total_waves_cleared
+			wave_total = combat_system.wave_system.waves.size()
+		if combat_system.castle_system:
+			castle = combat_system.castle_system.get_durability()
+			castle_max = combat_system.castle_system.max_durability
+		if combat_system.battle_layer:
+			elapsed = combat_system.battle_layer.get_elapsed_seconds()
+	var reward_coins := maxi(10, floori(float(score) / 20.0) + kills * 2 + waves_cleared * 10 + (100 if won else 0))
+	var reward_crystals := maxi(1, waves_cleared + (16 if won else 0))
+	return {
+		"waves": waves_cleared,
+		"wave_total": wave_total,
+		"elapsed": elapsed,
+		"score": score,
+		"best": best_score,
+		"new_record": score > _best_score_at_run_start,
+		"highest": maxi(current_level, _get_board_highest_level()),
+		"kills": kills,
+		"merges": _run_merge_count,
+		"max_merge": _run_max_merge_size,
+		"castle": castle,
+		"castle_max": castle_max,
+		"leaks": leaks,
+		"board_damage": 0,
+		"crystal_damage": 0,
+		"skill_damage": 0,
+		"reward_coins": reward_coins,
+		"reward_crystals": reward_crystals,
+		"cards": _collect_run_cards(),
+	}
 
-	var crown := _make_texture_rect(ui_textures["crown"])
-	_set_rect(crown, Vector2(235, 294), Vector2(59, 51))
-	popup.add_child(crown)
 
-	if score >= best_score and score > 0:
-		var record := _make_texture_rect(ui_textures["new_record"])
-		_set_rect(record, Vector2(229, 565), Vector2(338, 48))
-		popup.add_child(record)
-
-	var revive_button := _make_text_button("CONTINUE", Vector2(327, 99))
-	_set_rect(revive_button, Vector2(235, 634), Vector2(327, 99))
-	revive_button.pressed.connect(resurrect)
-	_wire_button_anim(revive_button)
-	popup.add_child(revive_button)
-
-	var restart_button := _make_texture_button(ui_textures["restart"])
-	_set_rect(restart_button, Vector2(146, 745), Vector2(203, 157))
-	restart_button.pressed.connect(replay_game)
-	_wire_button_anim(restart_button)
-	popup.add_child(restart_button)
-
-	var home_button := _make_texture_button(ui_textures["esc"])
-	_set_rect(home_button, Vector2(634, 29), Vector2(101, 86))
-	home_button.pressed.connect(over_game)
-	_wire_button_anim(home_button)
-	popup.add_child(home_button)
+func _collect_run_cards() -> Array[Dictionary]:
+	var cards: Array[Dictionary] = []
+	for card_id in _run_card_order:
+		cards.append({
+			"id": card_id,
+			"level": clampi(int(_run_card_levels.get(card_id, 1)), 1, GameConfig.MAX_CARD_LEVEL),
+			"selections": maxi(1, int(_run_card_counts.get(card_id, 1))),
+		})
+	return cards
 
 func _make_popup_panel(panel_size: Vector2) -> Control:
 	var shade := _make_popup_shade()
@@ -1032,19 +1080,23 @@ func _clear_merge_trails() -> void:
 func _apply_triggered_imprints(imprints: Array[Dictionary], result_block: MergeBlock) -> void:
 	for imprint in imprints:
 		var skill_id := str(imprint.get("id", ""))
-		var quality := clampi(int(imprint.get("quality", 1)), 1, 3)
+		var level := clampi(int(imprint.get("quality", 1)), 1, GameConfig.MAX_CARD_LEVEL)
+		var trigger_level := clampi(int(imprint.get("trigger_level", result_block.level - 1)), 1, GameConfig.MAX_BLOCK_LEVEL)
 		match skill_id:
-			"core_ascension":
-				result_block.level = mini(GameConfig.MAX_BLOCK_LEVEL, result_block.level + (2 if quality >= 3 else 1))
-			"frequency_convergence":
-				_apply_frequency_convergence(result_block, quality)
-			"fragment_reforge":
-				_apply_fragment_reforge(quality)
-			"board_echo":
-				_apply_board_echo(quality)
-			"frost_star":
+			"ascension_hammer":
+				result_block.level = mini(GameConfig.MAX_BLOCK_LEVEL, result_block.level + int(GameConfig.ASCENSION_EXTRA_LEVELS[level - 1]))
+			"unity_dial":
+				_apply_unity_dial(result_block, trigger_level)
+			"fate_shuffler":
+				_apply_board_echo(level)
+			"twin_mold":
+				_apply_twin_mold(result_block, int(GameConfig.TWIN_MOLD_TARGETS[level - 1]))
+			"castle_cannon":
 				if combat_system:
-					combat_system.trigger_frost_star(result_block.level, quality)
+					combat_system.trigger_card_attack(skill_id, result_block.level, level, result_block.global_position + result_block.size * 0.5)
+			"dragon_catapult", "frost_bell", "thunder_ballista":
+				if combat_system:
+					combat_system.trigger_card_attack(skill_id, result_block.level, level, result_block.global_position + result_block.size * 0.5)
 		await get_tree().create_timer(0.08).timeout
 
 
@@ -1068,30 +1120,36 @@ func _is_new_highest_merge_result(result_level: int, highest_before_merge: int) 
 	return result_level > highest_before_merge
 
 
-func _apply_frequency_convergence(result_block: MergeBlock, quality: int = 1) -> void:
+func _apply_unity_dial(result_block: MergeBlock, recorded_level: int) -> void:
 	var blocks := _active_blocks()
 	if blocks.is_empty():
 		return
-	var min_level := GameConfig.MAX_BLOCK_LEVEL
 	var max_level := 1
 	for block in blocks:
-		min_level = mini(min_level, block.level)
 		max_level = maxi(max_level, block.level)
 	for block in blocks:
 		if block != result_block and block.level < max_level:
-			block.level = mini(max_level - 1, min_level + quality - 1)
+			block.level = clampi(recorded_level, 1, GameConfig.MAX_BLOCK_LEVEL)
 
 
-func _apply_fragment_reforge(quality: int = 1) -> void:
-	var blocks := _active_blocks()
-	if blocks.is_empty():
-		return
-	var min_level := GameConfig.MAX_BLOCK_LEVEL
-	for block in blocks:
-		min_level = mini(min_level, block.level)
-	for block in blocks:
-		if block.level == min_level:
-			block.level = mini(GameConfig.MAX_BLOCK_LEVEL, block.level + quality)
+func _apply_twin_mold(result_block: MergeBlock, target_count: int) -> void:
+	var candidates: Array[MergeBlock] = []
+	var origin := result_block.board_site
+	var offsets: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+	for offset in offsets:
+		var site: Vector2i = origin + offset
+		if site.x < 0 or site.y < 0 or site.x >= GRID_SIZE or site.y >= GRID_SIZE:
+			continue
+		var neighbor := _block_at(site)
+		if neighbor and neighbor != result_block and neighbor.level < GameConfig.MAX_BLOCK_LEVEL:
+			candidates.append(neighbor)
+	if candidates.is_empty():
+		for block in _active_blocks():
+			if block != result_block and block.level < GameConfig.MAX_BLOCK_LEVEL:
+				candidates.append(block)
+	candidates.sort_custom(func(a: MergeBlock, b: MergeBlock): return a.level < b.level)
+	for i in range(mini(target_count, candidates.size())):
+		candidates[i].level = result_block.level
 
 
 func _apply_board_echo(quality: int = 1) -> void:
@@ -1148,7 +1206,9 @@ func _on_energy_gain_requested(amount: int, source_global: Vector2, mote_count: 
 
 func _on_normal_attack_kill(position: Vector2) -> void:
 	if skill_imprint_system:
-		skill_imprint_system.add_energy(GameConfig.SKILL_ENERGY_PER_KILL, position, 3, true)
+		# One defeated monster produces one visible mote. The single mote carries
+		# the full energy reward, so this only simplifies the visual feedback.
+		skill_imprint_system.add_energy(GameConfig.SKILL_ENERGY_PER_KILL, position, 1, true)
 
 
 func _on_pending_skill_changed(skill_id: String, quality: int) -> void:
@@ -1168,11 +1228,14 @@ func _on_wave_cleared(wave_index: int) -> void:
 
 
 func _try_open_card_choice() -> void:
+	if _board_settlement_active:
+		return
 	if active_card_modal != null or game_status == GameStatus.OVER or modal_layer == null:
 		return
 	var kind := ""
 	var ids: Array[String] = []
-	var qualities: Array[int] = []
+	var levels: Array[int] = []
+	var new_flags: Array[bool] = []
 	var skill_target := energy_hud.get_skill_target_global() if energy_hud else Vector2.ZERO
 	var crystal_target := combat_system.crystal_system.get_crystal_center_global() if combat_system and combat_system.crystal_system else Vector2.ZERO
 	if _wave_reward_pending:
@@ -1192,25 +1255,42 @@ func _try_open_card_choice() -> void:
 		return
 	var draw := _draw_unified_cards(kind)
 	ids = draw["ids"]
-	qualities = draw["qualities"]
+	var seen_changed := false
+	for id in ids:
+		var current_level := clampi(int(_card_levels.get(id, 0)), 0, GameConfig.MAX_CARD_LEVEL)
+		levels.append(clampi(current_level + 1, 1, GameConfig.MAX_CARD_LEVEL))
+		var first_seen := not _seen_card_ids.has(id)
+		new_flags.append(first_seen)
+		if first_seen:
+			_seen_card_ids.append(id)
+			seen_changed = true
+	if seen_changed:
+		_save_progress()
 	active_card_modal = CardChoiceModalScene.new() as CardChoiceModal
 	modal_layer.add_child(active_card_modal)
 	active_card_modal.choice_committed.connect(_on_card_choice_committed)
 	active_card_modal.modal_closed.connect(_on_card_modal_closed)
-	active_card_modal.setup(kind, ids, skill_target, crystal_target, qualities)
+	active_card_modal.setup(kind, ids, skill_target, crystal_target, levels, new_flags)
 
 
-func _on_card_choice_committed(kind: String, card_id: String, element_key: String, quality: int) -> void:
-	var is_crystal := GameConfig.CRYSTAL_CARD_IDS.has(card_id)
+func _on_card_choice_committed(kind: String, card_id: String, element_key: String, level: int) -> void:
+	var applied_level := clampi(level, 1, GameConfig.MAX_CARD_LEVEL)
+	_card_levels[card_id] = maxi(int(_card_levels.get(card_id, 0)), applied_level)
+	if not _run_card_counts.has(card_id):
+		_run_card_order.append(card_id)
+	_run_card_counts[card_id] = int(_run_card_counts.get(card_id, 0)) + 1
+	_run_card_levels[card_id] = applied_level
+	_save_progress()
+	var is_crystal := CardCatalog.is_crystal_card(card_id)
 	if is_crystal and combat_system:
-		combat_system.apply_crystal_upgrade(card_id, element_key, quality)
+		combat_system.apply_crystal_upgrade(card_id, element_key, applied_level)
 		if kind == "energy" and skill_imprint_system:
 			skill_imprint_system.resolve_energy_without_skill()
 	elif skill_imprint_system:
 		if kind == "energy":
-			skill_imprint_system.choose_skill(card_id, quality)
+			skill_imprint_system.choose_skill(card_id, applied_level)
 		else:
-			skill_imprint_system.enqueue_skill(card_id, quality)
+			skill_imprint_system.enqueue_skill(card_id, applied_level)
 
 
 func _draw_unified_cards(source: String) -> Dictionary:
@@ -1219,46 +1299,20 @@ func _draw_unified_cards(source: String) -> Dictionary:
 	var ids: Array[String] = []
 	if source == "milestone":
 		crystal_pool.shuffle()
-		ids.append(crystal_pool.pop_back())
-		ids.append(crystal_pool.pop_back())
-		var mixed_pool: Array = GameConfig.ALL_CARD_IDS.duplicate()
-		mixed_pool.shuffle()
-		for candidate in mixed_pool:
-			if not ids.has(candidate):
-				ids.append(candidate)
-				break
+		for i in range(mini(2, crystal_pool.size())):
+			ids.append(crystal_pool.pop_back())
 	else:
 		board_pool.shuffle()
 		ids.append(board_pool.pop_back())
 		ids.append(board_pool.pop_back())
-		var mixed_pool: Array = GameConfig.ALL_CARD_IDS.duplicate()
-		mixed_pool.shuffle()
-		for candidate in mixed_pool:
-			if not ids.has(candidate):
-				ids.append(candidate)
-				break
+	var mixed_pool: Array = GameConfig.ALL_CARD_IDS.duplicate()
+	mixed_pool.shuffle()
+	for candidate in mixed_pool:
+		if not ids.has(candidate):
+			ids.append(candidate)
+			break
 	ids.shuffle()
-	var qualities: Array[int] = []
-	for id in ids:
-		qualities.append(_roll_card_quality(source, id))
-	if source == "milestone":
-		var has_epic_crystal := false
-		for i in range(ids.size()):
-			if GameConfig.CRYSTAL_CARD_IDS.has(ids[i]) and qualities[i] >= GameConfig.CARD_QUALITY_EPIC:
-				has_epic_crystal = true
-		if not has_epic_crystal:
-			for i in range(ids.size()):
-				if GameConfig.CRYSTAL_CARD_IDS.has(ids[i]):
-					qualities[i] = GameConfig.CARD_QUALITY_EPIC
-					break
-	return {"ids": ids, "qualities": qualities}
-
-
-func _roll_card_quality(source: String, card_id: String) -> int:
-	var roll := randf()
-	if source == "milestone":
-		return GameConfig.CARD_QUALITY_EPIC if roll < 0.35 else GameConfig.CARD_QUALITY_RARE
-	return GameConfig.CARD_QUALITY_EPIC if roll < 0.05 else (GameConfig.CARD_QUALITY_RARE if roll < 0.30 else GameConfig.CARD_QUALITY_COMMON)
+	return {"ids": ids}
 
 
 func _on_card_modal_closed(_kind: String) -> void:
@@ -1269,6 +1323,7 @@ func _on_card_modal_closed(_kind: String) -> void:
 func _reset_card_runtime() -> void:
 	get_tree().paused = false
 	_manual_paused = false
+	_board_settlement_active = false
 	_wave_reward_pending = false
 	_skill_choice_pending = false
 	_wave_waiting_to_continue = false
@@ -1302,8 +1357,26 @@ func _load_save() -> void:
 	var config := ConfigFile.new()
 	if config.load(SAVE_PATH) == OK:
 		best_score = int(config.get_value("score", "best", 0))
+		var saved_levels: Dictionary = config.get_value("cards", "levels", {}) as Dictionary
+		for card_id in CardCatalog.ALL_CARD_IDS:
+			_card_levels[card_id] = clampi(int(saved_levels.get(card_id, 0)), 0, GameConfig.MAX_CARD_LEVEL)
+		var saved_seen: Array = config.get_value("cards", "seen_ids", []) as Array
+		for value in saved_seen:
+			var card_id := str(value)
+			if CardCatalog.ALL_CARD_IDS.has(card_id) and not _seen_card_ids.has(card_id):
+				_seen_card_ids.append(card_id)
+	else:
+		for card_id in CardCatalog.ALL_CARD_IDS:
+			_card_levels[card_id] = 0
 
 func _save_best() -> void:
+	_save_progress()
+
+
+func _save_progress() -> void:
 	var config := ConfigFile.new()
+	config.load(SAVE_PATH)
 	config.set_value("score", "best", best_score)
+	config.set_value("cards", "levels", _card_levels)
+	config.set_value("cards", "seen_ids", _seen_card_ids)
 	config.save(SAVE_PATH)
