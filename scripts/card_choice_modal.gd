@@ -67,7 +67,7 @@ func _build() -> void:
 	var milestone := _kind == "milestone"
 	_panel = TextureRect.new()
 	_panel.name = "WaveCardArea" if milestone else "SkillChoicePanel"
-	_panel.texture = null if milestone else load("res://assets/UI/技能选择/layer_003_2.png") as Texture2D
+	_panel.texture = null if milestone else load("res://assets/runtime/ui/screens/skill_choice/panel.png") as Texture2D
 	_panel.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_panel.stretch_mode = TextureRect.STRETCH_SCALE
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -81,7 +81,7 @@ func _build() -> void:
 
 	_title_art = TextureRect.new()
 	_title_art.name = "WaveChoiceTitle" if milestone else "SkillChoiceTitle"
-	_title_art.texture = load("res://assets/UI/波次选择/tip[.png") as Texture2D if milestone else load("res://assets/UI/技能选择/C-1.png") as Texture2D
+	_title_art.texture = load("res://assets/runtime/ui/screens/wave_choice/title.png") as Texture2D if milestone else load("res://assets/runtime/ui/screens/skill_choice/title.png") as Texture2D
 	_title_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_title_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_title_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -117,7 +117,7 @@ func _build() -> void:
 	if not milestone:
 		_confirm = TextureButton.new()
 		_confirm.name = "ConfirmChoice"
-		_confirm.texture_normal = load("res://assets/UI/技能选择/layer_001.png") as Texture2D
+		_confirm.texture_normal = load("res://assets/runtime/ui/screens/skill_choice/button_confirm.png") as Texture2D
 		_confirm.texture_hover = _confirm.texture_normal
 		_confirm.texture_pressed = _confirm.texture_normal
 		_confirm.ignore_texture_size = true

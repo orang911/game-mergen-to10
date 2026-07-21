@@ -32,12 +32,12 @@ func _recursive_free_effect_nodes(parent: Node) -> void:
 
 func play_merge_feedback(event: MergeAttackEvent) -> void:
 	const PROMPT_SCENE = preload("res://scenes/combat/merge_attack_prompt_view.tscn")
-	const PROMPT_BACKGROUND = preload("res://assets/UI/属性攻击提示/图层-2.png")
-	const ICON_FIRE = preload("res://assets/UI/属性攻击提示/火.png")
-	const ICON_POISON = preload("res://assets/UI/属性攻击提示/毒.png")
-	const ICON_CRITICAL = preload("res://assets/UI/属性攻击提示/暴击.png")
-	const ICON_LIGHTNING = preload("res://assets/UI/属性攻击提示/电.png")
-	const ICON_ICE = preload("res://assets/UI/属性攻击提示/冰.png")
+	const PROMPT_BACKGROUND = preload("res://assets/runtime/ui/battle/prompts/prompt_panel.png")
+	const ICON_FIRE = preload("res://assets/runtime/ui/battle/prompts/icon_fire.png")
+	const ICON_POISON = preload("res://assets/runtime/ui/battle/prompts/icon_poison.png")
+	const ICON_CRITICAL = preload("res://assets/runtime/ui/battle/prompts/icon_critical.png")
+	const ICON_LIGHTNING = preload("res://assets/runtime/ui/battle/prompts/icon_lightning.png")
+	const ICON_ICE = preload("res://assets/runtime/ui/battle/prompts/icon_ice.png")
 
 	if _effect_layer == null or not is_instance_valid(_effect_layer):
 		return

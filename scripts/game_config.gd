@@ -102,16 +102,16 @@ const CRYSTAL_EXTRA_TARGETS_BY_LEVEL := [1, 1, 1, 2, 2]
 const CRYSTAL_PIERCE_DAMAGE_RATIO := [0.35, 0.40, 0.45, 0.50, 0.55]
 
 const SKILL_IMPRINT_TEXTURES := {
-	"ascension_hammer": "res://assets/UI/棋盘印记/晶核跃升.png",
-	"unity_dial": "res://assets/UI/棋盘印记/同频汇聚.png",
-	"fate_shuffler": "res://assets/UI/棋盘印记/棋盘回响.png",
-	"twin_mold": "res://assets/UI/棋盘印记/碎片重铸.png",
-	"castle_cannon": "res://assets/UI/棋盘印记/寒星冲击.png",
-	"dragon_catapult": "res://assets/UI/棋盘印记/寒星冲击.png",
-	"frost_bell": "res://assets/UI/棋盘印记/寒星冲击.png",
-	"thunder_ballista": "res://assets/UI/棋盘印记/寒星冲击.png",
+	"ascension_hammer": "res://assets/runtime/ui/battle/board/imprints/ascension_hammer.png",
+	"unity_dial": "res://assets/runtime/ui/battle/board/imprints/unity_dial.png",
+	"fate_shuffler": "res://assets/runtime/ui/battle/board/imprints/fate_shuffler.png",
+	"twin_mold": "res://assets/runtime/ui/battle/board/imprints/twin_mold.png",
+	"castle_cannon": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
+	"dragon_catapult": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
+	"frost_bell": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
+	"thunder_ballista": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
 }
-const TEXT_BLOCK_DIR := "res://assets/sliced_20260703_172750/core_blocks_split/text/"
+const TEXT_BLOCK_DIR := "res://assets/runtime/ui/battle/board/text/"
 
 const BLOCK_COLORS := ["green", "blue", "yellow", "purple", "red"]
 const ELEMENT_ORDER := ["poison", "ice", "lightning", "critical", "fire"]
@@ -212,9 +212,9 @@ const ELEMENT_KEY_TO_ATTACK := {
 
 const ELEMENT_FX := {
 	"poison": {
-		"projectile": "res://assets/fx/elements/poison/projectile_core.png",
-		"hit": "res://assets/fx/elements/poison/hit_spritesheet.png",
-		"trail": "res://assets/fx/elements/shared/trail_soft_white.png",
+		"projectile": "res://assets/runtime/fx/elements/poison/projectile_core.png",
+		"hit": "res://assets/runtime/fx/elements/poison/hit_spritesheet.png",
+		"trail": "res://assets/runtime/fx/elements/shared/trail_soft_white.png",
 		"trail_color": Color(0.25, 1.0, 0.35, 0.82),
 		"core_size": Vector2(66.0, 66.0),
 		"trail_size": Vector2(165.0, 42.0),
@@ -222,9 +222,9 @@ const ELEMENT_FX := {
 		"hit_size": Vector2(150.0, 150.0),
 	},
 	"ice": {
-		"projectile": "res://assets/fx/elements/ice/projectile_core.png",
-		"hit": "res://assets/fx/elements/ice/hit_spritesheet.png",
-		"trail": "res://assets/fx/elements/ice/libai_sdx_trail01.png",
+		"projectile": "res://assets/runtime/fx/elements/ice/projectile_core.png",
+		"hit": "res://assets/runtime/fx/elements/ice/hit_spritesheet.png",
+		"trail": "res://assets/runtime/fx/elements/ice/trail_texture.png",
 		"trail_shader": "res://shaders/ice_projectile_trail.gdshader",
 		"trail_color": Color.WHITE,
 		"trail_tail_color": Color(0.05, 0.22, 0.88, 1.0),
@@ -243,9 +243,9 @@ const ELEMENT_FX := {
 		"hit_size": Vector2(160.0, 160.0),
 	},
 	"lightning": {
-		"projectile": "res://assets/fx/elements/lightning/projectile_core.png",
-		"hit": "res://assets/fx/elements/lightning/hit_spritesheet.png",
-		"trail": "res://assets/fx/elements/shared/trail_soft_white.png",
+		"projectile": "res://assets/runtime/fx/elements/lightning/projectile_core.png",
+		"hit": "res://assets/runtime/fx/elements/lightning/hit_spritesheet.png",
+		"trail": "res://assets/runtime/fx/elements/shared/trail_soft_white.png",
 		"trail_color": Color(1.0, 0.9, 0.15, 0.82),
 		"core_size": Vector2(64.0, 64.0),
 		"trail_size": Vector2(165.0, 42.0),
@@ -256,9 +256,9 @@ const ELEMENT_FX := {
 		"hit_fps": 18.0,
 	},
 	"critical": {
-		"projectile": "res://assets/fx/elements/arcane/projectile_core.png",
-		"hit": "res://assets/fx/elements/arcane/hit_spritesheet.png",
-		"trail": "res://assets/fx/elements/shared/trail_soft_white.png",
+		"projectile": "res://assets/runtime/fx/elements/critical/projectile_core.png",
+		"hit": "res://assets/runtime/fx/elements/critical/hit_spritesheet.png",
+		"trail": "res://assets/runtime/fx/elements/shared/trail_soft_white.png",
 		"trail_color": Color(0.72, 0.34, 1.0, 0.82),
 		"core_size": Vector2(72.0, 72.0),
 		"trail_size": Vector2(165.0, 42.0),
@@ -266,9 +266,9 @@ const ELEMENT_FX := {
 		"hit_size": Vector2(165.0, 165.0),
 	},
 	"fire": {
-		"projectile": "res://assets/fx/elements/fire/projectile_core.png",
-		"hit": "res://assets/fx/elements/fire/hit_spritesheet.png",
-		"trail": "res://assets/fx/elements/shared/trail_soft_white.png",
+		"projectile": "res://assets/runtime/fx/elements/fire/projectile_core.png",
+		"hit": "res://assets/runtime/fx/elements/fire/hit_spritesheet.png",
+		"trail": "res://assets/runtime/fx/elements/shared/trail_soft_white.png",
 		"trail_color": Color(1.0, 0.42, 0.12, 0.82),
 		"core_size": Vector2(76.0, 76.0),
 		"trail_size": Vector2(165.0, 42.0),
@@ -356,11 +356,11 @@ static func get_element_effect_params(level: int) -> Dictionary:
 	return params
 
 const BLOCK_BG_PATHS := {
-	"green": "res://assets/UI/新色块/tile_green_blank_no_shadow_green-transparent.png",
-	"blue": "res://assets/UI/新色块/tile_blue_blank_no_shadow_green-transparent.png",
-	"yellow": "res://assets/UI/新色块/tile_yellow_blank_no_shadow_green-transparent.png",
-	"purple": "res://assets/UI/新色块/tile_purple_blank_no_shadow_green-transparent.png",
-	"red": "res://assets/UI/新色块/tile_red_blank_no_shadow_green-transparent.png",
+	"green": "res://assets/runtime/ui/battle/blocks/block_green.png",
+	"blue": "res://assets/runtime/ui/battle/blocks/block_blue.png",
+	"yellow": "res://assets/runtime/ui/battle/blocks/block_yellow.png",
+	"purple": "res://assets/runtime/ui/battle/blocks/block_purple.png",
+	"red": "res://assets/runtime/ui/battle/blocks/block_red.png",
 }
 
 # Color correction from the supplied tile PNGs to the board effect reference.
@@ -391,7 +391,7 @@ static func get_level_label(level: int) -> String:
 static func get_label_texture_path(level: int) -> String:
 	if level <= 10:
 		return TEXT_BLOCK_DIR + "number_" + str(level) + ".png"
-	return TEXT_BLOCK_DIR + "letter_" + char(64 + level - 10) + ".png"
+	return TEXT_BLOCK_DIR + "letter_" + char(96 + level - 10) + ".png"
 
 static func get_element_for_level(level: int) -> int:
 	return ELEMENT_KEY_TO_ATTACK.get(get_element_key_for_level(level), AttackElement.POISON)

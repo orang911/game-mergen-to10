@@ -10,11 +10,11 @@ const HIGH_LEVEL_UPGRADE_PULSE := 1.06
 const HIGH_LEVEL_REWARD_PULSE := 1.08
 
 const TOWER_VISUALS := {
-	1: {"texture": preload("res://assets/UI/base_layers/base_009.png"), "scale": 0.75},
-	3: {"texture": preload("res://assets/UI/base_layers/base_003.png"), "scale": 0.80},
-	5: {"texture": preload("res://assets/UI/base_layers/base_005.png"), "scale": 1.00},
-	7: {"texture": preload("res://assets/UI/base_layers/base_007.png"), "scale": 1.35},
-	9: {"texture": preload("res://assets/UI/base_layers/base_001.png"), "scale": 1.40},
+	1: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_09.png"), "scale": 0.75},
+	3: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_03.png"), "scale": 0.80},
+	5: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_05.png"), "scale": 1.00},
+	7: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_07.png"), "scale": 1.35},
+	9: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_01.png"), "scale": 1.40},
 }
 
 const _TIER_LOOKUP := [1, 1, 3, 3, 5, 5, 7, 7, 9]

@@ -36,7 +36,7 @@ func _ready() -> void:
 func _build() -> void:
 	# The supplied reference contains the exact yellow-title panel as one clean
 	# region. Keep that region at one uniform scale so its frame is not squashed.
-	var panel := _texture_from_atlas("res://assets/UI/底部UI/效果图.png", PANEL_SOURCE_REGION)
+	var panel := _texture_from_atlas("res://assets/runtime/ui/battle/bottom_hud/hud_atlas.png", PANEL_SOURCE_REGION)
 	panel.size = PANEL_SIZE
 	add_child(panel)
 
@@ -47,7 +47,7 @@ func _build() -> void:
 	_set_rect(_fill_clip, ENERGY_FILL_POS, ENERGY_FILL_SIZE)
 	add_child(_fill_clip)
 
-	_fill = _texture("res://assets/UI/底部UI/能量.png")
+	_fill = _texture("res://assets/runtime/ui/battle/bottom_hud/energy_fill.png")
 	_fill.size = ENERGY_FILL_SIZE
 	_fill_clip.add_child(_fill)
 

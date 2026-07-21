@@ -2,7 +2,7 @@ extends Node2D
 class_name IceTrailParticles
 
 
-const PARTICLE_TEXTURE := preload("res://assets/fx/elements/ice/lizi.png")
+const PARTICLE_TEXTURE := preload("res://assets/runtime/fx/elements/ice/particle_snowflake.png")
 const EMISSION_DISTANCE_MIN := 9.0
 const EMISSION_DISTANCE_MAX := 27.0
 const EMISSION_GAP_CHANCE := 0.20

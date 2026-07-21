@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/loading_view.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/UI/登录页/登录页_晶核守卫_效果图_v1.png" id="2_artwork"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/screens/login/login_background.png" id="2_artwork"]
 
 [node name="LoadingView" type="Control"]
 layout_mode = 3

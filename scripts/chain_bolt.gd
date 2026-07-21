@@ -4,9 +4,9 @@ class_name ChainBolt
 
 
 const FRAME_TEXTURES: Array[Texture2D] = [
-	preload("res://assets/UI/电攻击弹道/1.png"),
-	preload("res://assets/UI/电攻击弹道/2.png"),
-	preload("res://assets/UI/电攻击弹道/3.png"),
+	preload("res://assets/runtime/fx/elements/lightning/beam/frame_00.png"),
+	preload("res://assets/runtime/fx/elements/lightning/beam/frame_01.png"),
+	preload("res://assets/runtime/fx/elements/lightning/beam/frame_02.png"),
 ]
 const FRAME_SEQUENCE := [0, 1, 2, 0, 1, 2]
 const PLAY_DURATION := 0.4

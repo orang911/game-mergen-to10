@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/castle_view.gd" id="1_view"]
-[ext_resource type="Texture2D" path="res://assets/UI/游戏核心/layer_001.png" id="2_castle"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/battle/core/castle.png" id="2_castle"]
 
 [node name="CastleView" type="Control"]
 layout_mode = 3

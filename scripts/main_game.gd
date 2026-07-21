@@ -80,29 +80,29 @@ func _load_assets() -> void:
 	for color_name in GameConfig.BLOCK_BG_PATHS:
 		block_bg_textures[color_name] = load(GameConfig.BLOCK_BG_PATHS[color_name]) as Texture2D
 
-	for i in range(1, 14):
-		merge_frames.append(load("res://assets/effest/texture/couple-%04d.png" % i) as Texture2D)
+	for i in range(13):
+		merge_frames.append(load("res://assets/runtime/fx/merge/frame_%02d.png" % i) as Texture2D)
 
 	var paths: Dictionary[String, String] = {
-		"bg": "res://assets/UI/登录页/登录页_晶核守卫_效果图_v1.png",
-		"bg_03": "res://assets/sliced_20260703_172750/decor_cloud_01.png",
-		"bg_04": "res://assets/sliced_20260703_172750/decor_cloud_02.png",
-		"bg_05": "res://assets/sliced_20260703_172750/decor_tree_01.png",
-		"game_bg": "res://assets/textrues/mian/bg_02.png",
-		"restart": "res://assets/textrues/mian/Rstart.png",
-		"refresh": "res://assets/textrues/mian/Refresh.png",
-		"back": "res://assets/textrues/mian/back.png",
-		"music": "res://assets/textrues/mian/music.png",
-		"panel": "res://assets/textrues/mian/Panel.png",
-		"success": "res://assets/textrues/mian/jiesuan.png",
-		"continue": "res://assets/textrues/mian/Continue.png",
-		"new_record": "res://assets/textrues/mian/newrecord.png",
-		"crown": "res://assets/textrues/mian/Crown.png",
-		"light": "res://assets/textrues/mian/Light.png",
-		"esc": "res://assets/textrues/mian/esc.png",
-		"slice_board_panel": "res://assets/UI/游戏核心/合成底板.png",
-		"battle_scene_bg": "res://assets/UI/游戏核心/layer_004.png",
-		"bottom_bg": "res://assets/UI/底部UI/layer_003.png"
+		"bg": "res://assets/runtime/ui/screens/login/login_background.png",
+		"bg_03": "res://assets/runtime/ui/screens/login/decor_cloud_01.png",
+		"bg_04": "res://assets/runtime/ui/screens/login/decor_cloud_02.png",
+		"bg_05": "res://assets/runtime/ui/screens/login/decor_tree_01.png",
+		"game_bg": "res://assets/runtime/ui/common/legacy_game_background.png",
+		"restart": "res://assets/runtime/ui/common/button_restart.png",
+		"refresh": "res://assets/runtime/ui/common/button_refresh.png",
+		"back": "res://assets/runtime/ui/common/button_back.png",
+		"music": "res://assets/runtime/ui/common/button_sound.png",
+		"panel": "res://assets/runtime/ui/common/popup_panel.png",
+		"success": "res://assets/runtime/ui/common/legacy_success_panel.png",
+		"continue": "res://assets/runtime/ui/common/button_continue.png",
+		"new_record": "res://assets/runtime/ui/common/legacy_new_record.png",
+		"crown": "res://assets/runtime/ui/common/icon_crown.png",
+		"light": "res://assets/runtime/ui/common/success_light.png",
+		"esc": "res://assets/runtime/ui/common/button_close.png",
+		"slice_board_panel": "res://assets/runtime/ui/battle/board/board_backplate.png",
+		"battle_scene_bg": "res://assets/runtime/ui/battle/core/battle_background.png",
+		"bottom_bg": "res://assets/runtime/ui/battle/bottom_hud/hud_background.png"
 	}
 	for key in paths:
 		ui_textures[key] = load(paths[key]) as Texture2D
@@ -221,11 +221,11 @@ func _build_scene() -> void:
 	game_layer.add_child(modal_layer)
 
 	click_player = AudioStreamPlayer.new()
-	click_player.stream = load("res://assets/sound/click.mp3")
+	click_player.stream = load("res://assets/runtime/audio/click.mp3")
 	add_child(click_player)
 
 	merge_player = AudioStreamPlayer.new()
-	merge_player.stream = load("res://assets/sound/mergen.mp3")
+	merge_player.stream = load("res://assets/runtime/audio/merge.mp3")
 	add_child(merge_player)
 
 func _build_background_decor() -> void:

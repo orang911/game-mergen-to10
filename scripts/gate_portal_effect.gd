@@ -2,7 +2,7 @@
 extends TextureRect
 class_name GatePortalEffect
 
-const SPRITE_SHEET := preload("res://assets/UI/游戏核心/门口特效.png")
+const SPRITE_SHEET := preload("res://assets/runtime/fx/portal/gate_portal_sheet.png")
 const FRAME_GRID := Vector2i(4, 4)
 const FRAME_SIZE := Vector2(256.0, 256.0)
 const FRAME_COUNT := FRAME_GRID.x * FRAME_GRID.y

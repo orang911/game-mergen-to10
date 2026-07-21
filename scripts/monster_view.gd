@@ -2,7 +2,7 @@
 extends Control
 class_name MonsterView
 
-const SLICE_DIR := "res://assets/sliced_20260703_172750/"
+const SLICE_DIR := "res://assets/runtime/characters/monsters/"
 
 var monster_type := "small"
 var _color := Color.ORANGE
