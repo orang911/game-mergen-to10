@@ -5,10 +5,10 @@
 ## 当前分区
 
 - `assets/runtime/`：Godot 运行时资源，共 185 个有效文件。文件和目录统一使用小写英文 `snake_case`。
-- `art_source/`：效果图、检查图、视频、GIF、源序列和未接入的新素材，共 158 个有效文件。根目录含 `.gdignore`，不会被 Godot 导入或打包。
+- `art_source/`：效果图、检查图、视频、GIF、源序列和未接入的新素材，共 161 个有效文件。根目录含 `.gdignore`，不会被 Godot 导入或打包。
 - `asset_review_delete/2026-07-21/`：已替换资源、旧 Cocos 遗留和 Git 基线中已删除的旧资源，共 299 个有效文件。根目录含 `.gdignore`，用户审核前不得删除。
 
-“有效文件”不包含 `.import`、清单、说明文件和 `.gdignore`。完整审计表共 642 条。
+“有效文件”不包含 `.import`、清单、说明文件和 `.gdignore`。完整审计表共 645 条。
 
 ## 清单
 
