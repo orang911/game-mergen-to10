@@ -45,9 +45,7 @@ func setup(kind: String, ids: Array[String], skill_target_global: Vector2, cryst
 	_skill_target_global = skill_target_global
 	_crystal_target_global = crystal_target_global
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	position = Vector2.ZERO
-	size = DESIGN_SIZE
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
 	get_tree().paused = true
@@ -91,6 +89,21 @@ func _build() -> void:
 	else:
 		_set_rect(_title_art, Vector2((_panel.size.x - SKILL_TITLE_SIZE.x) * 0.5, -42.0), SKILL_TITLE_SIZE)
 	_panel.add_child(_title_art)
+	if not milestone:
+		# The shared title artwork is kept for its frame, while the energy
+		# flow uses the more precise imprint wording.
+		var title_label := Label.new()
+		title_label.name = "ImprintChoiceTitle"
+		title_label.text = "选择合成印记"
+		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		title_label.add_theme_font_size_override("font_size", 31)
+		title_label.add_theme_color_override("font_color", Color.WHITE)
+		title_label.add_theme_color_override("font_outline_color", Color(0.03, 0.08, 0.20, 1.0))
+		title_label.add_theme_constant_override("outline_size", 5)
+		title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_set_rect(title_label, Vector2((_panel.size.x - 330.0) * 0.5, -14.0), Vector2(330.0, 56.0))
+		_panel.add_child(title_label)
 
 	for i in range(_ids.size()):
 		var card := CardView.new()
@@ -161,21 +174,34 @@ func _play_intro() -> void:
 	intro.parallel().tween_property(_panel, "modulate:a", 1.0, GameConfig.CARD_PANEL_INTRO)
 	intro.parallel().tween_property(_panel, "scale", Vector2.ONE, GameConfig.CARD_PANEL_INTRO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	intro.parallel().tween_property(_panel, "position", final_pos, GameConfig.CARD_PANEL_INTRO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	await intro.finished
 
 	for i in range(_cards.size()):
-		var card := _cards[i]
-		var appear := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-		appear.tween_property(card, "modulate:a", 1.0, GameConfig.CARD_INTRO_DURATION)
-		appear.parallel().tween_property(card, "scale", Vector2.ONE, GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		appear.parallel().tween_property(card, "position", _base_card_positions[i], GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		await appear.finished
-		await card.reveal(GameConfig.CARD_FLIP_DURATION)
-		await get_tree().create_timer(GameConfig.CARD_FLIP_STAGGER, true).timeout
+		_play_card_intro(_cards[i], i)
+
+	# The panel and cards animate as one entrance.  Keep the modal locked until
+	# the last flip settles, but do not make the user wait for a serial reveal.
+	var last_card_delay := 0.03 + maxf(0.0, float(_cards.size() - 1)) * GameConfig.CARD_FLIP_STAGGER
+	var cards_total := last_card_delay + maxf(GameConfig.CARD_INTRO_DURATION, GameConfig.CARD_FLIP_DURATION)
+	var intro_total := maxf(GameConfig.CARD_PANEL_INTRO, cards_total) + 0.04
+	await get_tree().create_timer(intro_total, true).timeout
 
 	_locked = false
 	for card in _cards:
 		card.set_interactable(true)
+
+
+func _play_card_intro(card: CardView, index: int) -> void:
+	var delay := 0.03 + float(index) * GameConfig.CARD_FLIP_STAGGER
+	await get_tree().create_timer(delay, true).timeout
+	if not is_instance_valid(card):
+		return
+	# Start the flip at the same moment the card fades/slides in, while the
+	# panel is still completing its own entrance.
+	card.reveal(GameConfig.CARD_FLIP_DURATION)
+	var appear := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	appear.tween_property(card, "modulate:a", 1.0, GameConfig.CARD_INTRO_DURATION)
+	appear.parallel().tween_property(card, "scale", Vector2.ONE, GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	appear.parallel().tween_property(card, "position", _base_card_positions[index], GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _select_card(index: int) -> void:
@@ -241,6 +267,11 @@ func _finish_choice(element_key: String) -> void:
 	var start_global := chosen.global_position
 	var start_size := chosen.size
 	chosen.reparent(self, true)
+	# The selected card used to keep the modal-root default z=0 after
+	# reparenting, which placed it behind the panel (z=1) during the flight.
+	# Keep it above the mask and panel while it travels toward the HUD slot.
+	chosen.z_as_relative = true
+	chosen.z_index = 30
 	chosen.global_position = start_global
 	chosen.size = start_size
 	chosen.pivot_offset = chosen.size * 0.5

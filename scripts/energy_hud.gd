@@ -3,6 +3,7 @@ class_name EnergyHud
 
 signal gain_fx_batch_finished
 signal instant_item_pressed(item_id: String)
+signal pending_imprint_trigger_finished(completed: bool)
 
 const PANEL_SIZE := Vector2(913.0, 210.0)
 const PANEL_SOURCE_REGION := Rect2(46.0, 15.0, 867.0, 199.0)
@@ -11,6 +12,8 @@ const ENERGY_FRAME_SIZE := Vector2(360.0, 35.0)
 const ENERGY_FILL_POS := Vector2(37.0, 147.0)
 const ENERGY_FILL_SIZE := Vector2(356.0, 32.0)
 const ENERGY_SEGMENT_X: Array[float] = [70.0, 135.0, 200.0, 265.0]
+const PENDING_ICON_POS := Vector2(18.0, 54.0)
+const PENDING_ICON_SIZE := Vector2(88.0, 88.0)
 const CLUSTER_SWAP_ITEM_ID := "cluster_swap"
 const CLUSTER_SWAP_TEXTURE := preload("res://assets/runtime/ui/battle/bottom_hud/item_cluster_swap.png")
 const CRYSTAL_RAIN_ITEM_ID := "crystal_rain"
@@ -23,6 +26,17 @@ var _fill: TextureRect
 var _energy_label: Label
 var _ready_label: Label
 var _pending_icon: TextureRect
+var _pending_skill_id := ""
+var _pending_trigger_tween: Tween
+var _pending_trail_ghost: TextureRect
+var _pending_trail_lines: Array[Line2D] = []
+var _pending_trail_points: Array[Vector2] = []
+var _pending_trail_active := false
+var _pending_trail_elapsed := 0.0
+var _pending_flight_start_global := Vector2.ZERO
+var _pending_flight_target_global := Vector2.ZERO
+var _pending_flight_arc_height := 0.0
+var _pending_trigger_active := false
 var _logical_energy := 0
 var _visual_energy := 0
 var _maximum := 100
@@ -45,6 +59,24 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_build()
 	set_process(false)
+
+
+func _process(delta: float) -> void:
+	if not _pending_trail_active or _pending_trail_ghost == null or not is_instance_valid(_pending_trail_ghost):
+		return
+	_pending_trail_elapsed += delta
+	if _pending_trail_elapsed < 0.014 and not _pending_trail_points.is_empty():
+		return
+	_pending_trail_elapsed = 0.0
+	var ghost_center_global := _pending_trail_ghost.get_global_transform_with_canvas() * (_pending_trail_ghost.size * 0.5)
+	var local_point := get_global_transform_with_canvas().affine_inverse() * ghost_center_global
+	_pending_trail_points.append(local_point)
+	while _pending_trail_points.size() > 13:
+		_pending_trail_points.pop_front()
+	var packed_points := PackedVector2Array(_pending_trail_points)
+	for line in _pending_trail_lines:
+		if line and is_instance_valid(line):
+			line.points = packed_points
 
 
 func _build() -> void:
@@ -81,7 +113,8 @@ func _build() -> void:
 	add_child(best_label)
 
 	_pending_icon = _texture("")
-	_set_rect(_pending_icon, Vector2(17, 61), Vector2(107, 80))
+	_pending_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_set_rect(_pending_icon, PENDING_ICON_POS, PENDING_ICON_SIZE)
 	add_child(_pending_icon)
 
 	_energy_label = _label("0 / 100", 18, Color(0.92, 0.96, 1.0))
@@ -90,7 +123,7 @@ func _build() -> void:
 	add_child(_energy_label)
 
 	_ready_label = _label("", 17, Color(0.88, 0.98, 1.0))
-	_set_rect(_ready_label, Vector2(74, 183), Vector2(274, 29))
+	_set_rect(_ready_label, Vector2(122, 70), Vector2(260, 66))
 	add_child(_ready_label)
 	_build_cluster_swap_item()
 	_build_crystal_rain_item()
@@ -281,9 +314,11 @@ func set_energy(current: int, maximum: int) -> void:
 	_refresh()
 
 
-func set_pending_skill(skill_id: String, quality: int = 1) -> void:
+func set_pending_skill(skill_id: String, _quality: int = 1) -> void:
 	if _pending_icon == null:
 		return
+	_pending_skill_id = skill_id
+	_pending_icon.visible = true
 	if skill_id.is_empty():
 		_pending_icon.texture = null
 		_pending_icon.modulate = Color.WHITE
@@ -291,7 +326,165 @@ func set_pending_skill(skill_id: String, quality: int = 1) -> void:
 	else:
 		_pending_icon.texture = load(GameConfig.SKILL_IMPRINT_TEXTURES.get(skill_id, "")) as Texture2D
 		_pending_icon.modulate = Color.WHITE
-		_ready_label.text = "下次合成触发 · %s" % GameConfig.CARD_QUALITY_NAMES.get(quality, "1星")
+		var imprint_name := str(SkillImprintSystem.IMPRINT_NAMES.get(skill_id, skill_id))
+		_ready_label.text = "下一次合成：待触发\n%s" % imprint_name
+
+
+func play_pending_imprint_trigger(target_global: Vector2) -> bool:
+	if _pending_icon == null or _pending_icon.texture == null:
+		return false
+	# Hide the slot copy immediately and animate a travelling copy.  The
+	# arrival pulse is intentionally larger than the source icon so the player
+	# can read the imprint being consumed at the merge point.
+	_clear_pending_trigger_fx(false)
+	_pending_icon.visible = false
+	var ghost := TextureRect.new()
+	ghost.name = "PendingImprintFly"
+	ghost.texture = _pending_icon.texture
+	ghost.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ghost.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ghost.size = _pending_icon.size
+	ghost.global_position = _pending_icon.global_position
+	ghost.pivot_offset = ghost.size * 0.5
+	ghost.z_index = 22
+	add_child(ghost)
+	_pending_trail_ghost = ghost
+	_pending_trigger_active = true
+	_pending_flight_start_global = _pending_icon.global_position + _pending_icon.size * 0.5
+	_pending_flight_target_global = target_global
+	var flight_distance := _pending_flight_start_global.distance_to(_pending_flight_target_global)
+	_pending_flight_arc_height = clampf(flight_distance * 0.12, 60.0, 130.0)
+	_pending_trail_points.clear()
+	_pending_trail_elapsed = 0.0
+	_pending_trail_lines.clear()
+	var glow := _create_pending_trail_line("PendingImprintTrailGlow", 30.0, Color(0.22, 0.78, 1.0, 0.18), 19)
+	var trail := _create_pending_trail_line("PendingImprintTrail", 13.0, Color(0.70, 0.95, 1.0, 0.70), 20)
+	_pending_trail_lines.append(glow)
+	_pending_trail_lines.append(trail)
+	_pending_trail_active = true
+	set_process(true)
+
+	var burst := Panel.new()
+	burst.name = "PendingImprintBurst"
+	burst.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	burst.z_index = 21
+	var burst_size := ghost.size * 0.82
+	burst.size = burst_size
+	var target_local := get_global_transform_with_canvas().affine_inverse() * target_global
+	burst.position = target_local - burst_size * 0.5
+	burst.pivot_offset = burst_size * 0.5
+	burst.modulate.a = 0.0
+	var burst_style := StyleBoxFlat.new()
+	burst_style.bg_color = Color(0.20, 0.78, 1.0, 0.08)
+	burst_style.border_color = Color(0.78, 0.96, 1.0, 0.96)
+	burst_style.set_border_width_all(3)
+	burst_style.set_corner_radius_all(int(minf(burst_size.x, burst_size.y) * 0.28))
+	burst_style.shadow_color = Color(0.16, 0.78, 1.0, 0.82)
+	burst_style.shadow_size = 12
+	burst.add_theme_stylebox_override("panel", burst_style)
+	add_child(burst)
+
+	_set_pending_flight_progress(0.0, ghost)
+	var sequence := create_tween()
+	_pending_trigger_tween = sequence
+	sequence.tween_method(
+		_set_pending_flight_progress.bind(ghost),
+		0.0,
+		1.0,
+		0.32
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	sequence.tween_callback(func():
+		if is_instance_valid(burst):
+			burst.modulate.a = 0.92
+	)
+	sequence.tween_property(ghost, "scale", Vector2(1.30, 1.30), 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	sequence.parallel().tween_property(ghost, "modulate:a", 0.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	sequence.parallel().tween_property(burst, "scale", Vector2(1.38, 1.38), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	sequence.parallel().tween_property(burst, "modulate:a", 0.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	for line in _pending_trail_lines:
+		sequence.parallel().tween_property(line, "modulate:a", 0.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	sequence.tween_callback(func():
+		_complete_pending_trigger_fx(ghost, burst)
+	)
+	return true
+
+
+func _set_pending_flight_progress(progress: float, ghost: TextureRect) -> void:
+	if ghost == null or not is_instance_valid(ghost):
+		return
+	var clamped_progress := clampf(progress, 0.0, 1.0)
+	var center := _pending_flight_start_global.lerp(_pending_flight_target_global, clamped_progress)
+	center.y -= sin(clamped_progress * PI) * _pending_flight_arc_height
+	ghost.global_position = center - ghost.size * 0.5
+	var perspective_scale := lerpf(1.0, 0.62, clamped_progress)
+	ghost.scale = Vector2.ONE * perspective_scale
+
+
+func _create_pending_trail_line(line_name: String, width: float, color: Color, z: int) -> Line2D:
+	var line := Line2D.new()
+	line.name = line_name
+	line.width = width
+	line.default_color = color
+	line.antialiased = true
+	line.z_index = z
+	var width_curve := Curve.new()
+	width_curve.add_point(Vector2(0.0, 0.16))
+	width_curve.add_point(Vector2(0.35, 0.68))
+	width_curve.add_point(Vector2(1.0, 1.0))
+	line.width_curve = width_curve
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.34, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(color.r, color.g, color.b, 0.02),
+		Color(color.r, color.g, color.b, color.a * 0.42),
+		color
+	])
+	line.gradient = gradient
+	add_child(line)
+	return line
+
+
+func _stop_pending_trail() -> void:
+	_pending_trail_active = false
+	set_process(false)
+	_pending_trail_ghost = null
+	_pending_trail_points.clear()
+	_pending_trail_elapsed = 0.0
+	_pending_flight_start_global = Vector2.ZERO
+	_pending_flight_target_global = Vector2.ZERO
+	_pending_flight_arc_height = 0.0
+	for line in _pending_trail_lines:
+		if line and is_instance_valid(line):
+			line.queue_free()
+	_pending_trail_lines.clear()
+
+
+func _complete_pending_trigger_fx(ghost: TextureRect, burst: Panel) -> void:
+	if not _pending_trigger_active:
+		return
+	_pending_trigger_active = false
+	_stop_pending_trail()
+	if is_instance_valid(ghost):
+		ghost.queue_free()
+	if is_instance_valid(burst):
+		burst.queue_free()
+	_pending_trigger_tween = null
+	pending_imprint_trigger_finished.emit(true)
+
+
+func _clear_pending_trigger_fx(emit_cancel: bool = false) -> void:
+	var was_active := _pending_trigger_active
+	if _pending_trigger_tween and _pending_trigger_tween.is_valid():
+		_pending_trigger_tween.kill()
+		_pending_trigger_tween = null
+	_stop_pending_trail()
+	_pending_trigger_active = false
+	for child in get_children():
+		if child.name == "PendingImprintFly" or child.name == "PendingImprintBurst":
+			child.queue_free()
+	if emit_cancel and was_active:
+		pending_imprint_trigger_finished.emit(false)
 
 
 func get_energy_target_global() -> Vector2:
@@ -317,9 +510,12 @@ func play_energy_gain(amount: int, source_global: Vector2, mote_count: int, brig
 
 
 func clear_fx() -> void:
+	_clear_pending_trigger_fx(true)
 	for child in get_children():
 		if child is EnergyGainFx:
 			child.queue_free()
+	if _pending_icon:
+		_pending_icon.visible = true
 	_active_motes = 0
 	_visual_energy = _logical_energy
 	_was_full_visual = _visual_energy >= _maximum
@@ -378,6 +574,8 @@ func _refresh() -> void:
 		_ready_label.text = "技能就绪"
 	elif not full and _ready_label.text == "技能就绪":
 		_ready_label.text = ""
+	if _pending_skill_id.is_empty():
+		_ready_label.text = "能量已满\n点击选择合成印记" if full else ""
 	if not full:
 		_was_full_visual = false
 

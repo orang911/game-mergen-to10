@@ -7,14 +7,26 @@ signal skill_choice_requested
 signal pending_skill_changed(skill_id: String, quality: int)
 
 var energy := 0
-var pending_skills: Array[Dictionary] = []
+## A board imprint is prepared for one future valid merge only.  Keep one
+## dictionary instead of a queue so the HUD and the rules always describe the
+## same single "next merge" slot.
+var pending_skill: Dictionary = {}
 var _pending_fx_batches := 0
 var _choice_requested := false
+
+const IMPRINT_NAMES := {
+	"ascension_hammer": "星阶锻造锤",
+	"unity_dial": "万象铸数盘",
+	"twin_mold": "双生晶铸模",
+	"fate_shuffler": "命运洗牌箱",
+	"castle_cannon": "王城魔导炮",
+	"dragon_catapult": "火龙投石机",
+}
 
 
 func reset() -> void:
 	energy = 0
-	pending_skills.clear()
+	pending_skill.clear()
 	_pending_fx_batches = 0
 	_choice_requested = false
 	energy_changed.emit(energy, GameConfig.SKILL_ENERGY_MAX)
@@ -32,7 +44,7 @@ func add_energy(amount: int, source_global: Vector2, mote_count: int = 1, bright
 	# 先创建光点，再同步逻辑值，使 HUD 的显示数值只在光点抵达时追赶。
 	energy_gain_requested.emit(gained, source_global, maxi(1, mote_count), bright)
 	energy_changed.emit(energy, GameConfig.SKILL_ENERGY_MAX)
-	if energy >= GameConfig.SKILL_ENERGY_MAX:
+	if energy >= GameConfig.SKILL_ENERGY_MAX and not has_pending_skill():
 		_choice_requested = true
 
 
@@ -47,9 +59,12 @@ func force_finish_fx() -> void:
 
 
 func choose_skill(skill_id: String, quality: int = 1) -> void:
-	if not GameConfig.SKILL_CARD_IDS.has(skill_id):
+	if not GameConfig.SKILL_IMPRINT_IDS.has(skill_id) or has_pending_skill():
 		return
-	pending_skills.append({"id": skill_id, "quality": clampi(quality, 1, GameConfig.MAX_CARD_LEVEL)})
+	pending_skill = {
+		"id": skill_id,
+		"quality": clampi(quality, 1, GameConfig.MAX_CARD_LEVEL),
+	}
 	energy = 0
 	_choice_requested = false
 	energy_changed.emit(energy, GameConfig.SKILL_ENERGY_MAX)
@@ -57,9 +72,12 @@ func choose_skill(skill_id: String, quality: int = 1) -> void:
 
 
 func enqueue_skill(skill_id: String, quality: int = 1) -> void:
-	if not GameConfig.SKILL_CARD_IDS.has(skill_id):
+	if not GameConfig.SKILL_IMPRINT_IDS.has(skill_id) or has_pending_skill():
 		return
-	pending_skills.append({"id": skill_id, "quality": clampi(quality, 1, GameConfig.MAX_CARD_LEVEL)})
+	pending_skill = {
+		"id": skill_id,
+		"quality": clampi(quality, 1, GameConfig.MAX_CARD_LEVEL),
+	}
 	_emit_pending_changed()
 
 
@@ -70,19 +88,33 @@ func resolve_energy_without_skill() -> void:
 
 
 func consume_pending_skill() -> Dictionary:
-	if pending_skills.is_empty():
+	if pending_skill.is_empty():
 		return {}
-	var result: Dictionary = pending_skills.pop_front()
+	var result := pending_skill.duplicate(true)
+	pending_skill.clear()
 	_emit_pending_changed()
+	# Energy can refill while an imprint is waiting.  Defer the next choice
+	# until this imprint has actually triggered, so a second slot never opens.
+	if energy >= GameConfig.SKILL_ENERGY_MAX:
+		_choice_requested = true
+		_try_request_choice()
 	return result
 
 
 func has_pending_skill() -> bool:
-	return not pending_skills.is_empty()
+	return not pending_skill.is_empty()
+
+
+func peek_pending_skill() -> Dictionary:
+	return pending_skill.duplicate(true)
+
+
+func get_imprint_name(skill_id: String) -> String:
+	return str(IMPRINT_NAMES.get(skill_id, skill_id))
 
 
 func is_full_waiting_for_choice() -> bool:
-	return energy >= GameConfig.SKILL_ENERGY_MAX
+	return energy >= GameConfig.SKILL_ENERGY_MAX and not has_pending_skill()
 
 
 func _try_request_choice() -> void:
@@ -92,8 +124,7 @@ func _try_request_choice() -> void:
 
 
 func _emit_pending_changed() -> void:
-	if pending_skills.is_empty():
+	if pending_skill.is_empty():
 		pending_skill_changed.emit("", 0)
 		return
-	var first: Dictionary = pending_skills[0]
-	pending_skill_changed.emit(str(first.get("id", "")), int(first.get("quality", 1)))
+	pending_skill_changed.emit(str(pending_skill.get("id", "")), int(pending_skill.get("quality", 1)))

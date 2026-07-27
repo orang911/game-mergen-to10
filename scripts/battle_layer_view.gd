@@ -39,6 +39,9 @@ var _timer_running := false
 var _timer_paused := false
 var _castle_durability_ratio := 1.0
 var _tutorial_crystal_foreground := false
+var _last_castle_durability := -1
+var _damage_flash: ColorRect
+var _damage_flash_tween: Tween
 
 @export var use_manual_layout := false
 
@@ -54,6 +57,7 @@ func _ready() -> void:
 		_design_root.layout_mode = 0
 		_design_root.position = Vector2.ZERO
 		_design_root.size = DESIGN_SIZE
+	_build_damage_flash()
 	_apply_runtime_layer_order()
 	if _back_button:
 		_back_button.pressed.connect(func(): back_pressed.emit())
@@ -177,6 +181,8 @@ func reset_run_hud() -> void:
 	_timer_paused = false
 	_elapsed_seconds = 0.0
 	_last_display_second = -1
+	_last_castle_durability = -1
+	_stop_damage_flash()
 	set_wave_text("")
 	set_wave_progress(0, 0)
 	_refresh_time_label()
@@ -192,12 +198,37 @@ func _refresh_time_label() -> void:
 
 
 func set_castle_status(current: int, max_value: int) -> void:
+	var was_damaged := _last_castle_durability >= 0 and current < _last_castle_durability
+	_last_castle_durability = current
 	if _castle_status_label == null:
 		_castle_status_label = get_node_or_null("DesignRoot/HudLayer/CastleStatusPanel/CastleStatusLabel") as Label
 	if _castle_status_label:
 		_castle_status_label.text = "%d/%d" % [current, max_value]
 	_castle_durability_ratio = clampf(float(current) / float(maxi(1, max_value)), 0.0, 1.0)
 	_layout_castle_fill()
+	if was_damaged:
+		play_crystal_damage_feedback()
+
+
+func play_crystal_damage_feedback() -> void:
+	# The crystal view starts its own shake/red hit animation from the same
+	# CastleSystem.damage() call.  This overlay is deliberately short and
+	# starts on the durability signal, so the whole battle frame flashes with
+	# the crystal hit without affecting popup input.
+	if _damage_flash == null or not is_inside_tree():
+		return
+	if _damage_flash_tween and _damage_flash_tween.is_valid():
+		_damage_flash_tween.kill()
+	_damage_flash_tween = null
+	_damage_flash.color.a = 0.0
+	_damage_flash_tween = create_tween()
+	_damage_flash_tween.tween_property(_damage_flash, "color:a", 0.28, 0.045).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_damage_flash_tween.tween_property(_damage_flash, "color:a", 0.0, 0.17).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_damage_flash_tween.tween_callback(func():
+		if is_instance_valid(_damage_flash):
+			_damage_flash.color.a = 0.0
+		_damage_flash_tween = null
+	)
 
 
 func layout_for_board(board_pos: Vector2, board_size: Vector2, path_margin: float, spawn_pos: Vector2, goal_pos: Vector2, visual_board_pos: Vector2) -> void:
@@ -217,6 +248,7 @@ func layout_for_board(board_pos: Vector2, board_size: Vector2, path_margin: floa
 	_set_full_rect(_monster_layer, viewport_size)
 	_set_full_rect(_projectile_layer, viewport_size)
 	_set_full_rect(_effect_layer, viewport_size)
+	_set_full_rect(_damage_flash, viewport_size)
 
 	var path_node := get_path_view()
 	if path_node:
@@ -253,6 +285,28 @@ func _apply_runtime_layer_order() -> void:
 	_set_canvas_z(_projectile_layer, 35)
 	_set_canvas_z(_effect_layer, 30)
 	_set_canvas_z(_hud_layer, 40)
+	_set_canvas_z(_damage_flash, 110)
+
+
+func _build_damage_flash() -> void:
+	if _damage_flash and is_instance_valid(_damage_flash):
+		return
+	_damage_flash = ColorRect.new()
+	_damage_flash.name = "CrystalDamageScreenFlash"
+	_damage_flash.layout_mode = 0
+	_damage_flash.position = Vector2.ZERO
+	_damage_flash.size = DESIGN_SIZE
+	_damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_damage_flash.color = Color(0.96, 0.055, 0.04, 0.0)
+	add_child(_damage_flash)
+
+
+func _stop_damage_flash() -> void:
+	if _damage_flash_tween and _damage_flash_tween.is_valid():
+		_damage_flash_tween.kill()
+	_damage_flash_tween = null
+	if _damage_flash and is_instance_valid(_damage_flash):
+		_damage_flash.color.a = 0.0
 
 
 func _set_canvas_z(node: CanvasItem, z: int) -> void:

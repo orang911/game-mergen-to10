@@ -45,7 +45,7 @@ const CARD_CRYSTAL_FLY_DURATION := 0.42
 const CARD_PANEL_FADE_OUT := 0.16
 const CARD_MASK_FADE_OUT := 0.18
 const CARD_FLIP_DURATION := 0.36
-const CARD_FLIP_STAGGER := 0.10
+const CARD_FLIP_STAGGER := 0.06
 const MAX_CARD_LEVEL := 5
 
 const CRYSTAL_DAMAGE_UP_STEP := 0.25
@@ -61,7 +61,17 @@ const FROST_STAR_TARGETS := 3
 const FROST_STAR_SLOW_RATIO := 0.25
 const FROST_STAR_SLOW_DURATION := 2.0
 
-const SKILL_CARD_IDS := CardCatalog.BOARD_CARD_IDS
+# Runtime board-imprint candidates.  Frost/lightning definitions remain in the
+# catalog for archive compatibility, but are intentionally excluded here.
+const SKILL_IMPRINT_IDS := [
+	"ascension_hammer",
+	"unity_dial",
+	"fate_shuffler",
+	"twin_mold",
+	"castle_cannon",
+	"dragon_catapult",
+]
+const SKILL_CARD_IDS := SKILL_IMPRINT_IDS
 const CRYSTAL_CARD_IDS := CardCatalog.CRYSTAL_CARD_IDS
 const ALL_CARD_IDS := SKILL_CARD_IDS + CRYSTAL_CARD_IDS
 const LEVEL_WAVE_COUNT := 20
@@ -108,12 +118,12 @@ const CRYSTAL_EXTRA_TARGETS_BY_LEVEL := [1, 1, 1, 2, 2]
 const CRYSTAL_PIERCE_DAMAGE_RATIO := [0.35, 0.40, 0.45, 0.50, 0.55]
 
 const SKILL_IMPRINT_TEXTURES := {
-	"ascension_hammer": "res://assets/runtime/ui/battle/board/imprints/ascension_hammer.png",
-	"unity_dial": "res://assets/runtime/ui/battle/board/imprints/unity_dial.png",
-	"fate_shuffler": "res://assets/runtime/ui/battle/board/imprints/fate_shuffler.png",
-	"twin_mold": "res://assets/runtime/ui/battle/board/imprints/twin_mold.png",
-	"castle_cannon": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
-	"dragon_catapult": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
+	"ascension_hammer": "res://assets/runtime/ui/cards/icons/ascension_hammer.png",
+	"unity_dial": "res://assets/runtime/ui/cards/icons/unity_dial.png",
+	"fate_shuffler": "res://assets/runtime/ui/cards/icons/fate_shuffler.png",
+	"twin_mold": "res://assets/runtime/ui/cards/icons/twin_mold.png",
+	"castle_cannon": "res://assets/runtime/ui/cards/icons/castle_cannon.png",
+	"dragon_catapult": "res://assets/runtime/ui/cards/icons/dragon_catapult.png",
 	"frost_bell": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
 	"thunder_ballista": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
 }

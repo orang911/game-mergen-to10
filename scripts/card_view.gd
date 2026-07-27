@@ -65,13 +65,15 @@ func reveal(duration: float = 0.36) -> void:
 		return
 	var half := maxf(0.06, duration * 0.5)
 	var close_tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	close_tween.tween_property(_inner, "scale", Vector2(0.0, _fit_scale.y * 1.025), half).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	# Use an ease-out curve for both halves: the card turns quickly at the
+	# start of each half and settles gently at the midpoint/final face.
+	close_tween.tween_property(_inner, "scale", Vector2(0.0, _fit_scale.y * 1.025), half).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	await close_tween.finished
 	_back.visible = false
 	_front_layer.visible = true
 	_revealed = true
 	var open_tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	open_tween.tween_property(_inner, "scale", _fit_scale, half).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	open_tween.tween_property(_inner, "scale", _fit_scale, half).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	await open_tween.finished
 
 

@@ -24,6 +24,7 @@ signal tutorial_first_strike_finished
 signal merge_shot_fired(sequence_id: int, shot_index: int, target: Monster)
 signal merge_shot_resolved(sequence_id: int, shot_index: int, target: Monster, damage: float, killed: bool)
 signal merge_sequence_finished(sequence_id: int, fired_count: int)
+signal merge_sequence_state_changed(sequence_id: int, completed: bool, fired_count: int)
 
 var running := false
 var board_pos := Vector2.ZERO
@@ -52,6 +53,7 @@ var _tutorial_generation := 0
 var _tutorial_breakthrough_monster: Monster
 var _merge_attack_generation := 0
 var _active_merge_sequences: Dictionary = {}
+var _merge_sequence_outcomes: Dictionary = {}
 
 
 func setup(p_game_layer: Control) -> void:
@@ -205,6 +207,9 @@ func stop_run() -> void:
 	reset()
 
 func reset() -> void:
+	for sequence_id in _active_merge_sequences.keys():
+		_record_merge_sequence_outcome(int(sequence_id), false)
+		merge_sequence_state_changed.emit(int(sequence_id), false, 0)
 	_merge_attack_generation += 1
 	_active_merge_sequences.clear()
 	_tutorial_generation += 1
@@ -398,6 +403,7 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 		return
 	merge_attack_received.emit(event)
 	var generation := _merge_attack_generation
+	_merge_sequence_outcomes.erase(event.sequence_id)
 	_active_merge_sequences[event.sequence_id] = generation
 	var launch_delay := 0.0
 	if effect_system:
@@ -511,9 +517,12 @@ func _play_merge_attack_sequence(event: MergeAttackEvent, generation: int) -> vo
 	_finish_merge_sequence(event.sequence_id, generation, fired_count)
 
 
-func _resolve_merge_sequence_target(original_target: Monster) -> Monster:
+func _resolve_merge_sequence_target(original_target: Variant) -> Monster:
+	# A delayed shot can retain a reference to a Monster that was freed during
+	# flight.  Keep this boundary Variant-typed so GDScript does not reject the
+	# call before is_instance_valid() gets a chance to discard that reference.
 	if is_instance_valid(original_target) and not original_target.is_queued_for_deletion() and original_target.is_alive() and not original_target.reached:
-		return original_target
+		return original_target as Monster
 	var replacement := monster_system.get_front_monsters(1)
 	return replacement[0] as Monster if not replacement.is_empty() else null
 
@@ -592,9 +601,22 @@ func _apply_merge_fire_splash(event: MergeAttackEvent, primary: Monster, hit_cen
 func _finish_merge_sequence(sequence_id: int, generation: int, fired_count: int) -> void:
 	if generation == _merge_attack_generation:
 		_active_merge_sequences.erase(sequence_id)
+		_record_merge_sequence_outcome(sequence_id, true)
 		if effect_system:
 			effect_system.finish_merge_feedback(sequence_id)
 		merge_sequence_finished.emit(sequence_id, fired_count)
+		merge_sequence_state_changed.emit(sequence_id, true, fired_count)
+
+
+func get_merge_sequence_outcome(sequence_id: int) -> Variant:
+	return _merge_sequence_outcomes.get(sequence_id, null)
+
+
+func _record_merge_sequence_outcome(sequence_id: int, completed: bool) -> void:
+	_merge_sequence_outcomes[sequence_id] = completed
+	while _merge_sequence_outcomes.size() > 64:
+		var oldest_key = _merge_sequence_outcomes.keys()[0]
+		_merge_sequence_outcomes.erase(oldest_key)
 
 
 func _play_merge_lightning_chain(event: MergeAttackEvent, first_target: Monster, chain_targets: Array[Monster], first_hit_pos: Vector2, generation: int) -> void:

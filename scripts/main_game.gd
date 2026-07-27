@@ -87,6 +87,7 @@ var _balance_simulation_panel: BalanceSimulationPanel
 var _first_wave_tutorial: FirstWaveTutorialController
 var _crystal_awakened_unlocked := false
 var _first_wave_tutorial_completed := false
+var _merge_generation := 0
 
 
 func _ready() -> void:
@@ -641,6 +642,7 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 		clicked.shake()
 		return
 
+	var merge_generation := _merge_generation
 	if combat_system and combat_system.crystal_system:
 		combat_system.crystal_system.hide_attack_tip()
 	_play_merge()
@@ -651,7 +653,6 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 	for block in selected_blocks:
 		merge_group.append(block)
 	var board_highest_before_merge := _get_board_highest_level()
-	var prepared_skill: Dictionary = skill_imprint_system.consume_pending_skill() if skill_imprint_system else {}
 	var triggered_imprints: Array[Dictionary] = []
 	if not clicked.skill_imprint_id.is_empty():
 		var clicked_imprint := clicked.take_skill_imprint()
@@ -698,15 +699,37 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 	clicked.complete_merge_highlight()
 	clicked.play_merge_result_reveal()
 	_play_merge_effect(clicked)
+
+	# The base merge attack leads the sequence.  A prepared imprint must not
+	# change the first attack beat or visually compete with its launch.
+	current_level = max(current_level, clicked.level)
+	var attack_sequence_id := _dispatch_merge_attack(clicked, merged_count, source_level, clicked.level)
+
+	# The prepared imprint belongs to the merge that has just produced this
+	# result.  Do not consume it before the result exists: invalid clicks never
+	# reach this function, while every valid merge gets exactly one trigger.
+	var prepared_skill: Dictionary = skill_imprint_system.peek_pending_skill() if skill_imprint_system else {}
+	if not prepared_skill.is_empty():
+		prepared_skill["trigger_level"] = source_level
+		triggered_imprints.append(prepared_skill)
+	if not triggered_imprints.is_empty():
+		var attack_completed := await _wait_for_merge_attack(attack_sequence_id, merge_generation)
+		if not attack_completed:
+			return
+	if not prepared_skill.is_empty() and energy_hud:
+		var target_global := board_layer.global_position + clicked.position + Vector2(BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.5)
+		if energy_hud.play_pending_imprint_trigger(target_global):
+			var flight_completed: bool = await energy_hud.pending_imprint_trigger_finished
+			if not flight_completed or merge_generation != _merge_generation or not is_instance_valid(clicked) or game_status == GameStatus.OVER:
+				return
 	if not triggered_imprints.is_empty():
 		await _apply_triggered_imprints(triggered_imprints, clicked)
 	result_level = clicked.level
-	if not prepared_skill.is_empty():
-		clicked.set_skill_imprint(str(prepared_skill.get("id", "")), true, int(prepared_skill.get("quality", 1)))
+	if not prepared_skill.is_empty() and skill_imprint_system:
+		skill_imprint_system.consume_pending_skill()
 	current_level = max(current_level, clicked.level)
 	if combat_system and combat_system.crystal_system:
 		combat_system.crystal_system.notify_merge_level(clicked.level)
-	_dispatch_merge_attack(clicked, merged_count, source_level, clicked.level)
 	if _first_wave_tutorial and _first_wave_tutorial.is_active():
 		_first_wave_tutorial.notify_merge_completed()
 	if skill_imprint_system and _is_new_highest_merge_result(clicked.level, board_highest_before_merge):
@@ -738,12 +761,31 @@ func _refresh_score(merge_count: int, level_value: int) -> void:
 	tween.tween_property(score_label, "scale", Vector2(1.25, 1.25), 0.1)
 	tween.tween_property(score_label, "scale", Vector2.ONE, 0.1)
 
-func _dispatch_merge_attack(clicked: MergeBlock, merge_count: int, source_level: int, result_level: int) -> void:
-	if combat_system == null:
-		return
+func _dispatch_merge_attack(clicked: MergeBlock, merge_count: int, source_level: int, result_level: int) -> int:
+	if combat_system == null or not combat_system.running:
+		return -1
 	var origin := board_layer.global_position + clicked.position + Vector2(BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.5)
 	var attack_event := MergeAttackEvent.from_merge(source_level, result_level, merge_count, origin, clicked.board_site.y)
 	combat_system.handle_merge_attack(attack_event)
+	return attack_event.sequence_id
+
+
+func _wait_for_merge_attack(sequence_id: int, merge_generation: int) -> bool:
+	if sequence_id < 0:
+		return true
+	if combat_system == null or not is_instance_valid(combat_system):
+		return false
+	var immediate_outcome = combat_system.get_merge_sequence_outcome(sequence_id)
+	if immediate_outcome != null:
+		return bool(immediate_outcome)
+	while merge_generation == _merge_generation and combat_system.running:
+		var state: Array = await combat_system.merge_sequence_state_changed
+		if state.size() >= 2 and int(state[0]) == sequence_id:
+			return bool(state[1])
+		var stored_outcome = combat_system.get_merge_sequence_outcome(sequence_id)
+		if stored_outcome != null:
+			return bool(stored_outcome)
+	return false
 
 func _update_score_label() -> void:
 	score_label.text = str(score)
@@ -1193,6 +1235,7 @@ func _apply_triggered_imprints(imprints: Array[Dictionary], result_block: MergeB
 		var skill_id := str(imprint.get("id", ""))
 		var level := clampi(int(imprint.get("quality", 1)), 1, GameConfig.MAX_CARD_LEVEL)
 		var trigger_level := clampi(int(imprint.get("trigger_level", result_block.level - 1)), 1, GameConfig.MAX_BLOCK_LEVEL)
+		_show_imprint_trigger_feedback(skill_id, result_block)
 		match skill_id:
 			"ascension_hammer":
 				result_block.level = mini(GameConfig.MAX_BLOCK_LEVEL, result_block.level + int(GameConfig.ASCENSION_EXTRA_LEVELS[level - 1]))
@@ -1209,6 +1252,28 @@ func _apply_triggered_imprints(imprints: Array[Dictionary], result_block: MergeB
 				if combat_system:
 					combat_system.trigger_card_attack(skill_id, result_block.level, level, result_block.global_position + result_block.size * 0.5)
 		await get_tree().create_timer(0.08).timeout
+
+
+func _show_imprint_trigger_feedback(skill_id: String, result_block: MergeBlock) -> void:
+	if board_layer == null or result_block == null or not is_instance_valid(result_block):
+		return
+	var imprint_name := skill_imprint_system.get_imprint_name(skill_id) if skill_imprint_system else skill_id
+	var feedback := _make_label("印记已生效\n%s" % imprint_name, 20)
+	feedback.name = "ImprintTriggerFeedback"
+	feedback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	feedback.z_index = 120
+	feedback.modulate.a = 0.0
+	_set_rect(
+		feedback,
+		result_block.position + Vector2(-38.0, -58.0),
+		Vector2(BLOCK_SIZE + 76.0, 54.0)
+	)
+	board_layer.add_child(feedback)
+	var tween := create_tween()
+	tween.parallel().tween_property(feedback, "modulate:a", 1.0, 0.08)
+	tween.parallel().tween_property(feedback, "position:y", feedback.position.y - 16.0, 0.34).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(feedback, "modulate:a", 0.0, 0.18)
+	tween.tween_callback(feedback.queue_free)
 
 
 func _active_blocks() -> Array[MergeBlock]:
@@ -1476,6 +1541,8 @@ func _on_pending_skill_changed(skill_id: String, quality: int) -> void:
 
 
 func _on_skill_choice_requested() -> void:
+	if skill_imprint_system and skill_imprint_system.has_pending_skill():
+		return
 	_skill_choice_pending = true
 	_try_open_card_choice()
 
@@ -1503,6 +1570,12 @@ func _try_open_card_choice() -> void:
 		kind = "milestone"
 		_wave_reward_pending = false
 	elif _skill_choice_pending:
+		if skill_imprint_system and skill_imprint_system.has_pending_skill():
+			# A milestone board reward may have filled the slot while the
+			# meter was already full.  Wait until the prepared imprint fires
+			# instead of opening a second selection modal.
+			_skill_choice_pending = false
+			return
 		kind = "energy"
 		_skill_choice_pending = false
 	else:
@@ -1549,16 +1622,25 @@ func _on_card_choice_committed(kind: String, card_id: String, element_key: Strin
 			skill_imprint_system.resolve_energy_without_skill()
 	elif skill_imprint_system:
 		if kind == "energy":
+			# Energy choices are board imprints only.  They occupy the single
+			# next-merge slot and are not attached to any block.
 			skill_imprint_system.choose_skill(card_id, applied_level)
 		else:
 			skill_imprint_system.enqueue_skill(card_id, applied_level)
 
 
 func _draw_unified_cards(source: String) -> Dictionary:
-	var board_pool: Array = GameConfig.SKILL_CARD_IDS.duplicate()
+	var board_pool: Array = GameConfig.SKILL_IMPRINT_IDS.duplicate()
 	var crystal_pool: Array = GameConfig.CRYSTAL_CARD_IDS.duplicate()
 	var ids: Array[String] = []
-	if source == "milestone":
+	if source == "energy":
+		# Imprint choice deliberately excludes crystal cards and the archived
+		# frost/lightning candidates.  The board catalog is already the six
+		# active imprint definitions.
+		board_pool.shuffle()
+		for i in range(mini(3, board_pool.size())):
+			ids.append(board_pool[i])
+	elif source == "milestone":
 		crystal_pool.shuffle()
 		for i in range(mini(2, crystal_pool.size())):
 			ids.append(crystal_pool.pop_back())
@@ -1566,12 +1648,13 @@ func _draw_unified_cards(source: String) -> Dictionary:
 		board_pool.shuffle()
 		ids.append(board_pool.pop_back())
 		ids.append(board_pool.pop_back())
-	var mixed_pool: Array = GameConfig.ALL_CARD_IDS.duplicate()
-	mixed_pool.shuffle()
-	for candidate in mixed_pool:
-		if not ids.has(candidate):
-			ids.append(candidate)
-			break
+	if source != "energy":
+		var mixed_pool: Array = GameConfig.ALL_CARD_IDS.duplicate()
+		mixed_pool.shuffle()
+		for candidate in mixed_pool:
+			if not ids.has(candidate):
+				ids.append(candidate)
+				break
 	ids.shuffle()
 	return {"ids": ids}
 
@@ -1582,6 +1665,7 @@ func _on_card_modal_closed(_kind: String) -> void:
 
 
 func _reset_card_runtime() -> void:
+	_merge_generation += 1
 	_stop_first_wave_tutorial()
 	_instant_item_generation += 1
 	_crystal_rain_busy = false

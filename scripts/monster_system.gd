@@ -10,7 +10,10 @@ var monsters: Array[Monster] = []
 var path_system: PathSystem
 var parent_layer: Control
 var running := false
-var _pending_remove: Array[Monster] = []
+## Keep this untyped because a monster can be queued for deletion by another
+## system between two frames.  Typed arrays reject a freed object before the
+## cleanup code can inspect is_instance_valid().
+var _pending_remove: Array = []
 var _delayed_free: Array[Monster] = []
 
 const SPAWN_INTRO_START_SCALE := 0.12
@@ -82,18 +85,21 @@ func _process(delta: float) -> void:
 	var total_length := path_system.get_total_length()
 	if total_length <= 0.0:
 		return
-	for monster in monsters:
-		if not is_instance_valid(monster):
-			_pending_remove.append(monster)
+	for index in range(monsters.size() - 1, -1, -1):
+		var candidate: Variant = monsters[index]
+		if not is_instance_valid(candidate):
+			monsters.remove_at(index)
 			continue
+		var monster := candidate as Monster
 		if monster.is_alive() and not monster.reached:
 			monster.update_status(delta)
 			monster.update_movement(delta, total_length)
 			monster.position = path_system.position_at_progress(monster.path_progress) - monster.get_path_anchor_offset()
 		elif monster.reached and not monster.tutorial_hold_at_goal:
 			_pending_remove.append(monster)
-	for monster in _pending_remove:
-		_remove_monster(monster)
+	for candidate in _pending_remove:
+		if is_instance_valid(candidate):
+			_remove_monster(candidate as Monster)
 	_pending_remove.clear()
 
 func _on_monster_died(monster: Monster) -> void:
