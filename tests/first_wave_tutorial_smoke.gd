@@ -64,9 +64,19 @@ func _run() -> void:
 
 	await _wait_seconds(2.2)
 	_check(tutorial.state == FirstWaveTutorialController.State.CORE_REWARD, "awakening core should appear after the two warnings")
+	var tutorial_view: FirstWaveTutorialView = tutorial._view
+	_check(tutorial_view != null and tutorial_view._core_button.visible, "awakening crystal icon should be visible during the core reward")
+	if tutorial_view:
+		var icon_center := tutorial_view._core_button.get_global_rect().get_center()
+		_check(tutorial_view._core_info.get_global_rect().has_point(icon_center), "awakening crystal icon should be inside the explanation card")
+		_check(not tutorial_view._card_crystal_icon.visible, "reward card should use the clickable crystal instead of a duplicate static icon")
+		_check(tutorial_view._core_button.texture_normal == load("res://assets/runtime/ui/battle/tutorial/icon_crystal_awakening_level_01.png"), "reward card should use the crystal-only level-one icon")
 	tutorial._on_awakening_core_pressed()
 	await _wait_seconds(0.65)
 	_check(game.combat_system.crystal_system.is_awakened(), "one core click should awaken the level-one crystal")
+	if tutorial_view and is_instance_valid(tutorial_view):
+		_check(tutorial_view._card_crystal_icon.visible, "awakened card should display the static level-one crystal icon")
+		_check(not tutorial_view._core_button.visible, "awakened card should not retain a clickable crystal icon")
 	if heavy and is_instance_valid(heavy):
 		_check(
 			game.combat_system.battle_layer.get_crystal_view().z_index > heavy.z_index,

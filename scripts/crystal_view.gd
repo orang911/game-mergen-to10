@@ -295,6 +295,25 @@ func _spawn_awakening_fx() -> void:
 	if _tower == null:
 		return
 	var tower_center := _tower.position + _tower.size * 0.5
+	var base_halo := Panel.new()
+	base_halo.name = "AwakeningBaseHalo"
+	base_halo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var base_halo_style := StyleBoxFlat.new()
+	base_halo_style.bg_color = Color(0.18, 0.90, 1.0, 0.32)
+	base_halo_style.border_color = Color(0.70, 1.0, 1.0, 0.92)
+	base_halo_style.set_border_width_all(3)
+	base_halo_style.set_corner_radius_all(72)
+	base_halo_style.shadow_color = Color(0.12, 0.86, 1.0, 0.88)
+	base_halo_style.shadow_size = 24
+	base_halo.add_theme_stylebox_override("panel", base_halo_style)
+	base_halo.position = Vector2(tower_center.x - 86.0, _tower.position.y + _tower.size.y * 0.76)
+	base_halo.size = Vector2(172.0, 58.0)
+	base_halo.pivot_offset = base_halo.size * 0.5
+	base_halo.scale = Vector2(0.22, 0.22)
+	base_halo.modulate.a = 0.0
+	add_child(base_halo)
+	move_child(base_halo, _tower.get_index())
+
 	var column := Panel.new()
 	column.name = "AwakeningLightColumn"
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -330,6 +349,14 @@ func _spawn_awakening_fx() -> void:
 	move_child(ring, _tower.get_index())
 
 	var column_tween := create_tween()
+	var base_halo_tween := create_tween()
+	base_halo_tween.set_parallel(true)
+	base_halo_tween.tween_property(base_halo, "scale", Vector2(1.18, 1.18), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	base_halo_tween.tween_property(base_halo, "modulate:a", 1.0, 0.10)
+	base_halo_tween.set_parallel(false)
+	base_halo_tween.tween_property(base_halo, "scale", Vector2(1.65, 1.65), 0.34).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	base_halo_tween.parallel().tween_property(base_halo, "modulate:a", 0.0, 0.34)
+	base_halo_tween.tween_callback(base_halo.queue_free)
 	column_tween.parallel().tween_property(column, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	column_tween.parallel().tween_property(column, "modulate:a", 0.82, 0.12)
 	column_tween.tween_interval(0.18)

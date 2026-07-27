@@ -129,6 +129,10 @@ func _on_awakening_core_pressed() -> void:
 	await get_tree().create_timer(0.62).timeout
 	if sequence_generation != _generation or state != State.AWAKENING:
 		return
+	if _view:
+		await _view.hide_crystal_card()
+	if sequence_generation != _generation or state != State.AWAKENING:
+		return
 	state = State.FIRST_STRIKE
 	_combat_system.play_tutorial_first_strike()
 

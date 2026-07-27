@@ -10,8 +10,10 @@ func _init() -> void:
 func _run() -> void:
 	_test_damage_formula()
 	_test_runtime_attribute_cycle()
+	_test_merge_feedback_presentation_tiers()
 	_test_runtime_card_pools()
 	_test_attack_rule_simulation()
+	await _test_merge_feedback_lifecycle()
 	await _test_runtime_focus_sequence()
 	await _test_ice_multitarget_sequence()
 	await _test_lightning_bounce_sequence()
@@ -58,6 +60,21 @@ func _test_runtime_attribute_cycle() -> void:
 		_check(GameConfig.COLOR_ELEMENT[GameConfig.get_block_color_name(level)] == GameConfig.get_element_for_level(level), "level %d color and attack attribute must stay aligned" % level)
 
 
+func _test_merge_feedback_presentation_tiers() -> void:
+	var cases := [
+		{"merge_count": 2, "tier": 1, "scale": 1.0},
+		{"merge_count": 3, "tier": 1, "scale": 1.0},
+		{"merge_count": 4, "tier": 2, "scale": 1.16},
+		{"merge_count": 5, "tier": 2, "scale": 1.16},
+		{"merge_count": 6, "tier": 3, "scale": 1.32},
+		{"merge_count": 12, "tier": 3, "scale": 1.32},
+	]
+	for case_value in cases:
+		var presentation := MergeAttackPromptView.get_merge_presentation(int(case_value["merge_count"]))
+		_check(int(presentation["tier"]) == int(case_value["tier"]), "merge %d should use feedback tier %d" % [int(case_value["merge_count"]), int(case_value["tier"])])
+		_check(is_equal_approx(float(presentation["icon_scale"]), float(case_value["scale"])), "merge %d should use the configured icon scale" % int(case_value["merge_count"]))
+
+
 func _test_runtime_card_pools() -> void:
 	var retired := ["frost_bell", "thunder_ballista", "frost_prism", "thunder_spire"]
 	_check(CardCatalog.BOARD_CARD_IDS.size() == 6, "runtime board pool should contain six cards")
@@ -82,6 +99,29 @@ func _test_attack_rule_simulation() -> void:
 			_check(legacy["initial_board"] == combo["initial_board"], "paired attack rules should share initial board")
 			_check(legacy["spawn_order_hash"] == combo["spawn_order_hash"], "paired attack rules should share monster order")
 			_check(combo.has("board_overkill_damage") and combo.has("avg_front_kill_time"), "combo reports should expose requested diagnostics")
+
+
+func _test_merge_feedback_lifecycle() -> void:
+	var fixture := await _make_combat_fixture()
+	var game = fixture["game"]
+	var combat: CombatSystem = fixture["combat"]
+	_spawn_fixture_monster(combat, 100.0, 0.80)
+	var event := MergeAttackEvent.from_merge(1, 4, 2, Vector2(320.0, 900.0), 2)
+	var state := {"fired": 0}
+	combat.merge_shot_fired.connect(func(_sequence: int, _shot: int, _target: Monster): state["fired"] = int(state["fired"]) + 1)
+	combat.handle_merge_attack(event)
+	await process_frame
+	_check(combat.effect_system._merge_feedbacks.has(event.sequence_id), "merge feedback should appear before projectile launch")
+	await _wait_seconds(MergeAttackPromptView.ENTER_DURATION * 0.5)
+	_check(int(state["fired"]) == 0, "projectile should wait for merge feedback entrance")
+	await _wait_seconds(MergeAttackPromptView.ENTER_DURATION * 0.75)
+	_check(int(state["fired"]) == 1, "projectile should launch after merge feedback entrance")
+	_check(combat.effect_system._merge_feedbacks.has(event.sequence_id), "merge feedback should remain during the attack sequence")
+	await _wait_seconds(ProjectileSystem.MERGE_BOLT_DURATION + MergeAttackPromptView.EXIT_DURATION + 0.08)
+	_check(not combat.effect_system._merge_feedbacks.has(event.sequence_id), "merge feedback should clear after the attack sequence finishes")
+	_cleanup_game(game)
+	await process_frame
+	await process_frame
 
 
 func _test_runtime_focus_sequence() -> void:
@@ -207,7 +247,7 @@ func _test_no_target_stops_sequence() -> void:
 	combat.merge_shot_fired.connect(func(_sequence: int, _shot: int, _target: Monster): state["fired"] = int(state["fired"]) + 1)
 	combat.merge_sequence_finished.connect(func(_sequence: int, fired_count: int): state["finished"] = fired_count)
 	combat.handle_merge_attack(MergeAttackEvent.from_merge(1, 4, 5, Vector2(320.0, 900.0), 2))
-	await _wait_seconds(0.08)
+	await _wait_seconds(MergeAttackPromptView.ENTER_DURATION + 0.08)
 	_check(int(state["fired"]) == 0 and int(state["finished"]) == 0, "no target should discard every remaining shot immediately")
 	_cleanup_game(game)
 	await process_frame
@@ -282,8 +322,11 @@ func _test_reset_cancels_sequence() -> void:
 	_spawn_fixture_monster(combat, 1000.0, 0.70)
 	var resolved_count := 0
 	combat.merge_shot_resolved.connect(func(_sequence: int, _shot: int, _target: Monster, _damage: float, _killed: bool): resolved_count += 1)
-	combat.handle_merge_attack(MergeAttackEvent.from_merge(1, 4, 5, Vector2(320.0, 900.0), 2))
+	var event := MergeAttackEvent.from_merge(1, 4, 5, Vector2(320.0, 900.0), 2)
+	combat.handle_merge_attack(event)
+	_check(combat.effect_system._merge_feedbacks.has(event.sequence_id), "reset fixture should register merge feedback before cancellation")
 	combat.reset()
+	_check(not combat.effect_system._merge_feedbacks.has(event.sequence_id), "reset should clear pending merge feedback")
 	await _wait_seconds(0.45)
 	_check(resolved_count == 0, "reset should cancel pending projectile hits and delayed attacks")
 	_cleanup_game(game)

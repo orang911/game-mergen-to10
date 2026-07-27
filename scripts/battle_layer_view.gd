@@ -250,7 +250,7 @@ func _apply_runtime_layer_order() -> void:
 		_crystal_panel,
 		TUTORIAL_CRYSTAL_FOREGROUND_Z if _tutorial_crystal_foreground else CRYSTAL_NORMAL_Z
 	)
-	_set_canvas_z(_projectile_layer, 20)
+	_set_canvas_z(_projectile_layer, 35)
 	_set_canvas_z(_effect_layer, 30)
 	_set_canvas_z(_hud_layer, 40)
 

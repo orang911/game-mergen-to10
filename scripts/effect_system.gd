@@ -3,6 +3,7 @@ class_name EffectSystem
 
 var _effect_layer: Control
 var _texture_cache: Dictionary = {}
+var _merge_feedbacks: Dictionary = {}
 var _visual_board_pos := GameConfig.BOARD_GRID_POS
 var _board_size := GameConfig.get_board_size()
 
@@ -17,6 +18,7 @@ func layout_for_board(new_visual_board_pos: Vector2, new_board_size: Vector2) ->
 
 
 func reset() -> void:
+	_merge_feedbacks.clear()
 	if _effect_layer == null or not is_instance_valid(_effect_layer):
 		return
 	_recursive_free_effect_nodes(_effect_layer)
@@ -30,7 +32,7 @@ func _recursive_free_effect_nodes(parent: Node) -> void:
 			_recursive_free_effect_nodes(child)
 
 
-func play_merge_feedback(event: MergeAttackEvent) -> void:
+func play_merge_feedback(event: MergeAttackEvent) -> float:
 	const PROMPT_SCENE = preload("res://scenes/combat/merge_attack_prompt_view.tscn")
 	const PROMPT_BACKGROUND = preload("res://assets/runtime/ui/battle/prompts/prompt_panel.png")
 	const ICON_FIRE = preload("res://assets/runtime/ui/battle/prompts/icon_fire.png")
@@ -40,7 +42,7 @@ func play_merge_feedback(event: MergeAttackEvent) -> void:
 	const ICON_ICE = preload("res://assets/runtime/ui/battle/prompts/icon_ice.png")
 
 	if _effect_layer == null or not is_instance_valid(_effect_layer):
-		return
+		return 0.0
 
 	var parent: Control = _effect_layer.get_node_or_null("FloatingText") as Control
 	if parent == null:
@@ -57,23 +59,50 @@ func play_merge_feedback(event: MergeAttackEvent) -> void:
 	var presentation: Dictionary = presentation_map.get(event.element_key, {}) as Dictionary
 	var icon: Texture2D = presentation.get("icon", null) as Texture2D
 	if icon == null:
-		return
+		return 0.0
 
 	var instance := PROMPT_SCENE.instantiate() as MergeAttackPromptView
 	if instance == null:
-		return
+		return 0.0
+	if _merge_feedbacks.has(event.sequence_id):
+		finish_merge_feedback(event.sequence_id)
 
 	instance.name = "Effect_MergeAttackPrompt"
 	parent.add_child(instance, true)
 
-	var row := clampi(event.board_row, 0, GameConfig.GRID_SIZE - 1)
-	var row_top_y: float = _visual_board_pos.y + GameConfig.get_block_position_for_site(Vector2i(0, row)).y
-	var target_position := Vector2(
-		_visual_board_pos.x + (_board_size.x - MergeAttackPromptView.DISPLAY_SIZE.x) * 0.5,
-		row_top_y - 8.0
+	var effect_origin := _global_to_effect_local(event.origin_position)
+	var target_position := effect_origin - MergeAttackPromptView.ICON_CENTER
+	instance.play(
+		PROMPT_BACKGROUND,
+		icon,
+		str(presentation.get("name", "")),
+		event.total_damage,
+		event.attack_count,
+		target_position,
+		event.element_key,
+		event.merge_count
 	)
+	_merge_feedbacks[event.sequence_id] = instance
+	return MergeAttackPromptView.ENTER_DURATION
 
-	instance.play(PROMPT_BACKGROUND, icon, str(presentation.get("name", "")), event.total_damage, event.attack_count, target_position)
+
+func begin_merge_feedback_attack(sequence_id: int) -> void:
+	var instance := _merge_feedbacks.get(sequence_id, null) as MergeAttackPromptView
+	if instance and is_instance_valid(instance):
+		instance.begin_attacking()
+
+
+func pulse_merge_feedback_shot(sequence_id: int) -> void:
+	var instance := _merge_feedbacks.get(sequence_id, null) as MergeAttackPromptView
+	if instance and is_instance_valid(instance):
+		instance.pulse_for_shot()
+
+
+func finish_merge_feedback(sequence_id: int) -> void:
+	var instance := _merge_feedbacks.get(sequence_id, null) as MergeAttackPromptView
+	_merge_feedbacks.erase(sequence_id)
+	if instance and is_instance_valid(instance):
+		instance.finish()
 
 
 func play_monster_hit(_monster: Monster) -> void:

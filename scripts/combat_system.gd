@@ -397,10 +397,17 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 	if not running or event == null:
 		return
 	merge_attack_received.emit(event)
-	if effect_system:
-		effect_system.play_merge_feedback(event)
 	var generation := _merge_attack_generation
 	_active_merge_sequences[event.sequence_id] = generation
+	var launch_delay := 0.0
+	if effect_system:
+		launch_delay = effect_system.play_merge_feedback(event)
+	if launch_delay > 0.0:
+		await get_tree().create_timer(launch_delay).timeout
+	if generation != _merge_attack_generation or not running:
+		return
+	if effect_system:
+		effect_system.begin_merge_feedback_attack(event.sequence_id)
 	if event.element == GameConfig.AttackElement.FREEZE:
 		_play_merge_freeze_multitarget(event, generation)
 	else:
@@ -425,6 +432,8 @@ func _play_merge_freeze_multitarget(event: MergeAttackEvent, generation: int) ->
 			continue
 		fired_count += 1
 		merge_shot_fired.emit(event.sequence_id, shot_index, target)
+		if effect_system:
+			effect_system.pulse_merge_feedback_shot(event.sequence_id)
 		if projectile_system:
 			projectile_system.play_merge_shot(
 				event,
@@ -443,7 +452,7 @@ func _resolve_merge_freeze_shot(event: MergeAttackEvent, target: Monster, shot_i
 		return
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or not target.is_alive() or target.reached:
 		return
-	var hit_result := _resolve_merge_sequence_hit(event, target)
+	var hit_result := await _resolve_merge_sequence_hit(event, target)
 	merge_shot_resolved.emit(
 		event.sequence_id,
 		shot_index,
@@ -472,6 +481,8 @@ func _play_merge_attack_sequence(event: MergeAttackEvent, generation: int) -> vo
 		focus_target = launch_target
 		fired_count += 1
 		merge_shot_fired.emit(event.sequence_id, shot_index, launch_target)
+		if effect_system:
+			effect_system.pulse_merge_feedback_shot(event.sequence_id)
 		if projectile_system:
 			projectile_system.play_merge_shot(
 				event,
@@ -485,7 +496,7 @@ func _play_merge_attack_sequence(event: MergeAttackEvent, generation: int) -> vo
 		if resolved_target == null:
 			break
 		focus_target = resolved_target
-		var hit_result := _resolve_merge_sequence_hit(event, resolved_target)
+		var hit_result := await _resolve_merge_sequence_hit(event, resolved_target)
 		merge_shot_resolved.emit(
 			event.sequence_id,
 			shot_index,
@@ -538,7 +549,7 @@ func _resolve_merge_sequence_hit(event: MergeAttackEvent, target: Monster) -> Di
 	if event.element == GameConfig.AttackElement.FIRE:
 		_apply_merge_fire_splash(event, target, hit_center)
 	elif event.element == GameConfig.AttackElement.LIGHTNING:
-		_play_current_lightning_chain(event, target, hit_center)
+		await _play_current_lightning_chain(event, target, hit_center)
 	return {"damage": final_damage, "killed": killed}
 
 
@@ -554,7 +565,8 @@ func _play_current_lightning_chain(event: MergeAttackEvent, primary: Monster, hi
 		if chain_targets.size() >= chain_count:
 			break
 	if not chain_targets.is_empty():
-		_play_merge_lightning_chain(event, primary, chain_targets, hit_center, _merge_attack_generation)
+		await _play_merge_lightning_chain(event, primary, chain_targets, hit_center, _merge_attack_generation)
+		await get_tree().create_timer(ChainBolt.PLAY_DURATION).timeout
 
 
 func _apply_merge_fire_splash(event: MergeAttackEvent, primary: Monster, hit_center: Vector2) -> void:
@@ -580,6 +592,8 @@ func _apply_merge_fire_splash(event: MergeAttackEvent, primary: Monster, hit_cen
 func _finish_merge_sequence(sequence_id: int, generation: int, fired_count: int) -> void:
 	if generation == _merge_attack_generation:
 		_active_merge_sequences.erase(sequence_id)
+		if effect_system:
+			effect_system.finish_merge_feedback(sequence_id)
 		merge_sequence_finished.emit(sequence_id, fired_count)
 
 

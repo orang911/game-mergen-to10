@@ -5,7 +5,9 @@ signal skip_pressed
 signal awakening_core_pressed
 
 const DESIGN_SIZE := Vector2(941.0, 1672.0)
-const CORE_TEXTURE := preload("res://assets/runtime/ui/battle/tutorial/item_crystal_awakening_core.png")
+const CORE_TEXTURE := preload("res://assets/runtime/ui/battle/tutorial/icon_crystal_awakening_level_01.png")
+const CARD_ICON_SIZE := Vector2(76.0, 76.0)
+const CRYSTAL_CARD_SIZE := Vector2(520.0, 128.0)
 
 var _board_rect := Rect2()
 var _highlight_rect := Rect2()
@@ -22,8 +24,12 @@ var _step_badge: Label
 var _red_warning: Panel
 var _core_button: TextureButton
 var _core_info: Panel
+var _card_crystal_icon: TextureRect
+var _core_title: Label
+var _core_desc: Label
 var _crystal_highlight: Panel
 var _core_tween: Tween
+var _crystal_halo_tween: Tween
 
 
 func _ready() -> void:
@@ -84,28 +90,50 @@ func show_core_reward() -> void:
 	_core_button.disabled = false
 	_core_button.modulate = Color.WHITE
 	_core_button.scale = Vector2.ONE
-	_core_info.visible = true
+	_core_button.rotation = 0.0
+	_card_crystal_icon.visible = false
+	_show_crystal_card("唤醒晶核", "唤醒水晶，解锁持续攻击。", Color(0.80, 0.98, 1.0))
 	_crystal_highlight.visible = true
-	_set_rect(_crystal_highlight, _crystal_anchor - Vector2(88.0, 58.0), Vector2(176.0, 116.0))
-	_set_rect(_core_button, _crystal_anchor + Vector2(10.0, -88.0) - Vector2(66.0, 66.0), Vector2(132.0, 132.0))
-	_set_rect(_core_info, _crystal_anchor + Vector2(72.0, -108.0), Vector2(330.0, 126.0))
+	_set_rect(_crystal_highlight, _crystal_anchor + Vector2(-104.0, 10.0), Vector2(208.0, 74.0))
+	_set_rect(_core_button, _card_icon_position(), CARD_ICON_SIZE)
 	if _core_tween:
 		_core_tween.kill()
 	_core_tween = create_tween().set_loops()
-	_core_tween.tween_property(_core_button, "scale", Vector2(1.10, 1.10), 0.42).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_core_tween.tween_property(_core_button, "scale", Vector2(1.12, 1.12), 0.42).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_core_tween.tween_property(_core_button, "scale", Vector2.ONE, 0.42).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	var crystal_pulse := create_tween().set_loops()
-	crystal_pulse.tween_property(_crystal_highlight, "scale", Vector2(1.10, 1.10), 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	crystal_pulse.tween_property(_crystal_highlight, "scale", Vector2.ONE, 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if _crystal_halo_tween and _crystal_halo_tween.is_valid():
+		_crystal_halo_tween.kill()
+	_crystal_halo_tween = create_tween().set_loops()
+	_crystal_halo_tween.tween_property(_crystal_highlight, "scale", Vector2(1.12, 1.12), 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_crystal_halo_tween.tween_property(_crystal_highlight, "scale", Vector2.ONE, 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func play_core_fly() -> void:
 	if _core_button == null or not _core_button.visible:
 		return
 	_core_button.disabled = true
-	_core_info.visible = false
 	if _core_tween:
 		_core_tween.kill()
+	if _crystal_halo_tween and _crystal_halo_tween.is_valid():
+		_crystal_halo_tween.kill()
+	_card_crystal_icon.visible = false
+	var card_exit := create_tween()
+	card_exit.set_parallel(true)
+	card_exit.tween_property(_core_info, "modulate:a", 0.0, 0.18)
+	card_exit.tween_property(_core_info, "scale", Vector2(0.96, 0.96), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	card_exit.chain().tween_callback(func():
+		if is_instance_valid(_core_info):
+			_core_info.visible = false
+			_core_info.modulate.a = 1.0
+			_core_info.scale = Vector2.ONE
+	)
+	var halo_exit := create_tween()
+	halo_exit.tween_property(_crystal_highlight, "modulate:a", 0.0, 0.20)
+	halo_exit.tween_callback(func():
+		if is_instance_valid(_crystal_highlight):
+			_crystal_highlight.visible = false
+			_crystal_highlight.modulate.a = 1.0
+	)
 	_core_button.pivot_offset = _core_button.size * 0.5
 	var destination := _crystal_anchor - _core_button.size * 0.5
 	var tween := create_tween()
@@ -115,20 +143,66 @@ func play_core_fly() -> void:
 	tween.tween_property(_core_button, "rotation", 0.42, 0.52).set_trans(Tween.TRANS_SINE)
 	await tween.finished
 	_core_button.visible = false
-	_crystal_highlight.visible = false
 
 
 func show_awakened() -> void:
-	_show_message("水晶已唤醒！", "持续攻击已解锁", 3, Color(0.76, 0.96, 1.0))
+	_core_button.visible = false
+	_show_crystal_card("水晶已唤醒！", "持续攻击已解锁。", Color(0.76, 0.96, 1.0), true)
 
 
 func show_final_message() -> void:
 	_show_message("水晶会持续守护防线！", "合成更高数字，与水晶一起消灭怪物！", 3, Color(0.80, 0.96, 1.0))
 
 
+func _card_icon_position() -> Vector2:
+	return _core_info.position + Vector2(24.0, 26.0)
+
+
+func _show_crystal_card(title: String, description: String, title_color: Color, show_static_icon := false) -> void:
+	if _core_info == null or _core_title == null or _core_desc == null:
+		return
+	_set_rect(_core_info, _crystal_anchor + Vector2(-CRYSTAL_CARD_SIZE.x * 0.5, -172.0), CRYSTAL_CARD_SIZE)
+	_set_rect(_card_crystal_icon, _card_icon_position(), CARD_ICON_SIZE)
+	_card_crystal_icon.visible = show_static_icon
+	_card_crystal_icon.modulate.a = 0.0 if show_static_icon else 1.0
+	_core_title.text = title
+	_core_title.add_theme_color_override("font_color", title_color)
+	_core_desc.text = description
+	_core_info.visible = true
+	_core_info.modulate.a = 0.0
+	_core_info.scale = Vector2(0.94, 0.94)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(_core_info, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_core_info, "scale", Vector2.ONE, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if show_static_icon:
+		tween.tween_property(_card_crystal_icon, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+
+func hide_crystal_card() -> void:
+	if _core_info == null or not _core_info.visible:
+		return
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(_core_info, "modulate:a", 0.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(_core_info, "scale", Vector2(0.96, 0.96), 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	if _card_crystal_icon.visible:
+		tween.tween_property(_card_crystal_icon, "modulate:a", 0.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await tween.finished
+	if is_instance_valid(_core_info):
+		_core_info.visible = false
+		_core_info.modulate.a = 1.0
+		_core_info.scale = Vector2.ONE
+	if is_instance_valid(_card_crystal_icon):
+		_card_crystal_icon.visible = false
+		_card_crystal_icon.modulate.a = 1.0
+
+
 func cleanup() -> void:
 	if _core_tween:
 		_core_tween.kill()
+	if _crystal_halo_tween and _crystal_halo_tween.is_valid():
+		_crystal_halo_tween.kill()
 	queue_free()
 
 
@@ -209,32 +283,48 @@ func _build_view() -> void:
 	_core_button.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 	_core_button.focus_mode = Control.FOCUS_NONE
 	_core_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_core_button.z_index = 2
 	_core_button.pressed.connect(func(): awakening_core_pressed.emit())
 	add_child(_core_button)
 	_core_button.visible = false
 
 	_core_info = _panel(Color(0.055, 0.075, 0.15, 0.97), Color(0.58, 0.94, 1.0, 1.0), 18)
 	add_child(_core_info)
+	_card_crystal_icon = TextureRect.new()
+	_card_crystal_icon.name = "AwakenedCrystalCardIcon"
+	_card_crystal_icon.texture = CORE_TEXTURE
+	_card_crystal_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_card_crystal_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_card_crystal_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card_crystal_icon.z_index = 1
+	add_child(_card_crystal_icon)
+	_card_crystal_icon.visible = false
 	var core_title := _label("唤醒晶核", 29, Color(0.80, 0.98, 1.0))
 	core_title.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.12, 1.0))
 	core_title.add_theme_constant_override("outline_size", 4)
 	_set_rect(core_title, Vector2(14.0, 10.0), Vector2(302.0, 50.0))
 	_core_info.add_child(core_title)
+	_core_title = core_title
+	_core_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_set_rect(_core_title, Vector2(118.0, 14.0), Vector2(370.0, 52.0))
 	var core_desc := _label("唤醒水晶，解锁持续攻击。", 20, Color.WHITE)
 	_set_rect(core_desc, Vector2(14.0, 59.0), Vector2(302.0, 45.0))
 	_core_info.add_child(core_desc)
+	_core_desc = core_desc
+	_core_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_set_rect(_core_desc, Vector2(118.0, 68.0), Vector2(370.0, 40.0))
 	_core_info.visible = false
 
 	_crystal_highlight = Panel.new()
 	_crystal_highlight.name = "CrystalTargetHighlight"
 	_crystal_highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var crystal_highlight_style := StyleBoxFlat.new()
-	crystal_highlight_style.bg_color = Color(0.20, 0.88, 1.0, 0.05)
-	crystal_highlight_style.border_color = Color(0.45, 0.97, 1.0, 0.96)
-	crystal_highlight_style.set_border_width_all(5)
-	crystal_highlight_style.set_corner_radius_all(58)
-	crystal_highlight_style.shadow_color = Color(0.14, 0.84, 1.0, 0.72)
-	crystal_highlight_style.shadow_size = 16
+	crystal_highlight_style.bg_color = Color(0.14, 0.84, 1.0, 0.20)
+	crystal_highlight_style.border_color = Color(0.58, 0.98, 1.0, 0.88)
+	crystal_highlight_style.set_border_width_all(3)
+	crystal_highlight_style.set_corner_radius_all(72)
+	crystal_highlight_style.shadow_color = Color(0.10, 0.82, 1.0, 0.80)
+	crystal_highlight_style.shadow_size = 22
 	_crystal_highlight.add_theme_stylebox_override("panel", crystal_highlight_style)
 	add_child(_crystal_highlight)
 	_crystal_highlight.visible = false
