@@ -2,16 +2,30 @@ extends Control
 
 const MergeBlockScene := preload("res://scripts/block.gd")
 const LoadingViewScene := preload("res://scenes/ui/loading_view.tscn")
+const MainHubViewScene := preload("res://scenes/ui/main_hub.tscn")
 const MergeTrailGhostScene := preload("res://scripts/merge_trail_ghost.gd")
 const EnergyHudScene := preload("res://scripts/energy_hud.gd")
 const CardChoiceModalScene := preload("res://scripts/card_choice_modal.gd")
 const BoardShadowLayerScene := preload("res://scripts/board_shadow_layer.gd")
+const BoardClusterLayoutScene := preload("res://scripts/board_cluster_layout.gd")
 const SettlementViewScene := preload("res://scripts/settlement_view.gd")
+const BalanceSimulationPanelScene := preload("res://scripts/simulation/balance_simulation_panel.gd")
+const BoardRefillPolicyScript := preload("res://scripts/board_refill_policy.gd")
+const FirstWaveTutorialControllerScene := preload("res://scripts/first_wave_tutorial_controller.gd")
 
 const GRID_SIZE := GameConfig.GRID_SIZE
 const BLOCK_SIZE := GameConfig.BLOCK_SIZE
 const SAVE_PATH := GameConfig.SAVE_PATH
 const START_DIRECTLY := false
+const CLUSTER_SWAP_ITEM_ID := "cluster_swap"
+const CLUSTER_SWAP_UNLIMITED_COUNT := -1
+const CLUSTER_SWAP_ANIMATION_DURATION := 0.38
+const CRYSTAL_RAIN_ITEM_ID := "crystal_rain"
+const HUB_DEFAULT_CRYSTALS := 120
+const HUB_DEFAULT_COINS := 1804
+# Temporary review switch. Keep the saved completion state intact while making
+# the awakening tutorial replay on every Start/Restart until visual review ends.
+const REPEAT_FIRST_WAVE_TUTORIAL := true
 
 enum GameStatus { NONE, START, OVER, PAUSE }
 
@@ -31,16 +45,19 @@ var ui_textures: Dictionary[String, Texture2D] = {}
 var background: TextureRect
 var main_layer: Control
 var loading_view: LoadingView
+var main_hub_view: MainHubView
 var game_layer: Control
 var battle_background: TextureRect
 var board_layer: Control
 var board_shadow_layer: BoardShadowLayer
-var decor_layer: Control
 var popup_layer: Control
 var score_label: Label
 var best_label: Label
 var click_player: AudioStreamPlayer
 var merge_player: AudioStreamPlayer
+var _combo_audio_players: Array[AudioStreamPlayer] = []
+var _combo_audio_cursor := 0
+var _combo_attack_counts := {}
 var combat_system: CombatSystem
 var music_button: TextureButton
 var bottom_ui: Control
@@ -54,6 +71,7 @@ var _wave_reward_pending := false
 var _skill_choice_pending := false
 var _wave_waiting_to_continue := false
 var _board_settlement_active := false
+var _success_popup_active := false
 var _card_levels: Dictionary = {}
 var _seen_card_ids: Array[String] = []
 var _run_merge_count := 0
@@ -62,6 +80,15 @@ var _best_score_at_run_start := 0
 var _run_card_counts: Dictionary = {}
 var _run_card_levels: Dictionary = {}
 var _run_card_order: Array[String] = []
+var _cluster_swap_item_count := 0
+var _crystal_rain_busy := false
+var _instant_item_generation := 0
+var _balance_simulation_panel: BalanceSimulationPanel
+var _first_wave_tutorial: FirstWaveTutorialController
+var _crystal_awakened_unlocked := false
+var _first_wave_tutorial_completed := false
+
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	randomize()
@@ -85,9 +112,6 @@ func _load_assets() -> void:
 
 	var paths: Dictionary[String, String] = {
 		"bg": "res://assets/runtime/ui/screens/login/login_background.png",
-		"bg_03": "res://assets/runtime/ui/screens/login/decor_cloud_01.png",
-		"bg_04": "res://assets/runtime/ui/screens/login/decor_cloud_02.png",
-		"bg_05": "res://assets/runtime/ui/screens/login/decor_tree_01.png",
 		"game_bg": "res://assets/runtime/ui/common/legacy_game_background.png",
 		"restart": "res://assets/runtime/ui/common/button_restart.png",
 		"refresh": "res://assets/runtime/ui/common/button_refresh.png",
@@ -111,13 +135,6 @@ func _build_scene() -> void:
 	background = _make_texture_rect(ui_textures["bg"])
 	add_child(background)
 
-	decor_layer = Control.new()
-	decor_layer.name = "Decor"
-	decor_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	decor_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(decor_layer)
-	_build_background_decor()
-
 	main_layer = Control.new()
 	main_layer.name = "MainMenu"
 	main_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -126,8 +143,16 @@ func _build_scene() -> void:
 	loading_view = LoadingViewScene.instantiate() as LoadingView
 	loading_view.name = "LoadingView"
 	loading_view.play_pressed.connect(_on_play_pressed)
+	loading_view.simulation_pressed.connect(_show_balance_simulation)
 	loading_view.intro_finished.connect(_on_title_intro_finished)
 	main_layer.add_child(loading_view)
+	main_hub_view = MainHubViewScene.instantiate() as MainHubView
+	main_hub_view.name = "MainHubView"
+	main_hub_view.stage_pressed.connect(_on_hub_stage_pressed)
+	main_hub_view.settings_pressed.connect(_on_hub_settings_pressed)
+	main_hub_view.set_resource_values(HUB_DEFAULT_CRYSTALS, HUB_DEFAULT_COINS)
+	main_hub_view.visible = false
+	main_layer.add_child(main_hub_view)
 
 	game_layer = Control.new()
 	game_layer.name = "Game"
@@ -157,6 +182,9 @@ func _build_scene() -> void:
 	if music_button:
 		music_button.pressed.connect(_toggle_mute)
 	combat_system.normal_attack_kill.connect(_on_normal_attack_kill)
+	combat_system.merge_attack_received.connect(func(event: MergeAttackEvent): _combo_attack_counts[event.sequence_id] = event.attack_count)
+	combat_system.merge_shot_resolved.connect(_on_merge_shot_resolved)
+	combat_system.merge_sequence_finished.connect(func(sequence_id: int, _fired_count: int): _combo_attack_counts.erase(sequence_id))
 	combat_system.wave_cleared.connect(_on_wave_cleared)
 	combat_system.level_completed.connect(func(): end_game(true))
 	battle_background = _make_texture_rect(ui_textures["battle_scene_bg"])
@@ -210,6 +238,7 @@ func _build_scene() -> void:
 	energy_hud.z_index = 80
 	game_layer.add_child(energy_hud)
 	energy_hud.gain_fx_batch_finished.connect(func(): skill_imprint_system.notify_fx_batch_finished())
+	energy_hud.instant_item_pressed.connect(_on_instant_item_pressed)
 
 	_build_bottom_ui()
 
@@ -227,25 +256,12 @@ func _build_scene() -> void:
 	merge_player = AudioStreamPlayer.new()
 	merge_player.stream = load("res://assets/runtime/audio/merge.mp3")
 	add_child(merge_player)
-
-func _build_background_decor() -> void:
-	var decor_data := [
-		["bg_05", Vector2(-144, 1359), Vector2(863, 679), 44.0],
-		["bg_03", Vector2(542, 1261), Vector2(529, 529), 55.0],
-		["bg_05", Vector2(274, 1463), Vector2(614, 483), 50.0],
-		["bg_03", Vector2(-216, 928), Vector2(693, 693), 60.0],
-		["bg_04", Vector2(614, 379), Vector2(274, 248), 39.0]
-	]
-	for i in range(decor_data.size()):
-		var item: Array = decor_data[i]
-		var texture_key: String = item[0]
-		var sprite := _make_texture_rect(ui_textures[texture_key])
-		sprite.name = "Decor_%d" % i
-		sprite.position = item[1]
-		sprite.size = item[2]
-		sprite.modulate = Color(1, 1, 1, 0.82)
-		decor_layer.add_child(sprite)
-		_float_node(sprite, float(item[3]), Vector2(0, -18 + i * 4))
+	for player_index in range(4):
+		var combo_player := AudioStreamPlayer.new()
+		combo_player.name = "ComboAttackAudio%d" % (player_index + 1)
+		combo_player.stream = merge_player.stream
+		add_child(combo_player)
+		_combo_audio_players.append(combo_player)
 
 func _layout_scene() -> void:
 	var viewport_size := size
@@ -259,6 +275,8 @@ func _layout_scene() -> void:
 	background.size = viewport_size
 	if loading_view:
 		loading_view.layout_for_viewport(viewport_size)
+	if main_hub_view:
+		main_hub_view.layout_for_viewport(viewport_size)
 
 	# Game layer: letterboxed at design aspect ratio, all children work in 941x1672 coords
 	game_layer.position = (viewport_size - design_size * scale_factor) * 0.5
@@ -349,6 +367,8 @@ func _build_bottom_ui() -> void:
 func _toggle_manual_pause() -> void:
 	if game_layer == null or not game_layer.visible:
 		return
+	if _first_wave_tutorial and _first_wave_tutorial.is_active():
+		return
 	_manual_paused = not _manual_paused
 	get_tree().paused = _manual_paused
 	_play_click()
@@ -389,20 +409,28 @@ func _make_round_panel(fill_color: Color, border_color: Color, radius: float) ->
 
 func show_main_menu() -> void:
 	game_status = GameStatus.NONE
+	background.visible = false
 	main_layer.visible = true
 	game_layer.visible = false
 	popup_layer.visible = false
-	decor_layer.visible = false
 	_clear_popup()
 	_update_mute_visual()
-	_begin_title_intro()
+	if loading_view:
+		loading_view.stop_animations()
+		loading_view.visible = false
+	if main_hub_view:
+		main_hub_view.set_resource_values(HUB_DEFAULT_CRYSTALS, HUB_DEFAULT_COINS)
+		main_hub_view.set_muted(muted)
+		main_hub_view.show_menu()
 
 func show_loading() -> void:
 	game_status = GameStatus.NONE
+	background.visible = true
 	main_layer.visible = true
 	game_layer.visible = false
 	popup_layer.visible = false
-	decor_layer.visible = false
+	if main_hub_view:
+		main_hub_view.hide_menu()
 	_begin_title_intro()
 
 func _begin_title_intro() -> void:
@@ -427,46 +455,88 @@ func _animate_game_in() -> void:
 
 func _on_play_pressed() -> void:
 	_play_click()
+	show_main_menu()
+
+
+func _on_hub_stage_pressed(stage_number: int) -> void:
+	if stage_number != 1:
+		return
+	_play_click()
 	start_game()
 
+
+func _on_hub_settings_pressed() -> void:
+	_toggle_mute()
+
+
+func _show_balance_simulation() -> void:
+	if _balance_simulation_panel and is_instance_valid(_balance_simulation_panel):
+		return
+	_play_click()
+	if loading_view:
+		loading_view.set_interactive(false)
+	_balance_simulation_panel = BalanceSimulationPanelScene.new() as BalanceSimulationPanel
+	_balance_simulation_panel.name = "BalanceSimulationPanel"
+	add_child(_balance_simulation_panel)
+	_balance_simulation_panel.closed.connect(func():
+		_balance_simulation_panel = null
+		if loading_view and main_layer and main_layer.visible:
+			loading_view.set_interactive(true)
+	)
+
 func start_game() -> void:
+	_combo_attack_counts.clear()
 	_reset_card_runtime()
+	_grant_starting_instant_items()
+	var tutorial_mode := REPEAT_FIRST_WAVE_TUTORIAL or not _first_wave_tutorial_completed
 	if loading_view:
 		loading_view.stop_animations()
 		loading_view.visible = false
+	if main_hub_view:
+		main_hub_view.hide_menu()
+	background.visible = false
 	main_layer.visible = false
 	game_layer.visible = true
 	popup_layer.visible = true
-	decor_layer.visible = true
 	game_layer.modulate = Color(1, 1, 1, 0)
 	_clear_game_world()
 	_reset_run_statistics()
 	score = 0
 	_update_score_label()
-	first_create_blocks()
+	first_create_blocks(tutorial_mode)
+	if tutorial_mode:
+		_create_first_wave_tutorial()
 	if combat_system:
-		combat_system.start_run()
+		combat_system.start_run(tutorial_mode)
 	game_status = GameStatus.PAUSE
 	_animate_game_in()
 	await get_tree().create_timer(1.35).timeout
 	if game_status == GameStatus.PAUSE:
+		if _first_wave_tutorial:
+			_first_wave_tutorial.start()
 		game_status = GameStatus.START
 
 func replay_game() -> void:
 	_play_click()
 	_reset_card_runtime()
+	_grant_starting_instant_items()
 	game_status = GameStatus.PAUSE
 	_clear_popup()
 	_clear_game_world()
 	_reset_run_statistics()
+	var tutorial_mode := REPEAT_FIRST_WAVE_TUTORIAL or not _first_wave_tutorial_completed
 	score = 0
 	_update_score_label()
-	first_create_blocks()
+	first_create_blocks(tutorial_mode)
+	if tutorial_mode:
+		_create_first_wave_tutorial()
 	if combat_system:
-		combat_system.start_run()
+		combat_system.start_run(tutorial_mode)
 	_animate_game_in()
 	await get_tree().create_timer(1.35).timeout
 	if game_status == GameStatus.PAUSE:
+		if _first_wave_tutorial:
+			_first_wave_tutorial.start()
 		game_status = GameStatus.START
 
 func over_game() -> void:
@@ -478,15 +548,23 @@ func over_game() -> void:
 	_clear_game_world()
 	show_main_menu()
 
-func first_create_blocks() -> void:
+func first_create_blocks(tutorial_mode: bool = false) -> void:
 	_reset_index_map()
+	var tutorial_board: Array[Array] = [
+		[2, 2, 2, 2, 2],
+		[2, 1, 1, 1, 3],
+		[3, 2, 2, 2, 2],
+		[3, 2, 3, 2, 3],
+		[2, 1, 3, 3, 3],
+	]
 	var order := 0
 	for y in range(GRID_SIZE):
 		for x in range(GRID_SIZE):
-			var level := randi_range(1, 3)
+			var level := int(tutorial_board[y][x]) if tutorial_mode else randi_range(1, 3)
 			_create_block(Vector2i(x, y), level, true, order * 0.04)
 			order += 1
-	_ensure_any_match()
+	if not tutorial_mode:
+		_ensure_any_match()
 
 func _create_block(site: Vector2i, start_level: int, drop_in: bool, drop_delay: float = 0.0) -> MergeBlock:
 	var block := MergeBlockScene.new() as MergeBlock
@@ -514,6 +592,8 @@ func _position_for_site(site: Vector2i) -> Vector2:
 
 func _on_block_pressed(block: MergeBlock) -> void:
 	if game_status != GameStatus.START:
+		return
+	if _first_wave_tutorial and _first_wave_tutorial.is_active() and not _first_wave_tutorial.can_interact_with_site(block.board_site):
 		return
 	if block.selected:
 		if block.had_merged:
@@ -627,6 +707,8 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 	if combat_system and combat_system.crystal_system:
 		combat_system.crystal_system.notify_merge_level(clicked.level)
 	_dispatch_merge_attack(clicked, merged_count, source_level, clicked.level)
+	if _first_wave_tutorial and _first_wave_tutorial.is_active():
+		_first_wave_tutorial.notify_merge_completed()
 	if skill_imprint_system and _is_new_highest_merge_result(clicked.level, board_highest_before_merge):
 		var merge_origin := board_layer.global_position + clicked.position + Vector2(BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.5)
 		skill_imprint_system.add_energy(GameConfig.SKILL_ENERGY_PER_MERGE_UNIT * (merged_count - 1), merge_origin, 3, false)
@@ -645,7 +727,7 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 		await _fall_and_fill()
 
 	_board_settlement_active = false
-	if game_status == GameStatus.PAUSE:
+	if game_status == GameStatus.PAUSE and not _success_popup_active:
 		game_status = GameStatus.START
 	call_deferred("_try_open_card_choice")
 
@@ -688,17 +770,30 @@ func _fall_and_fill() -> void:
 	if moved_existing_block:
 		await get_tree().create_timer(0.14).timeout
 
-	var create_level := 4 if current_level > 4 else 3
 	var created_block := false
 	for y in range(GRID_SIZE):
 		for x in range(GRID_SIZE):
 			if index_map[y][x] == -1:
-				_create_block(Vector2i(x, y), randi_range(1, create_level), true)
+				var site := Vector2i(x, y)
+				_create_block(site, _sample_refill_level(site), true)
 				created_block = true
 
 	if created_block:
 		await get_tree().create_timer(0.32).timeout
 	_snap_blocks_to_grid()
+
+
+func _sample_refill_level(site: Vector2i) -> int:
+	var values: Array[int] = []
+	values.resize(GRID_SIZE * GRID_SIZE)
+	values.fill(0)
+	for y in range(GRID_SIZE):
+		for x in range(GRID_SIZE):
+			var block := _block_at(Vector2i(x, y))
+			if block != null and is_instance_valid(block):
+				values[y * GRID_SIZE + x] = block.level
+	var historical_highest := maxi(1, current_level)
+	return BoardRefillPolicyScript.sample_level(historical_highest, values, GRID_SIZE, site.y * GRID_SIZE + site.x, randf())
 
 
 func _snap_blocks_to_grid() -> void:
@@ -786,10 +881,15 @@ func resurrect() -> void:
 	await _fall_and_fill()
 	if combat_system:
 		combat_system.start_run()
+	# The defeat flow clears and disables instant items while the settlement is
+	# open. Reviving resumes the same board, so restore both unlimited item slots
+	# before returning control to the player.
+	_grant_starting_instant_items()
 	game_status = GameStatus.START
 
 func _show_success_popup() -> void:
 	_clear_popup()
+	_success_popup_active = true
 	popup_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var shade := _make_popup_shade()
 	popup_layer.add_child(shade)
@@ -811,7 +911,7 @@ func _show_success_popup() -> void:
 
 	var continue_button := _make_texture_button(ui_textures["continue"])
 	_set_rect(continue_button, Vector2(182, 745), Vector2(510, 209))
-	continue_button.pressed.connect(func(): _play_click(); _clear_popup())
+	continue_button.pressed.connect(_close_success_popup)
 	_wire_button_anim(continue_button)
 	popup.add_child(continue_button)
 
@@ -819,6 +919,16 @@ func _show_success_popup() -> void:
 	tween.parallel().tween_property(light, "modulate:a", 1.0, 0.12)
 	tween.parallel().tween_property(light, "rotation", TAU, 8.0).set_trans(Tween.TRANS_LINEAR)
 	tween.parallel().tween_property(popup, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _close_success_popup() -> void:
+	if not _success_popup_active:
+		return
+	_play_click()
+	_clear_popup()
+	if game_status == GameStatus.PAUSE and not _board_settlement_active:
+		game_status = GameStatus.START
+	call_deferred("_try_open_card_choice")
 
 func _show_account_popup(won: bool, settlement_stats: Dictionary) -> void:
 	_clear_popup()
@@ -956,6 +1066,7 @@ func _make_text_button(text: String, button_size: Vector2) -> Button:
 	return button
 
 func _clear_popup() -> void:
+	_success_popup_active = false
 	for child in popup_layer.get_children():
 		child.queue_free()
 	popup_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1094,7 +1205,7 @@ func _apply_triggered_imprints(imprints: Array[Dictionary], result_block: MergeB
 			"castle_cannon":
 				if combat_system:
 					combat_system.trigger_card_attack(skill_id, result_block.level, level, result_block.global_position + result_block.size * 0.5)
-			"dragon_catapult", "frost_bell", "thunder_ballista":
+			"dragon_catapult":
 				if combat_system:
 					combat_system.trigger_card_attack(skill_id, result_block.level, level, result_block.global_position + result_block.size * 0.5)
 		await get_tree().create_timer(0.08).timeout
@@ -1107,6 +1218,154 @@ func _active_blocks() -> Array[MergeBlock]:
 		if block and is_instance_valid(block):
 			result.append(block)
 	return result
+
+
+func _on_instant_item_pressed(item_id: String) -> void:
+	match item_id:
+		CLUSTER_SWAP_ITEM_ID:
+			await _use_cluster_swap_item()
+		CRYSTAL_RAIN_ITEM_ID:
+			await _use_crystal_rain_item()
+
+
+func _use_crystal_rain_item() -> void:
+	if _crystal_rain_busy:
+		return
+	if game_status != GameStatus.START or active_card_modal != null:
+		return
+	if get_tree().paused or combat_system == null:
+		return
+	var sequence_duration := combat_system.trigger_crystal_rain()
+	if sequence_duration <= 0.0:
+		return
+
+	_play_click()
+	_crystal_rain_busy = true
+	var use_generation := _instant_item_generation
+	if energy_hud:
+		energy_hud.play_crystal_rain_used()
+		energy_hud.set_crystal_rain_enabled(false)
+	await get_tree().create_timer(sequence_duration + 0.02).timeout
+	if use_generation != _instant_item_generation:
+		return
+	_crystal_rain_busy = false
+	if energy_hud and game_layer and game_layer.visible and game_status != GameStatus.OVER:
+		energy_hud.set_crystal_rain_enabled(true)
+
+
+func _use_cluster_swap_item() -> void:
+	if _cluster_swap_item_count == 0:
+		return
+	if game_status != GameStatus.START or _board_settlement_active or active_card_modal != null:
+		return
+	if get_tree().paused:
+		return
+
+	_play_click()
+	game_status = GameStatus.PAUSE
+	_board_settlement_active = true
+	for block in selected_blocks:
+		if block and is_instance_valid(block):
+			block.selected = false
+	selected_blocks.clear()
+
+	var moved_count := _apply_cluster_swap_layout()
+	if moved_count <= 0:
+		_board_settlement_active = false
+		if game_status == GameStatus.PAUSE:
+			game_status = GameStatus.START
+		return
+
+	if _cluster_swap_item_count > 0:
+		_cluster_swap_item_count -= 1
+	if energy_hud:
+		energy_hud.play_cluster_swap_used()
+		energy_hud.set_cluster_swap_count(_cluster_swap_item_count)
+	await get_tree().create_timer(CLUSTER_SWAP_ANIMATION_DURATION).timeout
+	_snap_blocks_to_grid()
+	_board_settlement_active = false
+	if game_status == GameStatus.PAUSE:
+		game_status = GameStatus.START
+	call_deferred("_try_open_card_choice")
+
+
+func _apply_cluster_swap_layout() -> int:
+	var blocks := _active_blocks()
+	if blocks.size() < 2:
+		return 0
+	blocks.sort_custom(func(first: MergeBlock, second: MergeBlock):
+		return first.board_site.y * GRID_SIZE + first.board_site.x < second.board_site.y * GRID_SIZE + second.board_site.x
+	)
+
+	var levels: Array[int] = []
+	var current_layout: Array[int] = []
+	current_layout.resize(GRID_SIZE * GRID_SIZE)
+	current_layout.fill(-1)
+	var blocks_by_level: Dictionary = {}
+	for block in blocks:
+		levels.append(block.level)
+		current_layout[block.board_site.y * GRID_SIZE + block.board_site.x] = block.level
+		if not blocks_by_level.has(block.level):
+			blocks_by_level[block.level] = []
+		var group: Array = blocks_by_level[block.level]
+		group.append(block)
+		blocks_by_level[block.level] = group
+
+	var target_layout: Array[int] = BoardClusterLayoutScene.build_clustered_levels(levels, GRID_SIZE)
+	var current_cluster_score := BoardClusterLayoutScene.count_equal_neighbors(current_layout, GRID_SIZE)
+	var target_cluster_score := BoardClusterLayoutScene.count_equal_neighbors(target_layout, GRID_SIZE)
+	if target_layout == current_layout or target_cluster_score <= current_cluster_score:
+		return 0
+
+	var assignments: Array[Dictionary] = []
+	for cell_index in range(target_layout.size()):
+		var target_level := target_layout[cell_index]
+		if target_level < 0 or not blocks_by_level.has(target_level):
+			continue
+		var target_site := Vector2i(cell_index % GRID_SIZE, floori(float(cell_index) / float(GRID_SIZE)))
+		var candidates: Array = blocks_by_level[target_level]
+		var nearest_index := 0
+		var nearest_distance := 1000000
+		for candidate_index in range(candidates.size()):
+			var candidate := candidates[candidate_index] as MergeBlock
+			var delta := candidate.board_site - target_site
+			var distance := absi(delta.x) + absi(delta.y)
+			if distance < nearest_distance:
+				nearest_distance = distance
+				nearest_index = candidate_index
+		var chosen := candidates[nearest_index] as MergeBlock
+		candidates.remove_at(nearest_index)
+		blocks_by_level[target_level] = candidates
+		assignments.append({"block": chosen, "site": target_site, "old_site": chosen.board_site})
+
+	var block_ids: Dictionary = {}
+	for id_value in block_map.keys():
+		var mapped_block := block_map.get(id_value) as MergeBlock
+		if mapped_block and is_instance_valid(mapped_block):
+			block_ids[mapped_block.get_instance_id()] = int(id_value)
+
+	_reset_index_map()
+	var moves: Array[Dictionary] = []
+	for assignment in assignments:
+		var block := assignment["block"] as MergeBlock
+		var site: Vector2i = assignment["site"]
+		var old_site: Vector2i = assignment["old_site"]
+		var block_id := int(block_ids.get(block.get_instance_id(), -1))
+		if block_id < 0:
+			continue
+		index_map[site.y][site.x] = block_id
+		block.board_site = site
+		if old_site != site:
+			moves.append({"block": block, "site": site})
+
+	for move_index in range(moves.size()):
+		var move: Dictionary = moves[move_index]
+		var block := move["block"] as MergeBlock
+		var site: Vector2i = move["site"]
+		var tween := create_tween()
+		tween.tween_interval(minf(0.06, float(move_index) * 0.003))
+		tween.tween_property(block, "position", _position_for_site(site), 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	return moves.size()
 
 
 func _get_board_highest_level() -> int:
@@ -1228,7 +1487,9 @@ func _on_wave_cleared(wave_index: int) -> void:
 
 
 func _try_open_card_choice() -> void:
-	if _board_settlement_active:
+	if _board_settlement_active or _success_popup_active:
+		return
+	if _first_wave_tutorial and _first_wave_tutorial.is_active():
 		return
 	if active_card_modal != null or game_status == GameStatus.OVER or modal_layer == null:
 		return
@@ -1321,9 +1582,13 @@ func _on_card_modal_closed(_kind: String) -> void:
 
 
 func _reset_card_runtime() -> void:
+	_stop_first_wave_tutorial()
+	_instant_item_generation += 1
+	_crystal_rain_busy = false
 	get_tree().paused = false
 	_manual_paused = false
 	_board_settlement_active = false
+	_success_popup_active = false
 	_wave_reward_pending = false
 	_skill_choice_pending = false
 	_wave_waiting_to_continue = false
@@ -1335,6 +1600,73 @@ func _reset_card_runtime() -> void:
 	if energy_hud:
 		energy_hud.clear_fx()
 		energy_hud.set_pending_skill("")
+	_cluster_swap_item_count = 0
+	if energy_hud:
+		energy_hud.set_cluster_swap_count(0)
+		energy_hud.set_crystal_rain_enabled(false)
+
+
+func _grant_starting_instant_items() -> void:
+	_cluster_swap_item_count = CLUSTER_SWAP_UNLIMITED_COUNT
+	if energy_hud:
+		energy_hud.set_cluster_swap_count(_cluster_swap_item_count)
+		energy_hud.set_crystal_rain_enabled(true)
+
+
+func _create_first_wave_tutorial() -> void:
+	_stop_first_wave_tutorial()
+	if combat_system == null or modal_layer == null:
+		return
+	_first_wave_tutorial = FirstWaveTutorialControllerScene.new() as FirstWaveTutorialController
+	_first_wave_tutorial.name = "FirstWaveTutorialController"
+	add_child(_first_wave_tutorial)
+	var first_position := _position_for_site(Vector2i(1, 1))
+	var last_position := _position_for_site(Vector2i(3, 1))
+	var highlight_rect := Rect2(
+		board_layer.position + first_position,
+		(last_position - first_position) + Vector2(BLOCK_SIZE, BLOCK_SIZE)
+	)
+	var board_rect := Rect2(board_layer.position, board_layer.size)
+	var crystal_anchor := combat_system.battle_layer.get_crystal_tutorial_anchor()
+	_first_wave_tutorial.setup(combat_system, modal_layer, board_rect, highlight_rect, crystal_anchor)
+	_first_wave_tutorial.awakening_committed.connect(_on_tutorial_awakening_committed)
+	_first_wave_tutorial.instant_items_locked.connect(_on_tutorial_items_locked)
+	_first_wave_tutorial.finished.connect(_on_first_wave_tutorial_finished)
+
+
+func _stop_first_wave_tutorial() -> void:
+	if _first_wave_tutorial == null:
+		return
+	var tutorial := _first_wave_tutorial
+	_first_wave_tutorial = null
+	if is_instance_valid(tutorial):
+		tutorial.stop()
+		tutorial.queue_free()
+
+
+func _on_tutorial_items_locked(locked: bool) -> void:
+	if locked:
+		_cluster_swap_item_count = 0
+		_crystal_rain_busy = false
+		if energy_hud:
+			energy_hud.set_cluster_swap_count(0)
+			energy_hud.set_crystal_rain_enabled(false)
+	else:
+		_grant_starting_instant_items()
+
+
+func _on_tutorial_awakening_committed() -> void:
+	_crystal_awakened_unlocked = true
+	_first_wave_tutorial_completed = true
+	_save_progress()
+
+
+func _on_first_wave_tutorial_finished(_skipped: bool) -> void:
+	var tutorial := _first_wave_tutorial
+	_first_wave_tutorial = null
+	if tutorial and is_instance_valid(tutorial):
+		tutorial.queue_free()
+	call_deferred("_try_open_card_choice")
 
 func _toggle_mute() -> void:
 	muted = not muted
@@ -1344,6 +1676,8 @@ func _toggle_mute() -> void:
 func _update_mute_visual() -> void:
 	if music_button:
 		music_button.modulate = Color(1, 1, 1, 0.45) if muted else Color.WHITE
+	if main_hub_view:
+		main_hub_view.set_muted(muted)
 
 func _play_click() -> void:
 	if not muted and click_player and click_player.stream:
@@ -1352,6 +1686,23 @@ func _play_click() -> void:
 func _play_merge() -> void:
 	if not muted and merge_player and merge_player.stream:
 		merge_player.play()
+
+
+func _on_merge_shot_resolved(sequence_id: int, shot_index: int, _target: Monster, _damage: float, killed: bool) -> void:
+	if muted or _combo_audio_players.is_empty():
+		return
+	var total := maxi(1, int(_combo_attack_counts.get(sequence_id, shot_index + 1)))
+	var player := _combo_audio_players[_combo_audio_cursor % _combo_audio_players.size()]
+	_combo_audio_cursor += 1
+	player.stop()
+	player.pitch_scale = 1.0 + minf(0.12, float(shot_index) * 0.025)
+	if killed or shot_index >= total - 1:
+		player.volume_db = -13.0
+	elif shot_index == 0:
+		player.volume_db = -16.0
+	else:
+		player.volume_db = -23.0
+	player.play()
 
 func _load_save() -> void:
 	var config := ConfigFile.new()
@@ -1365,9 +1716,30 @@ func _load_save() -> void:
 			var card_id := str(value)
 			if CardCatalog.ALL_CARD_IDS.has(card_id) and not _seen_card_ids.has(card_id):
 				_seen_card_ids.append(card_id)
+		var has_existing_progress := best_score > 0 or not _seen_card_ids.is_empty()
+		if not has_existing_progress:
+			for value in _card_levels.values():
+				if int(value) > 0:
+					has_existing_progress = true
+					break
+		var has_tutorial_flag := config.has_section_key("tutorial", "first_wave_awakening_completed")
+		var has_awakened_flag := config.has_section_key("progression", "crystal_awakened")
+		_first_wave_tutorial_completed = bool(config.get_value(
+			"tutorial", "first_wave_awakening_completed", has_existing_progress
+		)) if has_tutorial_flag else has_existing_progress
+		_crystal_awakened_unlocked = bool(config.get_value(
+			"progression", "crystal_awakened", has_existing_progress
+		)) if has_awakened_flag else has_existing_progress
+		if _first_wave_tutorial_completed or _crystal_awakened_unlocked:
+			_first_wave_tutorial_completed = true
+			_crystal_awakened_unlocked = true
+		if (not has_tutorial_flag or not has_awakened_flag) and has_existing_progress:
+			_save_progress()
 	else:
 		for card_id in CardCatalog.ALL_CARD_IDS:
 			_card_levels[card_id] = 0
+		_first_wave_tutorial_completed = false
+		_crystal_awakened_unlocked = false
 
 func _save_best() -> void:
 	_save_progress()
@@ -1379,4 +1751,6 @@ func _save_progress() -> void:
 	config.set_value("score", "best", best_score)
 	config.set_value("cards", "levels", _card_levels)
 	config.set_value("cards", "seen_ids", _seen_card_ids)
+	config.set_value("progression", "crystal_awakened", _crystal_awakened_unlocked)
+	config.set_value("tutorial", "first_wave_awakening_completed", _first_wave_tutorial_completed)
 	config.save(SAVE_PATH)

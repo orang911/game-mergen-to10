@@ -19,6 +19,11 @@ var alive := true
 var reached := false
 var path_progress := 0.0
 var death_source := ""
+var tutorial_role := ""
+var tutorial_hold_progress := -1.0
+var tutorial_hold_at_goal := false
+var tutorial_min_hp_before_goal := 0.0
+var _goal_emitted := false
 
 # Structured status containers: {tier, duration, remaining, ...}
 var poison_status: Dictionary = {}
@@ -33,6 +38,11 @@ func setup(config: Dictionary) -> void:
 	hp = max_hp
 	durability_damage = config.get("durability_damage", 1)
 	speed = config.get("speed", 80.0)
+	tutorial_role = str(config.get("tutorial_role", ""))
+	tutorial_hold_progress = float(config.get("tutorial_hold_progress", -1.0))
+	tutorial_hold_at_goal = bool(config.get("tutorial_hold_at_goal", false))
+	tutorial_min_hp_before_goal = maxf(0.0, float(config.get("tutorial_min_hp_before_goal", 0.0)))
+	_goal_emitted = false
 
 	_view = MonsterViewScene.instantiate() as MonsterView
 	if _view == null:
@@ -55,16 +65,24 @@ func update_movement(delta: float, total_path_length: float) -> void:
 	if not alive or reached:
 		return
 	path_progress += (speed * get_speed_multiplier() / total_path_length) * delta
+	if tutorial_hold_progress > 0.0 and path_progress >= tutorial_hold_progress:
+		path_progress = tutorial_hold_progress
+		return
 	if path_progress >= 0.995:
 		path_progress = 1.0
 		reached = true
-		reached_goal.emit(self, durability_damage)
+		if not _goal_emitted:
+			_goal_emitted = true
+			reached_goal.emit(self, durability_damage)
 
 
 func apply_damage(amount: float, source: String = "normal") -> void:
 	if not alive:
 		return
-	hp = max(0.0, hp - amount)
+	var next_hp := maxf(0.0, hp - amount)
+	if not reached and tutorial_min_hp_before_goal > 0.0:
+		next_hp = maxf(tutorial_min_hp_before_goal, next_hp)
+	hp = next_hp
 	_sync_view()
 	hp_changed.emit(self, hp, max_hp)
 	if hp <= 0.0:
@@ -138,6 +156,8 @@ func update_status(delta: float) -> void:
 		var atk: float = float(poison_status["atk"])
 		var dps: float = atk * float(poison_status["dps_ratio"])
 		hp = max(0.0, hp - dps * delta)
+		if not reached and tutorial_min_hp_before_goal > 0.0:
+			hp = maxf(tutorial_min_hp_before_goal, hp)
 		_sync_view()
 		hp_changed.emit(self, hp, max_hp)
 		status_ticked.emit(self, GameConfig.AttackElement.POISON)
@@ -155,6 +175,8 @@ func update_status(delta: float) -> void:
 		var atk: float = float(burn_status["atk"])
 		var dps: float = atk * float(burn_status.get("dps_ratio", 0.0))
 		hp = max(0.0, hp - dps * delta)
+		if not reached and tutorial_min_hp_before_goal > 0.0:
+			hp = maxf(tutorial_min_hp_before_goal, hp)
 		_sync_view()
 		hp_changed.emit(self, hp, max_hp)
 		status_ticked.emit(self, GameConfig.AttackElement.FIRE)
@@ -178,6 +200,11 @@ func update_status(delta: float) -> void:
 
 func is_alive() -> bool:
 	return alive
+
+
+func set_tutorial_stunned(stunned: bool) -> void:
+	if _view and is_instance_valid(_view):
+		_view.set_tutorial_stunned(stunned)
 
 
 func _sync_view() -> void:

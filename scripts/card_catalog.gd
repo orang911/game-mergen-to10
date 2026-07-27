@@ -16,15 +16,11 @@ const BOARD_CARD_IDS := [
 	"twin_mold",
 	"castle_cannon",
 	"dragon_catapult",
-	"frost_bell",
-	"thunder_ballista",
 ]
 
 const CRYSTAL_CARD_IDS := [
 	"fire_conduit",
-	"frost_prism",
 	"poison_tank",
-	"thunder_spire",
 	"star_boiler",
 	"rapid_clockwork",
 	"twin_lens",
@@ -157,11 +153,11 @@ static func get_definition(card_id: String) -> Dictionary:
 
 
 static func is_board_card(card_id: String) -> bool:
-	return BOARD_CARD_IDS.has(card_id)
+	return str((DEFINITIONS.get(card_id, {}) as Dictionary).get("type", "")) == TYPE_BOARD
 
 
 static func is_crystal_card(card_id: String) -> bool:
-	return CRYSTAL_CARD_IDS.has(card_id)
+	return str((DEFINITIONS.get(card_id, {}) as Dictionary).get("type", "")) == TYPE_CRYSTAL
 
 
 static func get_front_texture(card_id: String) -> String:

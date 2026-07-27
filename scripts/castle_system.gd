@@ -6,10 +6,10 @@ signal castle_destroyed
 
 var max_durability := GameConfig.MAX_CASTLE_DURABILITY
 var durability := GameConfig.MAX_CASTLE_DURABILITY
-var _view: CastleView
+var _view: Node
 var _destroyed_emitted := false
 
-func setup(existing_view: CastleView = null) -> void:
+func setup(existing_view: Node = null) -> void:
 	_view = existing_view
 	_update_ui()
 
@@ -20,7 +20,7 @@ func reset() -> void:
 
 func damage(amount: int) -> void:
 	durability = max(0, durability - amount)
-	if _view and is_instance_valid(_view):
+	if _view and is_instance_valid(_view) and _view.has_method("play_damage"):
 		_view.play_damage(amount)
 	_update_ui()
 	_emit_destroyed_if_needed()
@@ -30,14 +30,14 @@ func heal(amount: int) -> void:
 	_update_ui()
 
 func layout(anchor_position: Vector2) -> void:
-	if _view and is_instance_valid(_view):
-		_view.position = anchor_position
+	if _view and is_instance_valid(_view) and _view is Control:
+		(_view as Control).position = anchor_position
 
 func get_durability() -> int:
 	return durability
 
 func _update_ui() -> void:
-	if _view and is_instance_valid(_view):
+	if _view and is_instance_valid(_view) and _view.has_method("update_durability"):
 		_view.update_durability(durability, max_durability)
 	durability_changed.emit(durability, max_durability)
 

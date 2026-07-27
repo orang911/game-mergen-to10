@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://cfs6ms0w6oqld" path="res://assets/runtime/ui/battle/core/crystal_attack_panel.png" id="18_crystal_panel"]
 [ext_resource type="Script" uid="uid://dqwf3smdsirnc" path="res://scripts/crystal_view.gd" id="20_crystal_view"]
 [ext_resource type="Texture2D" uid="uid://c2cq1eoos2jqv" path="res://assets/runtime/ui/common/button_back.png" id="21_back"]
-[ext_resource type="Texture2D" uid="uid://3hvrmrhclrqg" path="res://assets/runtime/ui/battle/core/crystal_level_09.png" id="22_base_009"]
+[ext_resource type="Texture2D" uid="uid://do6nbiamvb5af" path="res://assets/runtime/ui/battle/core/crystal_level_01.png" id="22_crystal_level_01"]
 [ext_resource type="Texture2D" uid="uid://dmk4cn1s0d5oa" path="res://assets/runtime/ui/battle/top_hud/timer_frame.png" id="23_top_timer"]
 [ext_resource type="Texture2D" uid="uid://dsd4idttyyvw1" path="res://assets/runtime/ui/battle/top_hud/castle_health_fill.png" id="24_top_fill"]
 [ext_resource type="Texture2D" uid="uid://e3yu4pgbdf16" path="res://assets/runtime/ui/battle/top_hud/castle_health_track.png" id="25_top_track"]
@@ -14,7 +14,6 @@
 [ext_resource type="Texture2D" uid="uid://nblscjqhen2y" path="res://assets/runtime/ui/battle/top_hud/button_pause.png" id="27_top_pause"]
 [ext_resource type="Texture2D" uid="uid://be6emut888ro1" path="res://assets/runtime/ui/battle/top_hud/hud_background.png" id="28_top_background"]
 [ext_resource type="Texture2D" uid="uid://cw14xv7gklg0m" path="res://assets/runtime/ui/battle/core/entrance_gate.png" id="29_gate"]
-[ext_resource type="PackedScene" path="res://scenes/combat/castle_view.tscn" id="30_castle"]
 [ext_resource type="Script" uid="uid://dubek87v3y8i" path="res://scripts/gate_portal_effect.gd" id="31_gate_portal"]
 [ext_resource type="Texture2D" uid="uid://lwtm5lryduhb" path="res://assets/runtime/ui/battle/top_hud/button_sound.png" id="32_top_music"]
 [ext_resource type="Texture2D" uid="uid://cuoktaxww2gr5" path="res://assets/runtime/ui/battle/top_hud/button_home.png" id="33_top_home"]
@@ -99,16 +98,6 @@ pivot_offset = Vector2(46.08, 46.08)
 mouse_filter = 2
 expand_mode = 1
 script = ExtResource("31_gate_portal")
-
-[node name="Castle" parent="DesignRoot/DecorLayer" unique_id=2038795382 instance=ExtResource("30_castle")]
-z_index = 6
-layout_mode = 0
-anchors_preset = 0
-offset_left = 290.0
-offset_top = 445.0
-offset_right = 410.0
-offset_bottom = 561.0
-pivot_offset = Vector2(60, 58)
 
 [node name="HudLayer" type="Control" parent="DesignRoot" unique_id=1380257583]
 z_index = 40
@@ -292,10 +281,10 @@ stretch_mode = 5
 z_index = 15
 z_as_relative = false
 anchors_preset = 0
-offset_left = 370.5
-offset_top = 420.0
-offset_right = 550.5
-offset_bottom = 645.0
+offset_left = 241.0
+offset_top = 348.0
+offset_right = 421.0
+offset_bottom = 573.0
 pivot_offset = Vector2(90, 112.5)
 mouse_filter = 2
 script = ExtResource("20_crystal_view")
@@ -309,9 +298,41 @@ offset_bottom = 225.0
 scale = Vector2(0.75, 0.75)
 pivot_offset = Vector2(60.5, 184)
 mouse_filter = 2
-texture = ExtResource("22_base_009")
+texture = ExtResource("22_crystal_level_01")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="DurabilityLabel" type="Label" parent="DesignRoot/CrystalPanel" unique_id=569433349]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 199.0
+offset_right = 156.0
+offset_bottom = 224.0
+theme_override_colors/font_color = Color(0.08, 0.27, 0.65, 1)
+theme_override_colors/font_shadow_color = Color(1, 1, 1, 0.9)
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+text = "20/20"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DurabilityBack" type="ColorRect" parent="DesignRoot/CrystalPanel" unique_id=1608629359]
+layout_mode = 0
+offset_left = 46.0
+offset_top = 226.0
+offset_right = 134.0
+offset_bottom = 233.0
+mouse_filter = 2
+color = Color(0.18, 0.23, 0.3, 0.35)
+
+[node name="DurabilityFill" type="ColorRect" parent="DesignRoot/CrystalPanel/DurabilityBack" unique_id=405542400]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 86.0
+offset_bottom = 5.0
+mouse_filter = 2
+color = Color(0.28, 0.76, 0.38, 1)
 
 [node name="AtkPanel" type="TextureRect" parent="DesignRoot/CrystalPanel" unique_id=1143008324]
 visible = false

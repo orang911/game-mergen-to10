@@ -47,10 +47,10 @@ func play_merge_feedback(event: MergeAttackEvent) -> void:
 		parent = _effect_layer
 
 	var presentation_map: Dictionary = {
-		"fire": {"icon": ICON_FIRE, "name": "燃烧"},
-		"poison": {"icon": ICON_POISON, "name": "中毒"},
+		"fire": {"icon": ICON_FIRE, "name": "火焰"},
+		"poison": {"icon": ICON_POISON, "name": "毒"},
 		"critical": {"icon": ICON_CRITICAL, "name": "暴击"},
-		"lightning": {"icon": ICON_LIGHTNING, "name": "电击"},
+		"lightning": {"icon": ICON_LIGHTNING, "name": "闪电"},
 		"ice": {"icon": ICON_ICE, "name": "冰冻"},
 	}
 
@@ -73,12 +73,12 @@ func play_merge_feedback(event: MergeAttackEvent) -> void:
 		row_top_y - 8.0
 	)
 
-	instance.play(PROMPT_BACKGROUND, icon, str(presentation.get("name", "")), event.atk, target_position)
+	instance.play(PROMPT_BACKGROUND, icon, str(presentation.get("name", "")), event.total_damage, event.attack_count, target_position)
 
 
 func play_monster_hit(_monster: Monster) -> void:
-	# Generic flash/scale hit feedback is temporarily disabled. Lightning keeps
-	# its dedicated spritesheet hit sequence through play_element_hit().
+	# Generic flash/scale hit feedback is temporarily disabled. Element attacks
+	# keep their dedicated spritesheet hit sequences through play_element_hit().
 	pass
 
 
@@ -126,6 +126,7 @@ func _element_color(key: String) -> Color:
 		"lightning": return Color(1.0, 0.95, 0.25, 1.0)
 		"critical":  return Color(0.75, 0.4, 0.95, 1.0)
 		"fire":      return Color(1.0, 0.45, 0.15, 1.0)
+		"crystal":   return Color(0.25, 0.88, 1.0, 1.0)
 	return Color(0.7, 0.92, 1.0, 1.0)
 
 
@@ -143,7 +144,7 @@ func play_element_hit(element_key_or_req, position: Vector2 = Vector2.ZERO, tier
 		tier_value = req.tier
 	else:
 		element_key = str(element_key_or_req)
-	if element_key != "lightning":
+	if element_key != "poison" and element_key != "ice" and element_key != "critical" and element_key != "fire" and element_key != "crystal" and element_key != "lightning":
 		return
 
 	var fx: Dictionary = GameConfig.get_element_fx(element_key)
@@ -153,12 +154,14 @@ func play_element_hit(element_key_or_req, position: Vector2 = Vector2.ZERO, tier
 
 	var hit_size: Vector2 = fx.get("hit_size", Vector2(160.0, 160.0)) as Vector2
 	var hit_grid: Vector2i = fx.get("hit_grid", GameConfig.ELEMENT_HIT_GRID) as Vector2i
-	var hit_frame_count := clampi(int(fx.get("hit_frame_count", GameConfig.ELEMENT_HIT_FRAME_COUNT)), 1, hit_grid.x * hit_grid.y)
+	var total_frames := hit_grid.x * hit_grid.y
+	var hit_start_frame := clampi(int(fx.get("hit_start_frame", 0)), 0, total_frames - 1)
+	var hit_frame_count := clampi(int(fx.get("hit_frame_count", GameConfig.ELEMENT_HIT_FRAME_COUNT)), 1, total_frames - hit_start_frame)
 	var hit_fps := maxf(1.0, float(fx.get("hit_fps", GameConfig.ELEMENT_HIT_FPS)))
 	var local_pos: Vector2 = _global_to_effect_local(hit_position)
 	var frame := TextureRect.new()
 	frame.name = "Effect_ElementHit_%s" % element_key
-	frame.texture = _make_atlas_frame(sheet, 0, hit_grid)
+	frame.texture = _make_atlas_frame(sheet, hit_start_frame, hit_grid)
 	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -166,8 +169,8 @@ func play_element_hit(element_key_or_req, position: Vector2 = Vector2.ZERO, tier
 	frame.position = local_pos - hit_size * 0.5
 	frame.pivot_offset = hit_size * 0.5
 	frame.scale = Vector2.ONE * (1.0 + float(max(0, tier_value - 1)) * 0.04)
-	_effect_layer.add_child(frame)
-	_play_hit_frames(frame, sheet, hit_grid, hit_frame_count, hit_fps)
+	_effect_layer.add_child(frame, true)
+	_play_hit_frames(frame, sheet, hit_grid, hit_start_frame, hit_frame_count, hit_fps)
 
 
 func play_critical_hit(_element_key: String, _hit_position: Vector2, _tier: int) -> void:
@@ -224,12 +227,12 @@ func _make_atlas_frame(sheet: Texture2D, frame_index: int, grid: Vector2i) -> At
 	return atlas
 
 
-func _play_hit_frames(node: TextureRect, sheet: Texture2D, grid: Vector2i, frame_count: int, fps: float) -> void:
+func _play_hit_frames(node: TextureRect, sheet: Texture2D, grid: Vector2i, start_frame: int, frame_count: int, fps: float) -> void:
 	var frame_delay := 1.0 / fps
-	for i in range(frame_count):
+	for offset in range(frame_count):
 		if not is_instance_valid(node):
 			return
-		node.texture = _make_atlas_frame(sheet, i, grid)
+		node.texture = _make_atlas_frame(sheet, start_frame + offset, grid)
 		await get_tree().create_timer(frame_delay).timeout
 	if is_instance_valid(node):
 		node.queue_free()

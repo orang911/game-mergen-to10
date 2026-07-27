@@ -2,6 +2,7 @@ extends Node
 class_name CrystalSystem
 
 signal normal_hit(position: Vector2)
+signal tutorial_first_strike_finished
 
 const ATTACK_INTERVAL := 1.8
 const DAMAGE_RATIO := 0.3
@@ -11,6 +12,10 @@ var _monster_system: MonsterSystem
 var _projectile_system: ProjectileSystem
 var _effect_system: EffectSystem
 var _crystal_center_global := Vector2.ZERO
+var _crystal_level := 1
+var _merge_upgrade_enabled := GameConfig.CRYSTAL_MERGE_UPGRADES_ENABLED
+var _awakened := true
+var _tutorial_strike_generation := 0
 
 var _attack_timer := 0.0
 var _running := false
@@ -34,9 +39,50 @@ func hide_attack_tip() -> void:
 		_crystal_view.hide_attack_tip()
 
 
-func notify_merge_level(level: int) -> void:
+func notify_merge_level(merge_result_level: int) -> void:
+	if not _merge_upgrade_enabled:
+		return
+	if not GameConfig.CRYSTAL_UPGRADE_TRIGGER_LEVELS.has(merge_result_level):
+		return
+	var next_level := mini(GameConfig.CRYSTAL_MAX_LEVEL, _crystal_level + 1)
+	if next_level == _crystal_level:
+		return
+	_crystal_level = next_level
 	if _crystal_view:
-		_crystal_view.set_crystal_level(level)
+		_crystal_view.set_crystal_level(_crystal_level)
+
+
+func get_crystal_level() -> int:
+	return _crystal_level
+
+
+func set_merge_upgrade_enabled(enabled: bool) -> void:
+	_merge_upgrade_enabled = enabled
+
+
+func is_merge_upgrade_enabled() -> bool:
+	return _merge_upgrade_enabled
+
+
+func set_awakened(awakened: bool) -> void:
+	_awakened = awakened
+	if not _awakened:
+		_attack_timer = 0.0
+	if _crystal_view:
+		_crystal_view.set_awakened(_awakened)
+
+
+func is_awakened() -> bool:
+	return _awakened
+
+
+func awaken() -> void:
+	if _awakened:
+		return
+	_awakened = true
+	_attack_timer = ATTACK_INTERVAL
+	if _crystal_view:
+		_crystal_view.set_awakened(true, true)
 
 
 func set_crystal_center(pos: Vector2) -> void:
@@ -53,8 +99,11 @@ func stop() -> void:
 
 
 func reset() -> void:
+	_tutorial_strike_generation += 1
 	_running = false
 	_attack_timer = 0.0
+	_crystal_level = 1
+	_awakened = true
 	_damage_multiplier = 1.0
 	_speed_multiplier = 1.0
 	_extra_targets = 0
@@ -66,7 +115,7 @@ func reset() -> void:
 
 
 func _process(delta: float) -> void:
-	if not _running:
+	if not _running or not _awakened:
 		return
 	_attack_timer -= delta
 	if _attack_timer <= 0.0:
@@ -83,9 +132,7 @@ func _try_attack() -> void:
 	if targets.is_empty():
 		return
 
-	var level := 1
-	if _crystal_view:
-		level = _crystal_view.get_crystal_level()
+	var level := _crystal_level
 
 	var base_atk := GameConfig.get_base_attack(level)
 	var damage: float = roundi(float(base_atk) * DAMAGE_RATIO * _damage_multiplier)
@@ -95,10 +142,11 @@ func _try_attack() -> void:
 
 	for i in range(mini(primary_count, targets.size())):
 		var target: Monster = targets[i]
+		var shot_delay := float(i) * 0.04
 		if _projectile_system:
 			var target_center := target.global_position + target.size * 0.5
-			_projectile_system.play_crystal_bolt(_crystal_center_global, target_center)
-		get_tree().create_timer(0.15 + float(i) * 0.04).timeout.connect(func():
+			_projectile_system.play_crystal_bolt(_crystal_center_global, target_center, shot_delay)
+		get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION + shot_delay).timeout.connect(func():
 			if not is_instance_valid(target) or not target.is_alive():
 				return
 			var hit_pos := target.global_position + target.size * 0.5
@@ -107,6 +155,7 @@ func _try_attack() -> void:
 			if target.is_alive():
 				_apply_installed_elements(target, level, damage)
 			if _effect_system:
+				_effect_system.play_element_hit("crystal", hit_pos, level)
 				_effect_system.play_monster_hit(target)
 		)
 
@@ -138,7 +187,34 @@ func _try_attack() -> void:
 		)
 
 
+func play_tutorial_first_strike(target: Monster) -> void:
+	var strike_generation := _tutorial_strike_generation
+	if not _awakened or not is_instance_valid(target) or not target.is_alive():
+		tutorial_first_strike_finished.emit()
+		return
+	if _crystal_view:
+		_crystal_view.play_attack_flash()
+	var target_center := target.global_position + target.size * 0.5
+	if _projectile_system:
+		_projectile_system.play_crystal_bolt(_crystal_center_global, target_center)
+	await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION).timeout
+	if strike_generation != _tutorial_strike_generation:
+		return
+	if is_instance_valid(target) and target.is_alive():
+		var hit_pos := target.global_position + target.size * 0.5
+		target.apply_damage(maxf(1.0, target.hp), "tutorial_crystal")
+		normal_hit.emit(hit_pos)
+		if _effect_system:
+			_effect_system.play_element_hit("crystal", hit_pos, 1)
+			_effect_system.play_monster_hit(target)
+	tutorial_first_strike_finished.emit()
+
+
 func apply_upgrade(card_id: String, _element_key: String = "", quality: int = 1) -> void:
+	# Ice and lightning cards remain archived in CardCatalog, but are intentionally
+	# disconnected from the current runtime pools and effect installation path.
+	if card_id == "frost_prism" or card_id == "thunder_spire":
+		return
 	var q := clampi(quality, 1, GameConfig.MAX_CARD_LEVEL)
 	match card_id:
 		"fire_conduit":
@@ -215,12 +291,27 @@ func _play_secondary_crystal_hit(target: Monster, damage: float, crystal_level: 
 		return
 	if _projectile_system and element_key.is_empty():
 		_projectile_system.play_crystal_bolt(_crystal_center_global, target.global_position + target.size * 0.5)
-	target.apply_damage(damage)
-	var hit_pos := target.global_position + target.size * 0.5
+		get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION).timeout.connect(
+			_resolve_secondary_crystal_hit.bind(target, damage, crystal_level, element_key)
+		)
+		return
+	_resolve_secondary_crystal_hit(target, damage, crystal_level, element_key)
+
+
+func _resolve_secondary_crystal_hit(target, damage: float, crystal_level: int, element_key: String) -> void:
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return
+	var monster := target as Monster
+	if monster == null or not monster.is_alive():
+		return
+	monster.apply_damage(damage)
+	var hit_pos := monster.global_position + monster.size * 0.5
 	normal_hit.emit(hit_pos)
-	if target.is_alive():
-		_apply_installed_elements(target, crystal_level, damage)
+	if monster.is_alive():
+		_apply_installed_elements(monster, crystal_level, damage)
 	if _effect_system:
-		if not element_key.is_empty():
+		if element_key.is_empty():
+			_effect_system.play_element_hit("crystal", hit_pos, crystal_level)
+		else:
 			_effect_system.play_element_hit(element_key, hit_pos, clampi(int(_installed_elements.get(element_key, 1)), 1, GameConfig.MAX_CARD_LEVEL))
-		_effect_system.play_monster_hit(target)
+		_effect_system.play_monster_hit(monster)

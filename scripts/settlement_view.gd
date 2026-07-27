@@ -300,8 +300,11 @@ func _add_secondary_stat(pos: Vector2, frame: Texture2D, icon: Texture2D, title:
 
 
 func _build_damage(pos: Vector2, display_scale: float) -> void:
-	var size := Vector2(700.0, 238.0) * display_scale
-	_add_texture(_page_content, "DamageFrame", DAMAGE_FRAME, pos, size)
+	# Keep the result detail panel aligned with the 700 px summary area. Only
+	# compress its height to fit above the action buttons; uniformly scaling it
+	# made the entire block narrow and left-aligned.
+	var size := Vector2(700.0, 238.0 * display_scale)
+	_add_texture(_page_content, "DamageFrame", DAMAGE_FRAME, pos, size, true)
 	_add_label(_page_content, "◆  伤害构成  ◆", Rect2(pos, Vector2(size.x, 42.0 * display_scale)), int(28.0 * display_scale), Color(0.20, 0.27, 0.45), 0)
 	var entries := [
 		{"name": "棋盘合成", "icon": ICON_BOARD_DAMAGE, "value": int(_stats.get("board_damage", 0)), "color": Color(0.48, 0.76, 0.14)},
@@ -314,14 +317,14 @@ func _build_damage(pos: Vector2, display_scale: float) -> void:
 	for i in range(entries.size()):
 		var entry: Dictionary = entries[i]
 		var row_pos := pos + Vector2(0.0, (48.0 + float(i) * 60.0) * display_scale)
-		var row_size := Vector2(700.0, 58.0) * display_scale
-		_add_texture(_page_content, "DamageRow%d" % i, DAMAGE_ROW, row_pos, row_size)
-		_add_texture(_page_content, "DamageIcon%d" % i, entry["icon"] as Texture2D, row_pos + Vector2(16.0, 5.0) * display_scale, Vector2(48.0, 48.0) * display_scale)
-		_add_label(_page_content, str(entry["name"]), Rect2(row_pos + Vector2(70.0, 0.0) * display_scale, Vector2(130.0, 58.0) * display_scale), int(22.0 * display_scale), Color(0.20, 0.27, 0.43), 0, HORIZONTAL_ALIGNMENT_LEFT)
+		var row_size := Vector2(700.0, 58.0 * display_scale)
+		_add_texture(_page_content, "DamageRow%d" % i, DAMAGE_ROW, row_pos, row_size, true)
+		_add_texture(_page_content, "DamageIcon%d" % i, entry["icon"] as Texture2D, row_pos + Vector2(16.0, 5.0 * display_scale), Vector2(48.0, 48.0) * display_scale)
+		_add_label(_page_content, str(entry["name"]), Rect2(row_pos + Vector2(70.0, 0.0), Vector2(130.0, 58.0 * display_scale)), int(22.0 * display_scale), Color(0.20, 0.27, 0.43), 0, HORIZONTAL_ALIGNMENT_LEFT)
 		var ratio := float(entry["value"]) / float(total) if total > 0 else 0.0
-		_add_bar(row_pos + Vector2(205.0, 18.0) * display_scale, Vector2(280.0, 22.0) * display_scale, ratio, entry["color"] as Color)
-		_add_label(_page_content, _format_number(int(entry["value"])), Rect2(row_pos + Vector2(490.0, 0.0) * display_scale, Vector2(120.0, 58.0) * display_scale), int(22.0 * display_scale), Color(0.20, 0.27, 0.43), 0)
-		_add_label(_page_content, "%d%%" % roundi(ratio * 100.0), Rect2(row_pos + Vector2(608.0, 0.0) * display_scale, Vector2(82.0, 58.0) * display_scale), int(22.0 * display_scale), entry["color"] as Color, 0)
+		_add_bar(row_pos + Vector2(205.0, 18.0 * display_scale), Vector2(280.0, 22.0 * display_scale), ratio, entry["color"] as Color)
+		_add_label(_page_content, _format_number(int(entry["value"])), Rect2(row_pos + Vector2(490.0, 0.0), Vector2(120.0, 58.0 * display_scale)), int(22.0 * display_scale), Color(0.20, 0.27, 0.43), 0)
+		_add_label(_page_content, "%d%%" % roundi(ratio * 100.0), Rect2(row_pos + Vector2(608.0, 0.0), Vector2(82.0, 58.0 * display_scale)), int(22.0 * display_scale), entry["color"] as Color, 0)
 
 
 func _add_bar(pos: Vector2, bar_size: Vector2, ratio: float, color: Color) -> void:

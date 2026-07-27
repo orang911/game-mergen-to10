@@ -36,6 +36,7 @@ var _rotate_to_velocity := true
 var _rotation_offset := 0.0
 var _flight_duration := 0.0
 var _trail_history_duration := 0.0
+var _target_provider := Callable()
 var trail_collapse_ratio := 1.0:
 	set(value):
 		trail_collapse_ratio = clampf(value, 0.0, 1.0)
@@ -52,6 +53,27 @@ func _ready() -> void:
 		end_pos = Vector2(180, 60)
 		progress = 0.5
 	_sync_visuals()
+	set_process(_target_provider.is_valid())
+
+
+func track_target_provider(provider: Callable) -> void:
+	_target_provider = provider
+	set_process(_target_provider.is_valid())
+
+
+func _process(_delta: float) -> void:
+	if not _target_provider.is_valid():
+		set_process(false)
+		return
+	var target_value = _target_provider.call()
+	var target := target_value as Control
+	if target == null or not is_instance_valid(target) or target.is_queued_for_deletion():
+		return
+	var parent_control := get_parent() as Control
+	if parent_control == null:
+		return
+	var target_global := target.global_position + target.size * 0.5
+	end_pos = parent_control.get_global_transform_with_canvas().affine_inverse() * target_global
 
 
 func apply_event(event: MergeAttackEvent) -> void:
@@ -132,7 +154,11 @@ func _apply_element_visuals() -> void:
 			trail_material.set_shader_parameter("opacity", float(fx.get("trail_opacity", 0.92)))
 			trail_material.set_shader_parameter("flow_speed", float(fx.get("trail_flow_speed", 2.8)))
 			trail_material.set_shader_parameter("distortion_strength", float(fx.get("trail_distortion", 0.038)))
+			trail_material.set_shader_parameter("use_texture_alpha", bool(fx.get("trail_use_texture_alpha", false)))
+			trail_material.set_shader_parameter("black_cutoff", float(fx.get("trail_black_cutoff", 0.025)))
+			trail_material.set_shader_parameter("tail_softness", float(fx.get("trail_tail_softness", 0.16)))
 			trail_material.set_shader_parameter("head_softness", float(fx.get("trail_head_softness", 0.10)))
+			trail_material.set_shader_parameter("body_thickness", float(fx.get("trail_body_thickness", 0.014)))
 			_trail_rect.material = trail_material
 			# The additive shader already supplies its own soft glow. A second copy
 			# would flatten the gradient and overexpose the black-keyed texture.
@@ -149,6 +175,8 @@ func _apply_element_visuals() -> void:
 			projectile_color = Color(0.75, 0.4, 0.95, 0.9)
 		"fire":
 			projectile_color = Color(1.0, 0.45, 0.15, 0.9)
+		"crystal":
+			projectile_color = Color(0.25, 0.88, 1.0, 0.9)
 		_:
 			projectile_color = Color(0.7, 0.92, 1.0, 0.9)
 

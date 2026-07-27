@@ -2,6 +2,7 @@ extends Control
 class_name LoadingView
 
 signal play_pressed
+signal simulation_pressed
 signal intro_finished
 
 const DESIGN_SIZE := Vector2(967.0, 1626.0)
@@ -14,10 +15,12 @@ const INTRO_ENABLE_DELAY := 0.12
 
 var _intro_tween: Tween
 var _interactive := false
+var _simulation_button: Button
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_build_simulation_button()
 	if _play_button and not _play_button.pressed.is_connected(_on_play_button_pressed):
 		_play_button.pressed.connect(_on_play_button_pressed)
 	set_interactive(false)
@@ -60,6 +63,44 @@ func set_interactive(enabled: bool) -> void:
 	if _play_button:
 		_play_button.disabled = not enabled
 		_play_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+	if _simulation_button:
+		_simulation_button.disabled = not enabled
+		_simulation_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+
+
+func _build_simulation_button() -> void:
+	if _design_root == null:
+		return
+	_simulation_button = Button.new()
+	_simulation_button.name = "BalanceSimulationButton"
+	_simulation_button.text = "数值模拟"
+	_simulation_button.process_mode = Node.PROCESS_MODE_ALWAYS
+	_simulation_button.focus_mode = Control.FOCUS_NONE
+	_simulation_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_simulation_button.position = Vector2(744.0, 1532.0)
+	_simulation_button.size = Vector2(190.0, 64.0)
+	_simulation_button.add_theme_font_size_override("font_size", 24)
+	_simulation_button.add_theme_color_override("font_color", Color(0.90, 0.96, 1.0))
+	_simulation_button.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 1.0))
+	_simulation_button.add_theme_constant_override("outline_size", 2)
+	_simulation_button.add_theme_stylebox_override("normal", _simulation_button_style(Color(0.08, 0.13, 0.24, 0.82)))
+	_simulation_button.add_theme_stylebox_override("hover", _simulation_button_style(Color(0.10, 0.34, 0.62, 0.94)))
+	_simulation_button.add_theme_stylebox_override("pressed", _simulation_button_style(Color(0.06, 0.24, 0.48, 0.96)))
+	_simulation_button.add_theme_stylebox_override("disabled", _simulation_button_style(Color(0.08, 0.10, 0.16, 0.46)))
+	_simulation_button.pressed.connect(func():
+		if _interactive:
+			simulation_pressed.emit()
+	)
+	_design_root.add_child(_simulation_button)
+
+
+func _simulation_button_style(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.border_color = Color(0.42, 0.66, 0.96, color.a)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(12)
+	return style
 
 
 func stop_animations() -> void:

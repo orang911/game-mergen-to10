@@ -45,8 +45,12 @@
 - 颜色属性。
 - 合成数量。
 - 攻击起点位置。
-- 基础伤害或可计算伤害。
-- 目标数量。
+- `merge_count`：原始合并数量。
+- `attack_count`：实际主攻击发数；毒/暴击/火焰等于合并数量，冰冻等于 `N-1`，闪电为 1。
+- `total_damage`：本次主攻击理论总伤害。
+- `damage`：单发浮点伤害。
+- `sequence_id`：用于并行执行及重置取消的序列标识。
+- `target_count`：冰冻合成攻击使用 `N-1`，闪电及连续集火主攻击为 1；独立技能也可使用该字段。
 
 建议结构：
 
@@ -79,9 +83,10 @@ var attack_event := {
 
 - 每个怪物维护路径进度 `progress_ratio`。
 - 越接近 1.0，越靠近终点。
-- 攻击时从存活怪物中筛选。
-- 按 `progress_ratio` 从大到小排序。
-- 取前 `target_count` 个怪物。
+- 每个合成序列保存自己的当前锁定目标。
+- 首发从存活且未到达水晶的怪物中按 `progress_ratio` 从大到小取第一只。
+- 当前目标存活时后续发数继续使用它；死亡或到达终点时才重新查询第一只。
+- 飞行和间隔均由异步序列推进，`CombatSystem.reset()` 通过 generation 使旧回调失效，`ProjectileSystem.reset()` 清理视觉节点。
 
 ## 数据结构 / Data Structures
 
@@ -107,8 +112,7 @@ const LEVEL_ATTACK := {
 ```gdscript
 enum AttackElement {
 	POISON,
-	FREEZE,
-	LIGHTNING,
+	CRITICAL,
 	FIRE,
 }
 ```

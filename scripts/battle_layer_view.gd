@@ -7,6 +7,10 @@ signal back_pressed
 const DESIGN_SIZE := Vector2(941, 1672)
 const TOP_FILL_POS := Vector2(40.0, 112.0)
 const TOP_FILL_SIZE := Vector2(837.0, 31.0)
+const MONSTER_LAYER_Z := 13
+const CRYSTAL_NORMAL_Z := 15
+const TUTORIAL_BREAKTHROUGH_Z := 16
+const TUTORIAL_CRYSTAL_FOREGROUND_Z := 17
 
 @onready var _design_root := get_node_or_null("DesignRoot") as Control
 @onready var _board_guide := get_node_or_null("DesignRoot/BoardGuide") as Control
@@ -27,13 +31,14 @@ const TOP_FILL_SIZE := Vector2(837.0, 31.0)
 @onready var _back_button := get_node_or_null("DesignRoot/HudLayer/BackButton") as TextureButton
 @onready var _gate_view := get_node_or_null("DesignRoot/DecorLayer/Gate") as Control
 @onready var _gate_portal_effect := get_node_or_null("DesignRoot/DecorLayer/GatePortalEffect") as GatePortalEffect
-@onready var _castle_view := get_node_or_null("DesignRoot/DecorLayer/Castle") as Control
 
 var _castle_anchor_position := Vector2.ZERO
 var _elapsed_seconds := 0.0
 var _last_display_second := -1
 var _timer_running := false
+var _timer_paused := false
 var _castle_durability_ratio := 1.0
+var _tutorial_crystal_foreground := false
 
 @export var use_manual_layout := false
 
@@ -58,7 +63,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if Engine.is_editor_hint() or not _timer_running:
+	if Engine.is_editor_hint() or not _timer_running or _timer_paused:
 		return
 	_elapsed_seconds += delta
 	var display_second := floori(_elapsed_seconds)
@@ -94,6 +99,43 @@ func get_castle_anchor_position() -> Vector2:
 	return _castle_anchor_position
 
 
+func get_crystal_view() -> CrystalView:
+	if _crystal_panel == null:
+		_crystal_panel = get_node_or_null("DesignRoot/CrystalPanel") as Control
+	return _crystal_panel as CrystalView
+
+
+func get_crystal_attack_origin_global() -> Vector2:
+	var crystal_view := get_crystal_view()
+	return crystal_view.get_attack_origin_global() if crystal_view else Vector2.ZERO
+
+
+func get_crystal_tutorial_anchor() -> Vector2:
+	var crystal_view := get_crystal_view()
+	if crystal_view == null:
+		return _castle_anchor_position
+	var crystal_center_global := crystal_view.get_attack_origin_global()
+	return get_global_transform_with_canvas().affine_inverse() * crystal_center_global
+
+
+func set_tutorial_breakthrough_foreground(monster: CanvasItem) -> void:
+	if monster == null or not is_instance_valid(monster):
+		return
+	_set_canvas_z(monster, TUTORIAL_BREAKTHROUGH_Z)
+
+
+func set_tutorial_crystal_foreground(enabled: bool) -> void:
+	_tutorial_crystal_foreground = enabled
+	_set_canvas_z(
+		_crystal_panel,
+		TUTORIAL_CRYSTAL_FOREGROUND_Z if enabled else CRYSTAL_NORMAL_Z
+	)
+
+
+func reset_tutorial_layer_order() -> void:
+	set_tutorial_crystal_foreground(false)
+
+
 func set_wave_text(text_value: String) -> void:
 	if _wave_label == null:
 		_wave_label = get_node_or_null("DesignRoot/HudLayer/WaveLabel") as Label
@@ -112,12 +154,18 @@ func start_run_hud() -> void:
 	_elapsed_seconds = 0.0
 	_last_display_second = -1
 	_timer_running = true
+	_timer_paused = false
 	set_wave_progress(0, 0)
 	_refresh_time_label()
 
 
 func stop_run_hud() -> void:
 	_timer_running = false
+	_timer_paused = false
+
+
+func set_run_hud_paused(paused: bool) -> void:
+	_timer_paused = paused
 
 
 func get_elapsed_seconds() -> float:
@@ -126,6 +174,7 @@ func get_elapsed_seconds() -> float:
 
 func reset_run_hud() -> void:
 	_timer_running = false
+	_timer_paused = false
 	_elapsed_seconds = 0.0
 	_last_display_second = -1
 	set_wave_text("")
@@ -183,10 +232,8 @@ func layout_for_board(board_pos: Vector2, board_size: Vector2, path_margin: floa
 		var gate_rect := GameConfig.get_path_gate_rect(board_pos, board_size)
 		_gate_view.scale = Vector2.ONE
 		_set_rect(_gate_view, gate_rect.position, gate_rect.size)
-	_layout_crystal(visual_board_pos, board_size)
+	_layout_crystal()
 	_castle_anchor_position = goal_pos
-	if _castle_view:
-		_set_rect(_castle_view, Vector2(290, 445), Vector2(120, 116))
 
 
 func _apply_runtime_layer_order() -> void:
@@ -194,12 +241,15 @@ func _apply_runtime_layer_order() -> void:
 	_set_canvas_z(_board_guide, 1)
 	_set_canvas_z(_decor_layer, 2)
 	_set_canvas_z(_path_view, 5)
-	_set_canvas_z(_monster_layer, 13)
+	_set_canvas_z(_monster_layer, MONSTER_LAYER_Z)
 	_set_canvas_z(_gate_portal_effect, 11)
 	# Monsters stay in front of the entrance; their scale-in intro makes them
 	# appear to emerge from the portal instead of popping through the gate.
 	_set_canvas_z(_gate_view, 12)
-	_set_canvas_z(_crystal_panel, 15)
+	_set_canvas_z(
+		_crystal_panel,
+		TUTORIAL_CRYSTAL_FOREGROUND_Z if _tutorial_crystal_foreground else CRYSTAL_NORMAL_Z
+	)
 	_set_canvas_z(_projectile_layer, 20)
 	_set_canvas_z(_effect_layer, 30)
 	_set_canvas_z(_hud_layer, 40)
@@ -253,12 +303,10 @@ func _set_child_rect(name: String, pos: Vector2, node_size: Vector2) -> void:
 		_set_rect(child, pos, node_size)
 
 
-func _layout_crystal(visual_board_pos: Vector2, board_size: Vector2) -> void:
+func _layout_crystal() -> void:
 	if _crystal_panel == null:
 		return
-	var panel_size := GameConfig.CRYSTAL_PANEL_SIZE
-	var center_x := visual_board_pos.x + board_size.x * 0.5
-	_set_rect(_crystal_panel, Vector2(center_x - panel_size.x * 0.5, GameConfig.CRYSTAL_PANEL_TOP), panel_size)
+	_set_rect(_crystal_panel, GameConfig.CRYSTAL_CASTLE_PANEL_POSITION, GameConfig.CRYSTAL_PANEL_SIZE)
 
 
 func _configure_texture_rects(root: Node) -> void:
