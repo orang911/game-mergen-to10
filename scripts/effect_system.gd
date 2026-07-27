@@ -32,11 +32,12 @@ func _recursive_free_effect_nodes(parent: Node) -> void:
 
 func play_merge_feedback(event: MergeAttackEvent) -> void:
 	const PROMPT_SCENE = preload("res://scenes/combat/merge_attack_prompt_view.tscn")
-	const TEX_FIRE = preload("res://assets/UI/merge_attack_banner_fire.png")
-	const TEX_POISON = preload("res://assets/UI/merge_attack_banner_poison.png")
-	const TEX_CRITICAL = preload("res://assets/UI/merge_attack_banner_critical.png")
-	const TEX_LIGHTNING = preload("res://assets/UI/merge_attack_banner_lightning.png")
-	const TEX_ICE = preload("res://assets/UI/merge_attack_banner_ice.png")
+	const PROMPT_BACKGROUND = preload("res://assets/runtime/ui/battle/prompts/prompt_panel.png")
+	const ICON_FIRE = preload("res://assets/runtime/ui/battle/prompts/icon_fire.png")
+	const ICON_POISON = preload("res://assets/runtime/ui/battle/prompts/icon_poison.png")
+	const ICON_CRITICAL = preload("res://assets/runtime/ui/battle/prompts/icon_critical.png")
+	const ICON_LIGHTNING = preload("res://assets/runtime/ui/battle/prompts/icon_lightning.png")
+	const ICON_ICE = preload("res://assets/runtime/ui/battle/prompts/icon_ice.png")
 
 	if _effect_layer == null or not is_instance_valid(_effect_layer):
 		return
@@ -45,16 +46,17 @@ func play_merge_feedback(event: MergeAttackEvent) -> void:
 	if parent == null:
 		parent = _effect_layer
 
-	var texture_map: Dictionary = {
-		"fire": TEX_FIRE,
-		"poison": TEX_POISON,
-		"critical": TEX_CRITICAL,
-		"lightning": TEX_LIGHTNING,
-		"ice": TEX_ICE,
+	var presentation_map: Dictionary = {
+		"fire": {"icon": ICON_FIRE, "name": "火焰"},
+		"poison": {"icon": ICON_POISON, "name": "毒"},
+		"critical": {"icon": ICON_CRITICAL, "name": "暴击"},
+		"lightning": {"icon": ICON_LIGHTNING, "name": "闪电"},
+		"ice": {"icon": ICON_ICE, "name": "冰冻"},
 	}
 
-	var texture: Texture2D = texture_map.get(event.element_key, null)
-	if texture == null:
+	var presentation: Dictionary = presentation_map.get(event.element_key, {}) as Dictionary
+	var icon: Texture2D = presentation.get("icon", null) as Texture2D
+	if icon == null:
 		return
 
 	var instance := PROMPT_SCENE.instantiate() as MergeAttackPromptView
@@ -71,19 +73,13 @@ func play_merge_feedback(event: MergeAttackEvent) -> void:
 		row_top_y - 8.0
 	)
 
-	instance.play(texture, event.atk, target_position)
+	instance.play(PROMPT_BACKGROUND, icon, str(presentation.get("name", "")), event.total_damage, event.attack_count, target_position)
 
 
-func play_monster_hit(monster: Monster) -> void:
-	if not is_instance_valid(monster):
-		return
-	var original_modulate: Color = monster.modulate
-	var tween := monster.create_tween()
-	tween.tween_property(monster, "modulate", Color(2.0, 1.5, 1.5, 1.0), 0.04)
-	tween.tween_property(monster, "modulate", original_modulate, 0.12)
-	var s: float = monster.scale.x
-	tween.parallel().tween_property(monster, "scale", Vector2(s * 1.12, s * 1.12), 0.06)
-	tween.tween_property(monster, "scale", Vector2(s, s), 0.12)
+func play_monster_hit(_monster: Monster) -> void:
+	# Generic flash/scale hit feedback is temporarily disabled. Element attacks
+	# keep their dedicated spritesheet hit sequences through play_element_hit().
+	pass
 
 
 func play_monster_reached_goal(monster: Monster) -> void:
@@ -103,6 +99,8 @@ func play_castle_damage(_amount: int) -> void:
 
 func play_element_launch(req: ElementFxRequest) -> void:
 	if _effect_layer == null or not is_instance_valid(_effect_layer):
+		return
+	if req.element_key != "lightning":
 		return
 	var flash_size := GameConfig.LAUNCH_FLASH_SIZE
 	var local_pos: Vector2 = _global_to_effect_local(req.origin_position)
@@ -128,6 +126,7 @@ func _element_color(key: String) -> Color:
 		"lightning": return Color(1.0, 0.95, 0.25, 1.0)
 		"critical":  return Color(0.75, 0.4, 0.95, 1.0)
 		"fire":      return Color(1.0, 0.45, 0.15, 1.0)
+		"crystal":   return Color(0.25, 0.88, 1.0, 1.0)
 	return Color(0.7, 0.92, 1.0, 1.0)
 
 
@@ -145,6 +144,8 @@ func play_element_hit(element_key_or_req, position: Vector2 = Vector2.ZERO, tier
 		tier_value = req.tier
 	else:
 		element_key = str(element_key_or_req)
+	if element_key != "poison" and element_key != "ice" and element_key != "critical" and element_key != "fire" and element_key != "crystal" and element_key != "lightning":
+		return
 
 	var fx: Dictionary = GameConfig.get_element_fx(element_key)
 	var sheet: Texture2D = _load_texture(str(fx.get("hit", "")))
@@ -152,10 +153,15 @@ func play_element_hit(element_key_or_req, position: Vector2 = Vector2.ZERO, tier
 		return
 
 	var hit_size: Vector2 = fx.get("hit_size", Vector2(160.0, 160.0)) as Vector2
+	var hit_grid: Vector2i = fx.get("hit_grid", GameConfig.ELEMENT_HIT_GRID) as Vector2i
+	var total_frames := hit_grid.x * hit_grid.y
+	var hit_start_frame := clampi(int(fx.get("hit_start_frame", 0)), 0, total_frames - 1)
+	var hit_frame_count := clampi(int(fx.get("hit_frame_count", GameConfig.ELEMENT_HIT_FRAME_COUNT)), 1, total_frames - hit_start_frame)
+	var hit_fps := maxf(1.0, float(fx.get("hit_fps", GameConfig.ELEMENT_HIT_FPS)))
 	var local_pos: Vector2 = _global_to_effect_local(hit_position)
 	var frame := TextureRect.new()
 	frame.name = "Effect_ElementHit_%s" % element_key
-	frame.texture = _make_atlas_frame(sheet, 0)
+	frame.texture = _make_atlas_frame(sheet, hit_start_frame, hit_grid)
 	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -163,49 +169,13 @@ func play_element_hit(element_key_or_req, position: Vector2 = Vector2.ZERO, tier
 	frame.position = local_pos - hit_size * 0.5
 	frame.pivot_offset = hit_size * 0.5
 	frame.scale = Vector2.ONE * (1.0 + float(max(0, tier_value - 1)) * 0.04)
-	_effect_layer.add_child(frame)
-	_play_hit_frames(frame, sheet)
+	_effect_layer.add_child(frame, true)
+	_play_hit_frames(frame, sheet, hit_grid, hit_start_frame, hit_frame_count, hit_fps)
 
 
-func play_critical_hit(element_key: String, hit_position: Vector2, tier: int) -> void:
-	if _effect_layer == null or not is_instance_valid(_effect_layer):
-		return
-	var local_pos: Vector2 = _global_to_effect_local(hit_position)
-
-	# Stronger/larger purple hit flash
-	var flash_size := Vector2(200.0, 200.0)
-	var flash := ColorRect.new()
-	flash.name = "Effect_CritFlash"
-	flash.color = _element_color(element_key)
-	flash.size = flash_size
-	flash.position = local_pos - flash_size * 0.5
-	flash.pivot_offset = flash_size * 0.5
-	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_effect_layer.add_child(flash)
-	var ft := flash.create_tween()
-	ft.set_parallel(true)
-	ft.tween_property(flash, "scale", Vector2(1.5, 1.5), 0.18).from(Vector2(0.5, 0.5))
-	ft.tween_property(flash, "modulate:a", 0.0, 0.18).from(0.65)
-	ft.chain().tween_callback(flash.queue_free)
-
-	# Floating Chinese text "暴击!"
-	var label := Label.new()
-	label.name = "Effect_CritText"
-	label.text = "\u66B4\u51FB!"
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 36)
-	label.add_theme_color_override("font_color", _element_color(element_key) * Color(1.0, 1.0, 1.0, 1.0) + Color(0.2, 0.1, 0.2, 0.0))
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.position = local_pos - Vector2(60.0, 70.0)
-	label.size = Vector2(120.0, 40.0)
-	_effect_layer.add_child(label)
-	var lt := label.create_tween()
-	lt.set_parallel(true)
-	lt.tween_property(label, "position", label.position + Vector2(0.0, -50.0), 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	lt.tween_property(label, "modulate:a", 0.0, 0.65).from(1.0).set_delay(0.15)
-	lt.tween_property(label, "scale", Vector2(1.2, 1.2), 0.7)
-	lt.chain().tween_callback(label.queue_free)
+func play_critical_hit(_element_key: String, _hit_position: Vector2, _tier: int) -> void:
+	# Critical damage remains active; its temporary flash and floating hit art do not.
+	pass
 
 
 func play_element_chain(_req: ElementFxRequest) -> void:
@@ -243,8 +213,7 @@ func _global_to_effect_local(global_pos: Vector2) -> Vector2:
 	return _effect_layer.get_global_transform_with_canvas().affine_inverse() * global_pos
 
 
-func _make_atlas_frame(sheet: Texture2D, frame_index: int) -> AtlasTexture:
-	var grid := GameConfig.ELEMENT_HIT_GRID
+func _make_atlas_frame(sheet: Texture2D, frame_index: int, grid: Vector2i) -> AtlasTexture:
 	var frame_size := Vector2(
 		floorf(sheet.get_width() / float(grid.x)),
 		floorf(sheet.get_height() / float(grid.y))
@@ -258,12 +227,12 @@ func _make_atlas_frame(sheet: Texture2D, frame_index: int) -> AtlasTexture:
 	return atlas
 
 
-func _play_hit_frames(node: TextureRect, sheet: Texture2D) -> void:
-	var frame_delay := 1.0 / GameConfig.ELEMENT_HIT_FPS
-	for i in range(GameConfig.ELEMENT_HIT_FRAME_COUNT):
+func _play_hit_frames(node: TextureRect, sheet: Texture2D, grid: Vector2i, start_frame: int, frame_count: int, fps: float) -> void:
+	var frame_delay := 1.0 / fps
+	for offset in range(frame_count):
 		if not is_instance_valid(node):
 			return
-		node.texture = _make_atlas_frame(sheet, i)
+		node.texture = _make_atlas_frame(sheet, start_frame + offset, grid)
 		await get_tree().create_timer(frame_delay).timeout
 	if is_instance_valid(node):
 		node.queue_free()

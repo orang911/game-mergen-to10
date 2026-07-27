@@ -147,7 +147,7 @@ func _refresh() -> void:
 
 func set_skill_imprint(skill_id: String, animated: bool = true, quality: int = 1) -> void:
 	skill_imprint_id = skill_id
-	skill_imprint_quality = clampi(quality, 1, 3)
+	skill_imprint_quality = clampi(quality, 1, GameConfig.MAX_CARD_LEVEL)
 	_refresh_imprint()
 	if animated and _imprint_rect and _imprint_rect.visible:
 		_imprint_rect.pivot_offset = _imprint_rect.size * 0.5

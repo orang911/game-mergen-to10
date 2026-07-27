@@ -2,9 +2,10 @@
 extends Control
 class_name MonsterView
 
-const SLICE_DIR := "res://assets/sliced_20260703_172750/"
+const SLICE_DIR := "res://assets/runtime/characters/monsters/"
 
 var monster_type := "small"
+var visual_tier := 1
 var _color := Color.ORANGE
 var _sides := 3
 var _base_size := 60.0
@@ -18,6 +19,11 @@ var _sprite: TextureRect
 var _frames: Array[Texture2D] = []
 var _frame_index := 0
 var _anim_time := 0.0
+var _sprite_base_position := Vector2.ZERO
+var _tutorial_bob := false
+var _stage_art_loaded := false
+var _stun_layer: Control
+var _stun_tween: Tween
 
 
 func _ready() -> void:
@@ -31,9 +37,11 @@ func _ready() -> void:
 
 func configure(config: Dictionary) -> void:
 	monster_type = config.get("type", "small")
+	visual_tier = clampi(int(config.get("visual_tier", 1)), 1, 3)
 	_max_hp = float(config.get("hp", 5))
 	_hp = _max_hp
 	var scale_val: float = config.get("scale", 1.0)
+	_tutorial_bob = bool(config.get("tutorial_bob", false))
 
 	match monster_type:
 		"small":
@@ -73,9 +81,14 @@ func update_status(freeze: float, burn: float, poison: float) -> void:
 	queue_redraw()
 
 func _process(delta: float) -> void:
-	if _frames.size() <= 1 or _sprite == null:
+	if _sprite == null:
 		return
 	_anim_time += delta
+	if _tutorial_bob or _stage_art_loaded:
+		var bob_amount := 2.5 if _tutorial_bob else 1.5
+		_sprite.position = _sprite_base_position + Vector2(0.0, sin(_anim_time * 5.0) * bob_amount)
+	if _frames.size() <= 1:
+		return
 	if _anim_time < 0.12:
 		return
 	_anim_time = 0.0
@@ -161,11 +174,23 @@ func _draw_status_indicators(cx: float, top_y: float) -> void:
 
 func _setup_sprite() -> void:
 	_clear_sprite()
+	var explicit_path := ""
+	if monster_type == "tutorial_armored":
+		# The fifth first-wave tutorial monster is the dedicated shield goblin
+		# from the new monster set (source asset: 06_方盾哥布林.png).
+		explicit_path = "res://assets/runtime/characters/monsters/goblin_stage_03.png"
+	if not explicit_path.is_empty() and FileAccess.file_exists(explicit_path):
+		_frames.append(load(explicit_path) as Texture2D)
+	var stage_art_path := _stage_art_path(monster_type, visual_tier)
+	if _frames.is_empty() and not stage_art_path.is_empty() and FileAccess.file_exists(stage_art_path):
+		_frames.append(load(stage_art_path) as Texture2D)
+		_stage_art_loaded = true
 	var prefix := _prefix_for_type(monster_type)
-	for i in range(1, 4):
-		var path := "%smonster_%s_walk_%02d.png" % [SLICE_DIR, prefix, i]
-		if FileAccess.file_exists(path):
-			_frames.append(load(path) as Texture2D)
+	if _frames.is_empty():
+		for i in range(1, 4):
+			var path := "%smonster_%s_walk_%02d.png" % [SLICE_DIR, prefix, i]
+			if FileAccess.file_exists(path):
+				_frames.append(load(path) as Texture2D)
 	if _frames.is_empty():
 		var idle_path := "%smonster_%s_idle.png" % [SLICE_DIR, prefix]
 		if FileAccess.file_exists(idle_path):
@@ -181,10 +206,14 @@ func _setup_sprite() -> void:
 	_sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_sprite)
-	var sprite_size := Vector2(_base_size, _base_size)
+	var art_zoom := _stage_art_zoom(monster_type, visual_tier) if _stage_art_loaded else 1.0
+	var sprite_size := Vector2(_base_size, _base_size) * art_zoom
 	_sprite.position = Vector2((size.x - sprite_size.x) * 0.5, 0)
+	if _stage_art_loaded:
+		_sprite.position.y = (_base_size - sprite_size.y) * 0.5
+	_sprite_base_position = _sprite.position
 	_sprite.size = sprite_size
-	set_process(_frames.size() > 1)
+	set_process(_frames.size() > 1 or _tutorial_bob or _stage_art_loaded)
 
 func _layout_anchors() -> void:
 	var hit_anchor := get_node_or_null("HitAnchor") as Control
@@ -204,6 +233,30 @@ func _clear_sprite() -> void:
 	if _sprite and is_instance_valid(_sprite):
 		_sprite.queue_free()
 	_sprite = null
+	_sprite_base_position = Vector2.ZERO
+	_stage_art_loaded = false
+
+
+func _stage_art_path(type_name: String, tier: int) -> String:
+	match type_name:
+		"small", "medium", "large":
+			# The current wave roster intentionally uses only the three slime
+			# progression drawings. Combat type still controls HP, speed and
+			# scale; visual_tier controls which slime stage is shown.
+			return "%sslime_stage_%02d.png" % [SLICE_DIR, clampi(tier, 1, 3)]
+		_:
+			return ""
+
+
+func _stage_art_zoom(type_name: String, tier: int) -> float:
+	# Source canvases are all 512px, while the painted alpha bounds vary a lot.
+	# These values normalize the visible body instead of stretching the bitmap.
+	var stage_index := clampi(tier, 1, 3) - 1
+	match type_name:
+		"small", "medium", "large":
+			return [2.28, 1.76, 1.70][stage_index]
+		_:
+			return 1.0
 
 func _prefix_for_type(type_name: String) -> String:
 	match type_name:
@@ -215,3 +268,35 @@ func _prefix_for_type(type_name: String) -> String:
 			return "red"
 		_:
 			return "yellow"
+
+
+func set_tutorial_stunned(stunned: bool) -> void:
+	if not stunned:
+		if _stun_tween and _stun_tween.is_valid():
+			_stun_tween.kill()
+		_stun_tween = null
+		if _stun_layer and is_instance_valid(_stun_layer):
+			_stun_layer.queue_free()
+		_stun_layer = null
+		return
+	if _stun_layer and is_instance_valid(_stun_layer):
+		return
+	_stun_layer = Control.new()
+	_stun_layer.name = "TutorialStunStars"
+	_stun_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stun_layer.position = Vector2(size.x * 0.5, -8.0)
+	add_child(_stun_layer)
+	var star_texture := load("res://assets/runtime/ui/cards/stars/star_active.png") as Texture2D
+	for i in range(3):
+		var star := TextureRect.new()
+		star.texture = star_texture
+		star.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		star.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		star.size = Vector2(24.0, 24.0)
+		var angle := TAU * float(i) / 3.0
+		star.position = Vector2(cos(angle) * 42.0, sin(angle) * 10.0) - star.size * 0.5
+		_stun_layer.add_child(star)
+	_stun_layer.pivot_offset = Vector2.ZERO
+	_stun_tween = create_tween().set_loops()
+	_stun_tween.tween_property(_stun_layer, "rotation", TAU, 1.15).set_trans(Tween.TRANS_LINEAR)

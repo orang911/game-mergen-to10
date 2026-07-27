@@ -17,7 +17,7 @@ var _bg_texture: Texture2D
 func _ready() -> void:
 	custom_minimum_size = GameConfig.get_board_backdrop_size()
 	size = GameConfig.get_board_backdrop_size()
-	_bg_texture = load("res://assets/textrues/mian/bg_02.png")
+	_bg_texture = load("res://assets/runtime/ui/common/legacy_game_background.png")
 	queue_redraw()
 
 

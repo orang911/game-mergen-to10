@@ -95,7 +95,7 @@ MainGame
 | --- | --- | --- |
 | `assets/textrues/mian/` | 原主界面、按钮、方块、棋盘资源 | 保留旧资源路径，替换同名图片最稳。 |
 | `assets/textrues/bg/` | 背景装饰 | 替换背景和主菜单装饰时看这里。 |
-| `assets/UI/loading/` | Loading / 主菜单页面 | 背景、Logo、水晶、数字方块、怪物、PLAY 按钮及其轻量动画资源。 |
+| `assets/UI/登录页/` | 登录 / 主菜单页面 | 完整登录页主视觉及其“开始游戏”点击热区。 |
 | `assets/sliced_20260703_172750/` | 新拆分战斗层素材 | 战斗 UI、怪物、城堡、路径、提示面板优先放这里。 |
 | `assets/sound/` | 点击和合成音效 | 后续攻击、命中、死亡、城堡受击音效也建议放这里。 |
 | `assets/effest/` | 旧 Cocos 特效资源 | 可以作为视觉参考，Godot 中建议逐步转成场景或脚本特效。 |
@@ -283,7 +283,7 @@ scripts/crystal_view.gd
 
 1. `BattleLayer` 增加 `CrystalAnchor` 或直接实例化 `CrystalView`。
 2. `CombatSystem` 创建并持有 `CrystalSystem`。
-3. 合成事件进来时，`CrystalSystem` 根据 `event.level` 更新历史最高等级。
+3. 合成事件进来时，`CrystalSystem` 检查 `event.level`；结果为 3、5、7 时将水晶当前等级提升 1 级。
 4. `CrystalSystem` 按固定间隔请求最靠近终点的怪物。
 5. 使用 `ProjectileSystem` 播放水晶弹道。
 6. 使用 `EffectSystem` 播放水晶升级和命中特效。
@@ -291,7 +291,7 @@ scripts/crystal_view.gd
 水晶维护原则：
 
 - 水晶是基础战力，不是主输出。
-- 水晶等级跟随历史最高等级。
+- 水晶等级独立保存，初始 1 级，按触发次数连续成长到 9 级，不能把合成数字直接当作水晶等级。
 - 水晶伤害、频率、目标数放到 `GameConfig`。
 - 水晶外观升级放到 `CrystalView`。
 
@@ -369,3 +369,11 @@ scripts/game_config.gd
 - 各种 `View` 管自己长什么样。
 
 按这个结构走，后续替换美术资源、加弹道、加怪物受击、加城堡表现、加持续攻击水晶，都是可控的。项目不会越改越乱，它会越来越像一个可以长期维护和扩展的游戏工程。
+
+## 连续攻击维护约束（2026-07-23）
+
+- 合成总伤害、主攻击发数与冰雷特殊参数只在 `MergeAttackEvent.from_merge()` 计算，UI 必须读取 `total_damage` 与 `attack_count`。
+- `CombatSystem` 负责连续集火、冰冻 `N-1` 多目标和闪电单主目标弹射；`ProjectileSystem` 只负责视觉弹道。目标选择不得回流到棋盘代码。
+- 新增退出、重置或结算路径时，必须调用战斗与弹道 reset，防止协程和延迟回调残留。
+- 当前正式合成属性入口必须按方块五色返回 poison、ice、lightning、critical、fire；冰雷历史卡仍不得加入当前随机卡池或卡牌触发入口。
+- 模拟器的 `attack_combo_focus` 必须与实机共用：普通属性 0.14 秒飞行/0.05 秒间隔，冰冻 `N-1` 目标/0.10 秒错落，闪电单主目标及相同弹跳增强参数。

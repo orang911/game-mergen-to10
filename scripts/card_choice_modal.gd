@@ -1,39 +1,53 @@
 extends Control
 class_name CardChoiceModal
 
-signal choice_committed(kind: String, card_id: String, element_key: String, quality: int)
+signal choice_committed(kind: String, card_id: String, element_key: String, level: int)
 signal modal_closed(kind: String)
 
 const DESIGN_SIZE := Vector2(941.0, 1672.0)
-const MASK_COLOR := Color(0.018, 0.028, 0.075, 0.80)
+const GREEN_KEY_SHADER := preload("res://shaders/ui_green_key.gdshader")
+const MASK_COLOR := Color(0.0, 0.0, 0.0, 180.0 / 255.0)
+
+const SKILL_PANEL_POS := Vector2(70.5, 180.0)
+const SKILL_PANEL_SIZE := Vector2(800.0, 735.0)
+const SKILL_TITLE_SIZE := Vector2(400.0, 108.0)
+const SKILL_CONFIRM_SIZE := Vector2(328.0, 98.0)
+const SKILL_CARD_SIZE := Vector2(220.0, 322.72)
+
+const WAVE_TITLE_POS := Vector2(185.5, 400.0)
+const WAVE_TITLE_SIZE := Vector2(570.0, 160.0)
+const WAVE_CARD_SIZE := Vector2(230.0, 337.39)
 
 var _kind := "energy"
 var _ids: Array[String] = []
-var _qualities: Array[int] = []
+var _levels: Array[int] = []
+var _new_flags: Array[bool] = []
 var _skill_target_global := Vector2.ZERO
 var _crystal_target_global := Vector2.ZERO
+
 var _mask: ColorRect
 var _panel: TextureRect
-var _panel_shadow: Panel
-var _cards: Array[TextureButton] = []
+var _title_art: TextureRect
+var _cards: Array[CardView] = []
 var _selection_frames: Array[Panel] = []
-var _selected_index := -1
-var _confirm: TextureButton
-var _close: Button
-var _locked := true
 var _base_card_positions: Array[Vector2] = []
-var _element_layer: Control
+var _confirm: TextureButton
+var _selected_index := -1
+var _locked := true
 var _selection_tween: Tween
 
 
-func setup(kind: String, ids: Array[String], skill_target_global: Vector2, crystal_target_global: Vector2, qualities: Array[int]) -> void:
+func setup(kind: String, ids: Array[String], skill_target_global: Vector2, crystal_target_global: Vector2, levels: Array[int], new_flags: Array[bool]) -> void:
 	_kind = kind
 	_ids = ids
+	_levels = levels
+	_new_flags = new_flags
 	_skill_target_global = skill_target_global
 	_crystal_target_global = crystal_target_global
-	_qualities = qualities
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	position = Vector2.ZERO
+	size = DESIGN_SIZE
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_build()
 	get_tree().paused = true
@@ -42,148 +56,141 @@ func setup(kind: String, ids: Array[String], skill_target_global: Vector2, cryst
 
 func _build() -> void:
 	_mask = ColorRect.new()
+	_mask.name = "FullScreenMask"
 	_mask.color = Color(0, 0, 0, 0)
 	_mask.mouse_filter = Control.MOUSE_FILTER_STOP
-	_mask.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_mask.position = Vector2.ZERO
+	_mask.size = DESIGN_SIZE
+	_mask.z_index = 0
 	add_child(_mask)
 
 	var milestone := _kind == "milestone"
-	var panel_path := "res://assets/UI/波次选择/layer_001.png" if milestone else "res://assets/UI/技能选择/layer_002.png"
 	_panel = TextureRect.new()
-	_panel.texture = load(panel_path) as Texture2D
+	_panel.name = "WaveCardArea" if milestone else "SkillChoicePanel"
+	_panel.texture = null if milestone else load("res://assets/runtime/ui/screens/skill_choice/panel.png") as Texture2D
 	_panel.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_panel.stretch_mode = TextureRect.STRETCH_SCALE
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if not milestone:
-		_set_rect(_panel, Vector2(29.5, 555.0), Vector2(882, 566))
+	_panel.z_index = 1
+	if milestone:
+		_set_rect(_panel, Vector2.ZERO, DESIGN_SIZE)
 	else:
-		_set_rect(_panel, Vector2(42.0, 250.0), Vector2(857, 949))
-	# A soft navy shadow keeps the modal readable over busy combat scenes.
-	_panel_shadow = Panel.new()
-	_panel_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var shadow_style := StyleBoxFlat.new()
-	shadow_style.bg_color = Color(0.015, 0.025, 0.07, 0.72)
-	shadow_style.corner_radius_top_left = 28
-	shadow_style.corner_radius_top_right = 28
-	shadow_style.corner_radius_bottom_left = 28
-	shadow_style.corner_radius_bottom_right = 28
-	shadow_style.shadow_color = Color(0.0, 0.0, 0.0, 0.62)
-	shadow_style.shadow_size = 24
-	shadow_style.shadow_offset = Vector2(0, 14)
-	_set_rect(_panel_shadow, _panel.position + Vector2(0, 12), _panel.size)
-	add_child(_panel_shadow)
+		_set_rect(_panel, SKILL_PANEL_POS, SKILL_PANEL_SIZE)
+		_panel.material = _green_key_material()
 	add_child(_panel)
 
+	_title_art = TextureRect.new()
+	_title_art.name = "WaveChoiceTitle" if milestone else "SkillChoiceTitle"
+	_title_art.texture = load("res://assets/runtime/ui/screens/wave_choice/title.png") as Texture2D if milestone else load("res://assets/runtime/ui/screens/skill_choice/title.png") as Texture2D
+	_title_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_title_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_title_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_title_art.material = _green_key_material()
+	if milestone:
+		_set_rect(_title_art, WAVE_TITLE_POS, WAVE_TITLE_SIZE)
+	else:
+		_set_rect(_title_art, Vector2((_panel.size.x - SKILL_TITLE_SIZE.x) * 0.5, -42.0), SKILL_TITLE_SIZE)
+	_panel.add_child(_title_art)
+
 	for i in range(_ids.size()):
-		var id := _ids[i]
-		var is_crystal := GameConfig.CRYSTAL_CARD_IDS.has(id)
-		var texture_path: String = GameConfig.CRYSTAL_CARD_TEXTURES.get(id, "") if is_crystal else GameConfig.SKILL_CARD_TEXTURES.get(id, "")
-		var card := TextureButton.new()
-		card.name = "Card_%s" % id
-		card.texture_normal = load(texture_path) as Texture2D
-		card.texture_hover = card.texture_normal
-		card.texture_pressed = card.texture_normal
-		card.ignore_texture_size = true
-		card.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		card.focus_mode = Control.FOCUS_NONE
-		card.disabled = true
-		var card_size := Vector2(190, 356) if not milestone else Vector2(210, 373)
-		var card_pos := Vector2(78 + i * 275, 145) if not milestone else Vector2(70 + i * 260, 390)
+		var card := CardView.new()
+		card.name = "Card_%s" % _ids[i]
+		var card_size := WAVE_CARD_SIZE if milestone else SKILL_CARD_SIZE
+		var card_pos := Vector2(75 + i * 255, 740) if milestone else Vector2(48 + i * 238, 171)
 		_set_rect(card, card_pos, card_size)
+		card.setup(
+			_ids[i],
+			_levels[i] if i < _levels.size() else 1,
+			_new_flags[i] if i < _new_flags.size() else false
+		)
 		_panel.add_child(card)
 		_cards.append(card)
 		_base_card_positions.append(card_pos)
-		var frame := Panel.new()
-		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		frame.visible = false
-		var frame_style := StyleBoxFlat.new()
-		frame_style.bg_color = Color(0.2, 0.75, 1.0, 0.04)
-		frame_style.border_color = Color(0.72, 0.94, 1.0, 0.95)
-		frame_style.set_border_width_all(5)
-		frame_style.set_corner_radius_all(22)
-		frame.add_theme_stylebox_override("panel", frame_style)
-		_set_rect(frame, Vector2.ZERO, card_size)
+
+		var frame := _make_selection_frame(card_size)
 		card.add_child(frame)
 		_selection_frames.append(frame)
-		var quality_badge := Label.new()
-		quality_badge.text = str(GameConfig.CARD_QUALITY_NAMES.get(_qualities[i] if i < _qualities.size() else 1, "普通"))
-		quality_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		quality_badge.add_theme_font_size_override("font_size", 18)
-		quality_badge.add_theme_color_override("font_color", GameConfig.CARD_QUALITY_COLORS.get(_qualities[i] if i < _qualities.size() else 1, Color.WHITE))
-		_set_rect(quality_badge, Vector2(0, card_size.y - 34), Vector2(card_size.x, 28))
-		quality_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.add_child(quality_badge)
 		card.pressed.connect(_select_card.bind(i))
 		card.mouse_entered.connect(_hover_card.bind(i, true))
 		card.mouse_exited.connect(_hover_card.bind(i, false))
 
-	var confirm_path := "res://assets/UI/波次选择/layer_002.png" if milestone else "res://assets/UI/技能选择/layer_001.png"
-	_confirm = TextureButton.new()
-	_confirm.texture_normal = load(confirm_path) as Texture2D
-	_confirm.texture_hover = _confirm.texture_normal
-	_confirm.texture_pressed = _confirm.texture_normal
-	_confirm.ignore_texture_size = true
-	_confirm.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-	_confirm.focus_mode = Control.FOCUS_NONE
-	_confirm.disabled = true
-	var confirm_size := Vector2(332, 93) if milestone else Vector2(246, 88)
-	var confirm_pos := Vector2((_panel.size.x - confirm_size.x) * 0.5, 805) if milestone else Vector2((_panel.size.x - confirm_size.x) * 0.5, 466)
-	_set_rect(_confirm, confirm_pos, confirm_size)
-	_panel.add_child(_confirm)
-	_confirm.pressed.connect(_confirm_selection)
+	if not milestone:
+		_confirm = TextureButton.new()
+		_confirm.name = "ConfirmChoice"
+		_confirm.texture_normal = load("res://assets/runtime/ui/screens/skill_choice/button_confirm.png") as Texture2D
+		_confirm.texture_hover = _confirm.texture_normal
+		_confirm.texture_pressed = _confirm.texture_normal
+		_confirm.ignore_texture_size = true
+		_confirm.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		_confirm.focus_mode = Control.FOCUS_NONE
+		_confirm.disabled = true
+		_confirm.material = _green_key_material()
+		_set_rect(_confirm, Vector2((_panel.size.x - SKILL_CONFIRM_SIZE.x) * 0.5, 579), SKILL_CONFIRM_SIZE)
+		_panel.add_child(_confirm)
+		_confirm.pressed.connect(_confirm_selection)
 
-	_close = Button.new()
-	_close.text = ""
-	_close.flat = true
-	_close.focus_mode = Control.FOCUS_NONE
-	_close.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_set_rect(_close, Vector2(_panel.size.x - 92, 34), Vector2(72, 72))
-	_panel.add_child(_close)
-	_close.pressed.connect(_random_close)
+
+func _make_selection_frame(frame_size: Vector2) -> Panel:
+	var frame := Panel.new()
+	frame.name = "SelectionFrame"
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.visible = false
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.75, 1.0, 0.04)
+	style.border_color = Color(0.72, 0.94, 1.0, 0.95)
+	style.set_border_width_all(5)
+	style.set_corner_radius_all(22)
+	frame.add_theme_stylebox_override("panel", style)
+	_set_rect(frame, Vector2.ZERO, frame_size)
+	return frame
 
 
 func _play_intro() -> void:
 	_locked = true
 	_panel.modulate.a = 0.0
-	_panel.scale = Vector2(0.86, 0.86)
+	_panel.scale = Vector2(0.92, 0.92)
 	var final_pos := _panel.position
-	_panel.position = final_pos + Vector2(0, 30)
-	if _panel_shadow:
-		_panel_shadow.modulate.a = 0.0
-		_panel_shadow.scale = Vector2(0.86, 0.86)
-		_panel_shadow.position = final_pos + Vector2(0, 42)
+	_panel.position = final_pos + Vector2(0, 24)
 	for i in range(_cards.size()):
 		var card := _cards[i]
 		card.modulate.a = 0.0
-		card.scale = Vector2(0.82, 0.82)
-		card.position = _base_card_positions[i] + Vector2(0, 46)
+		card.scale = Vector2(0.86, 0.86)
+		card.position = _base_card_positions[i] + Vector2(0, 36)
 	var intro := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	intro.tween_property(_mask, "color", MASK_COLOR, GameConfig.CARD_MASK_FADE_IN)
 	intro.parallel().tween_property(_panel, "modulate:a", 1.0, GameConfig.CARD_PANEL_INTRO)
 	intro.parallel().tween_property(_panel, "scale", Vector2.ONE, GameConfig.CARD_PANEL_INTRO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	intro.parallel().tween_property(_panel, "position", final_pos, GameConfig.CARD_PANEL_INTRO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	if _panel_shadow:
-		intro.parallel().tween_property(_panel_shadow, "modulate:a", 1.0, GameConfig.CARD_PANEL_INTRO)
-		intro.parallel().tween_property(_panel_shadow, "scale", Vector2.ONE, GameConfig.CARD_PANEL_INTRO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		intro.parallel().tween_property(_panel_shadow, "position", final_pos + Vector2(0, 12), GameConfig.CARD_PANEL_INTRO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	await intro.finished
+
 	for i in range(_cards.size()):
 		var card := _cards[i]
-		var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-		tween.tween_property(card, "modulate:a", 1.0, GameConfig.CARD_INTRO_DURATION)
-		tween.parallel().tween_property(card, "scale", Vector2.ONE, GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tween.parallel().tween_property(card, "position", _base_card_positions[i], GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		await get_tree().create_timer(GameConfig.CARD_INTRO_STAGGER, true).timeout
+		var appear := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		appear.tween_property(card, "modulate:a", 1.0, GameConfig.CARD_INTRO_DURATION)
+		appear.parallel().tween_property(card, "scale", Vector2.ONE, GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		appear.parallel().tween_property(card, "position", _base_card_positions[i], GameConfig.CARD_INTRO_DURATION).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		await appear.finished
+		await card.reveal(GameConfig.CARD_FLIP_DURATION)
+		await get_tree().create_timer(GameConfig.CARD_FLIP_STAGGER, true).timeout
+
 	_locked = false
 	for card in _cards:
-		card.disabled = false
+		card.set_interactable(true)
 
 
 func _select_card(index: int) -> void:
 	if _locked or index < 0 or index >= _cards.size():
 		return
 	_selected_index = index
-	_confirm.disabled = false
+	if _kind == "milestone":
+		for card in _cards:
+			card.set_interactable(false)
+		await get_tree().create_timer(0.08, true).timeout
+		_finish_choice("")
+		return
+
+	if _confirm:
+		_confirm.disabled = false
 	if _selection_tween and _selection_tween.is_valid():
 		_selection_tween.kill()
 	for i in range(_cards.size()):
@@ -205,94 +212,39 @@ func _hover_card(index: int, entered: bool) -> void:
 	if _locked or index == _selected_index or index < 0 or index >= _cards.size():
 		return
 	var card := _cards[index]
-	var target_scale := Vector2(1.035, 1.035) if entered else Vector2.ONE
-	var target_modulate := Color(1.08, 1.08, 1.08, 1.0) if entered else Color.WHITE
 	var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.parallel().tween_property(card, "scale", target_scale, 0.10).set_trans(Tween.TRANS_SINE)
-	tween.parallel().tween_property(card, "modulate", target_modulate, 0.10).set_trans(Tween.TRANS_SINE)
-
-
-func _random_close() -> void:
-	if _locked:
-		return
-	_selected_index = randi_range(0, _cards.size() - 1)
-	if _ids[_selected_index] == "element_prism":
-		_finish_choice(["fire", "ice", "poison", "lightning"].pick_random())
-	else:
-		_finish_choice("")
+	tween.parallel().tween_property(card, "scale", Vector2(1.035, 1.035) if entered else Vector2.ONE, 0.10).set_trans(Tween.TRANS_SINE)
+	tween.parallel().tween_property(card, "modulate", Color(1.08, 1.08, 1.08, 1.0) if entered else Color.WHITE, 0.10).set_trans(Tween.TRANS_SINE)
 
 
 func _confirm_selection() -> void:
 	if _locked or _selected_index < 0:
 		return
-	if _ids[_selected_index] == "element_prism":
-		_show_element_choice()
-	else:
-		_finish_choice("")
-
-
-func _show_element_choice() -> void:
-	_locked = true
-	if _selection_tween and _selection_tween.is_valid():
-		_selection_tween.kill()
-	for card in _cards:
-		card.visible = false
-	_confirm.visible = false
-	_element_layer = Control.new()
-	_element_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_set_rect(_element_layer, Vector2(90, 385), Vector2(_panel.size.x - 180, 260))
-	_panel.add_child(_element_layer)
-	var title := Label.new()
-	title.text = "选择水晶属性"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 36)
-	title.add_theme_color_override("font_color", Color(0.08, 0.35, 0.68))
-	_set_rect(title, Vector2(0, 0), Vector2(_element_layer.size.x, 62))
-	_element_layer.add_child(title)
-	var names := {"fire": "火", "ice": "冰", "poison": "毒", "lightning": "雷"}
-	var colors := {"fire": Color(1, .28, .12), "ice": Color(.25, .72, 1), "poison": Color(.22, .8, .28), "lightning": Color(1, .8, .12)}
-	var keys := ["fire", "ice", "poison", "lightning"]
-	for i in range(keys.size()):
-		var key: String = keys[i]
-		var button := Button.new()
-		button.text = names[key]
-		button.add_theme_font_size_override("font_size", 34)
-		button.add_theme_color_override("font_color", Color.WHITE)
-		var style := StyleBoxFlat.new()
-		style.bg_color = colors[key]
-		style.corner_radius_top_left = 18
-		style.corner_radius_top_right = 18
-		style.corner_radius_bottom_left = 18
-		style.corner_radius_bottom_right = 18
-		button.add_theme_stylebox_override("normal", style)
-		_set_rect(button, Vector2(20 + i * 155, 92), Vector2(125, 125))
-		_element_layer.add_child(button)
-		button.pressed.connect(_finish_choice.bind(key))
-	_locked = false
+	_finish_choice("")
 
 
 func _finish_choice(element_key: String) -> void:
-	if _locked:
+	if _locked or _selected_index < 0 or _selected_index >= _cards.size():
 		return
 	_locked = true
+	if _selection_tween and _selection_tween.is_valid():
+		_selection_tween.kill()
 	var chosen_id := _ids[_selected_index]
 	var chosen := _cards[_selected_index]
-	chosen.visible = true
 	for card in _cards:
-		card.disabled = true
+		card.set_interactable(false)
 		if card != chosen:
 			var fade := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 			fade.parallel().tween_property(card, "modulate:a", 0.0, GameConfig.CARD_UNSELECTED_FADE)
 			fade.parallel().tween_property(card, "scale", Vector2(0.84, 0.84), GameConfig.CARD_UNSELECTED_FADE)
-	if _element_layer:
-		_element_layer.queue_free()
+
 	var start_global := chosen.global_position
 	var start_size := chosen.size
 	chosen.reparent(self, true)
 	chosen.global_position = start_global
 	chosen.size = start_size
 	chosen.pivot_offset = chosen.size * 0.5
-	var is_crystal := GameConfig.CRYSTAL_CARD_IDS.has(chosen_id)
+	var is_crystal := CardCatalog.is_crystal_card(chosen_id)
 	var duration := GameConfig.CARD_CRYSTAL_FLY_DURATION if is_crystal else GameConfig.CARD_SKILL_FLY_DURATION
 	var target_global := _crystal_target_global if is_crystal else _skill_target_global
 	var target_pos := target_global - chosen.size * 0.5 * 0.12
@@ -301,11 +253,10 @@ func _finish_choice(element_key: String) -> void:
 	fly.parallel().tween_property(chosen, "scale", Vector2(0.12, 0.12) if is_crystal else Vector2(0.18, 0.18), duration)
 	fly.tween_property(chosen, "modulate:a", 0.0, 0.12)
 	await fly.finished
-	choice_committed.emit(_kind, chosen_id, element_key, int(_qualities[_selected_index] if _selected_index < _qualities.size() else 1))
+	choice_committed.emit(_kind, chosen_id, element_key, int(_levels[_selected_index] if _selected_index < _levels.size() else 1))
+
 	var outro := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	outro.parallel().tween_property(_panel, "modulate:a", 0.0, GameConfig.CARD_PANEL_FADE_OUT)
-	if _panel_shadow:
-		outro.parallel().tween_property(_panel_shadow, "modulate:a", 0.0, GameConfig.CARD_PANEL_FADE_OUT)
 	outro.parallel().tween_property(_mask, "color:a", 0.0, GameConfig.CARD_MASK_FADE_OUT)
 	await outro.finished
 	get_tree().paused = false
@@ -317,3 +268,9 @@ func _set_rect(node: Control, pos: Vector2, node_size: Vector2) -> void:
 	node.position = pos
 	node.size = node_size
 	node.pivot_offset = node_size * 0.5
+
+
+func _green_key_material() -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = GREEN_KEY_SHADER
+	return material
