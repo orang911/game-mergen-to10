@@ -1,0 +1,47 @@
+{
+  "purpose": "crystal-stage-background",
+  "version": "v01",
+  "date": "2026-08-09",
+  "assets": [
+    {
+      "file": "cutouts/lobby_grass_background_clean_941x1672_v01.png",
+      "size": [941, 1672],
+      "mode": "RGB",
+      "alpha": false,
+      "text_baked": false,
+      "shadow": "environmental only",
+      "pivot": "top_left"
+    },
+    {
+      "file": "previews/lobby_grass_background_clean_1882x3344_v01.png",
+      "size": [1882, 3344],
+      "mode": "RGB",
+      "alpha": false,
+      "text_baked": false,
+      "shadow": "environmental only",
+      "pivot": "top_left"
+    },
+    {
+      "file": "cutouts/lobby_crystal_stage_complete_v03.png",
+      "size": [1401, 1116],
+      "mode": "RGBA",
+      "alpha": true,
+      "text_baked": false,
+      "external_shadow": false,
+      "transparent_padding": 16,
+      "pivot": "center"
+    }
+  ],
+  "nine_patch": "not_applicable",
+  "qa": {
+    "white_bg": "pass",
+    "gray_bg": "pass",
+    "black_bg": "pass",
+    "alpha_corners": "pass",
+    "purple_and_pink_preservation": "pass",
+    "runtime_import": "pending",
+    "in_game": "pending"
+  },
+  "runtime_installed": false,
+  "notes": "Only the clean environmental background and complete central crystal-stage sprite are deliverables. Rejected global-key and opaque attempts are preserved under qa/rejected and must not be used."
+}

@@ -79,12 +79,34 @@ func get_front_monsters(count: int) -> Array[Monster]:
 		result.append(alive[i])
 	return result
 
+
+func export_states() -> Array:
+	var result: Array = []
+	for monster in monsters:
+		if is_instance_valid(monster) and monster.is_alive() and not monster.reached:
+			result.append(monster.export_state())
+	return result
+
+
+func restore_states(states: Array) -> void:
+	for state_value in states:
+		var state := state_value as Dictionary
+		var config := (state.get("config", {}) as Dictionary).duplicate(true)
+		if config.is_empty():
+			continue
+		var monster_type := str(config.get("type", "small"))
+		var monster := spawn_monster(monster_type, 1.0, config)
+		monster.restore_state(state)
+		monster.position = path_system.position_at_progress(monster.path_progress) - monster.get_path_anchor_offset()
+		monster.scale = Vector2.ONE
+
 func _process(delta: float) -> void:
 	if not running:
 		return
 	var total_length := path_system.get_total_length()
 	if total_length <= 0.0:
 		return
+	var goal_progress := path_system.get_goal_progress_ratio()
 	for index in range(monsters.size() - 1, -1, -1):
 		var candidate: Variant = monsters[index]
 		if not is_instance_valid(candidate):
@@ -93,7 +115,7 @@ func _process(delta: float) -> void:
 		var monster := candidate as Monster
 		if monster.is_alive() and not monster.reached:
 			monster.update_status(delta)
-			monster.update_movement(delta, total_length)
+			monster.update_movement(delta, total_length, goal_progress)
 			monster.position = path_system.position_at_progress(monster.path_progress) - monster.get_path_anchor_offset()
 		elif monster.reached and not monster.tutorial_hold_at_goal:
 			_pending_remove.append(monster)
@@ -128,12 +150,22 @@ func _remove_monster(monster: Monster) -> void:
 	monster.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_delayed_free.append(monster)
 	var delay: float = 0.22 if monster.reached else 0.18
+	if not monster.is_alive() and not monster.reached:
+		# Death is resolved immediately for gameplay, while the released visual
+		# remains in place until its supplied 19-frame sequence has finished.
+		var death_speed := 2.5 if monster.death_source == "annihilation" else 1.0
+		delay = maxf(delay, monster.play_death_animation(death_speed))
+	var monster_id := monster.get_instance_id()
 	get_tree().create_timer(delay).timeout.connect(func():
-		var d_idx: int = _delayed_free.find(monster)
-		if d_idx >= 0:
-			_delayed_free.remove_at(d_idx)
-		if is_instance_valid(monster):
-			monster.queue_free()
+		# Resolve by ObjectID instead of capturing the Monster reference. The
+		# battle can be reset while the death animation timer is still pending.
+		var live_monster := instance_from_id(monster_id) as Monster
+		for i in range(_delayed_free.size() - 1, -1, -1):
+			var pending := _delayed_free[i]
+			if is_instance_valid(pending) and pending.get_instance_id() == monster_id:
+				_delayed_free.remove_at(i)
+		if is_instance_valid(live_monster):
+			live_monster.queue_free()
 	)
 	if monsters.is_empty():
 		all_monsters_cleared.emit()

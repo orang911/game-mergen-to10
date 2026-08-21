@@ -1,4 +1,6 @@
-# 首批九张统一卡牌目录
+# 历史九卡目录 / Archived Nine-Card Catalog
+
+> 归档：当前运行时卡池为 6 张印记 + 6 张水晶卡，规则见 `00_current_product_baseline.md`、`13_skill_imprint_mechanism.md` 和 `scripts/card_catalog.gd`。本文只保留早期命名与迁移参考。
 
 日期：2026-07-16  
 状态：统一卡池第一版已实现。

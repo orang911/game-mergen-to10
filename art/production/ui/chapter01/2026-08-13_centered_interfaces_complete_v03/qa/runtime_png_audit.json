@@ -1,0 +1,1698 @@
+[
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_battle_pause_shell_v03.png",
+    "size": [
+      1320,
+      970
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      3,
+      2,
+      1317,
+      968
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_benefits_shell_v03.png",
+    "size": [
+      1520,
+      1550
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      3,
+      2,
+      1517,
+      1548
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_clear_data_confirm_shell_v03.png",
+    "size": [
+      1320,
+      766
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      3,
+      0,
+      1317,
+      766
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_signin_shell_v03.png",
+    "size": [
+      1760,
+      872
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      4,
+      2,
+      1760,
+      870
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_tasks_shell_v03_bottom.png",
+    "size": [
+      1760,
+      762
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      4,
+      0,
+      1756,
+      759
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_tasks_shell_v03_middle.png",
+    "size": [
+      1760,
+      760
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      4,
+      0,
+      1756,
+      760
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_tasks_shell_v03_top.png",
+    "size": [
+      1760,
+      760
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      4,
+      3,
+      1756,
+      760
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_exit_confirm_shell_v03.png",
+    "size": [
+      1320,
+      776
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      4,
+      2,
+      1316,
+      774
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_first_purchase_gift_shell_v03.png",
+    "size": [
+      1520,
+      1496
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      3,
+      2,
+      1517,
+      1494
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_piggy_bank_shell_v03.png",
+    "size": [
+      1520,
+      1684
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      3,
+      3,
+      1517,
+      1681
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_settings_shell_v03.png",
+    "size": [
+      1300,
+      1820
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      3,
+      2,
+      1297,
+      1818
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/frames/ui_shop_shell_v03.png",
+    "size": [
+      1700,
+      1802
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      4,
+      3,
+      1696,
+      1799
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/badge_red_dot.png",
+    "size": [
+      48,
+      48
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      48,
+      48
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_blue_default.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_blue_pressed.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_gray_disabled.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_green_default.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_red_default.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_red_pressed.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_yellow_default.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/button_yellow_pressed.png",
+    "size": [
+      192,
+      80
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      192,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/divider_diamond.png",
+    "size": [
+      420,
+      28
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      8,
+      3,
+      412,
+      26
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/panel_dark.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      127,
+      127
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/panel_light.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      127,
+      127
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/progress_fill.png",
+    "size": [
+      240,
+      32
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      239,
+      31
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/progress_track.png",
+    "size": [
+      240,
+      32
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      239,
+      31
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/row_light.png",
+    "size": [
+      420,
+      88
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      420,
+      88
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/switch_off.png",
+    "size": [
+      112,
+      60
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      112,
+      60
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/switch_on.png",
+    "size": [
+      112,
+      60
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      112,
+      60
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/tab_default.png",
+    "size": [
+      180,
+      64
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      180,
+      64
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/tab_selected.png",
+    "size": [
+      180,
+      64
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      180,
+      64
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/common/title_ribbon_blue.png",
+    "size": [
+      480,
+      92
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      2,
+      2,
+      478,
+      80
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/ad_removed.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      12,
+      12,
+      117,
+      117
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/arrow_right.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      37,
+      23,
+      86,
+      106
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/back.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      12,
+      15,
+      116,
+      113
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/check.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      14,
+      14,
+      114,
+      114
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/chest.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      14,
+      22,
+      114,
+      109
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/coin.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      15,
+      17,
+      114,
+      108
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/crystal.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      24,
+      7,
+      103,
+      115
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/double_coin.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      13,
+      19,
+      110,
+      121
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/exit_door.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      21,
+      16,
+      122,
+      112
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/gift.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      14,
+      8,
+      114,
+      115
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/help.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      16,
+      16,
+      112,
+      112
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/lock.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      23,
+      12,
+      105,
+      117
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/music.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      25,
+      22,
+      105,
+      103
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/privacy_shield.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      21,
+      11,
+      107,
+      114
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings_gear.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      11,
+      11,
+      118,
+      118
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/shop.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      13,
+      22,
+      115,
+      113
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/sold_out.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      13,
+      13,
+      115,
+      115
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/sound.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      15,
+      27,
+      121,
+      101
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/task_kill.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      23,
+      32,
+      105,
+      109
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/task_login.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      21,
+      11,
+      107,
+      114
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/task_merge.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      16,
+      20,
+      112,
+      97
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/task_star.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      13,
+      13,
+      115,
+      115
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/task_swords.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      19,
+      17,
+      109,
+      105
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/vibration.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      14,
+      19,
+      114,
+      109
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/arrow_right.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      37,
+      23,
+      86,
+      106
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/back.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      12,
+      15,
+      116,
+      113
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/exit_door.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      21,
+      16,
+      122,
+      112
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/help.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      16,
+      16,
+      112,
+      112
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/music.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      25,
+      22,
+      105,
+      103
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/privacy_shield.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      21,
+      11,
+      107,
+      114
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/settings_gear.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      11,
+      11,
+      118,
+      118
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/sound.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      15,
+      27,
+      121,
+      101
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/icons/settings/vibration.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      14,
+      19,
+      114,
+      109
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/badge_new_blank.png",
+    "size": [
+      72,
+      72
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      71,
+      71
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/badge_owned.png",
+    "size": [
+      72,
+      72
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      71,
+      71
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/benefit_card.png",
+    "size": [
+      180,
+      230
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      1,
+      1,
+      179,
+      229
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/first_chest_closed.png",
+    "size": [
+      220,
+      180
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      25,
+      35,
+      195,
+      161
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/first_chest_open.png",
+    "size": [
+      220,
+      180
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      25,
+      19,
+      195,
+      164
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/first_reward_altar.png",
+    "size": [
+      220,
+      180
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      25,
+      15,
+      195,
+      164
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/piggy_empty.png",
+    "size": [
+      160,
+      160
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      18,
+      25,
+      142,
+      136
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/piggy_filling.png",
+    "size": [
+      160,
+      160
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      18,
+      25,
+      142,
+      136
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/piggy_full.png",
+    "size": [
+      160,
+      160
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      18,
+      24,
+      142,
+      136
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/piggy_owned.png",
+    "size": [
+      160,
+      160
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      18,
+      25,
+      142,
+      136
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/reward_slot_blue.png",
+    "size": [
+      96,
+      112
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      96,
+      112
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/commerce/reward_slot_purple.png",
+    "size": [
+      96,
+      112
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      96,
+      112
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/activity_chest_claimed.png",
+    "size": [
+      150,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      15,
+      24,
+      135,
+      117
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/activity_chest_locked.png",
+    "size": [
+      150,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      18,
+      16,
+      132,
+      116
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/activity_chest_ready.png",
+    "size": [
+      150,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      15,
+      19,
+      135,
+      117
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/signin_day_default.png",
+    "size": [
+      110,
+      206
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      110,
+      206
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/signin_day_today.png",
+    "size": [
+      110,
+      206
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      110,
+      206
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/status_claimable.png",
+    "size": [
+      72,
+      72
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      2,
+      2,
+      71,
+      71
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/status_claimed.png",
+    "size": [
+      72,
+      72
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      2,
+      2,
+      71,
+      71
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/status_incomplete.png",
+    "size": [
+      72,
+      72
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      2,
+      2,
+      71,
+      71
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/daily/task_row.png",
+    "size": [
+      780,
+      126
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      780,
+      126
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/pause/action_tile_blue.png",
+    "size": [
+      152,
+      126
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      152,
+      126
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/pause/action_tile_red.png",
+    "size": [
+      152,
+      126
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      152,
+      126
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_cannon.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      18,
+      21,
+      116,
+      114
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_clockwork.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      11,
+      11,
+      117,
+      117
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_coin_bundle.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      12,
+      9,
+      116,
+      114
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_crystal_bundle.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      16,
+      13,
+      113,
+      108
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_fire_conduit.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      15,
+      36,
+      113,
+      98
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_imprint_chest.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      14,
+      19,
+      114,
+      111
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_prism.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      12,
+      28,
+      117,
+      108
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_star_hammer.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      15,
+      22,
+      91,
+      119
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/icon_steam_furnace.png",
+    "size": [
+      128,
+      128
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      23,
+      10,
+      106,
+      115
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/price_strip_crystal.png",
+    "size": [
+      188,
+      52
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      188,
+      52
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/price_strip_money.png",
+    "size": [
+      188,
+      52
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      188,
+      52
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/product_slot_default.png",
+    "size": [
+      190,
+      250
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      190,
+      250
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/product_slot_unavailable.png",
+    "size": [
+      190,
+      250
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      190,
+      250
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/purchase_quantity_row.png",
+    "size": [
+      400,
+      76
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      400,
+      76
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/status_daily_limit.png",
+    "size": [
+      64,
+      64
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      64,
+      64
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/status_insufficient.png",
+    "size": [
+      64,
+      64
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      64,
+      64
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/status_owned.png",
+    "size": [
+      64,
+      64
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      64,
+      64
+    ],
+    "valid_nontransparent": true
+  },
+  {
+    "file": "assets/runtime/ui/secondary_complete_v03/elements/pages/shop/status_sold_out.png",
+    "size": [
+      64,
+      64
+    ],
+    "within_2048": true,
+    "has_alpha": true,
+    "nontransparent_bbox": [
+      0,
+      0,
+      64,
+      64
+    ],
+    "valid_nontransparent": true
+  }
+]

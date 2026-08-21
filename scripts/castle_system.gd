@@ -36,6 +36,12 @@ func layout(anchor_position: Vector2) -> void:
 func get_durability() -> int:
 	return durability
 
+
+func set_durability(value: int) -> void:
+	durability = clampi(value, 0, max_durability)
+	_destroyed_emitted = durability <= 0
+	_update_ui()
+
 func _update_ui() -> void:
 	if _view and is_instance_valid(_view) and _view.has_method("update_durability"):
 		_view.update_durability(durability, max_durability)

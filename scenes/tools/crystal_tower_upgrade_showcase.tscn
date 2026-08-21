@@ -1,0 +1,645 @@
+[gd_scene format=3 uid="uid://3xta6gbkeb5f"]
+
+[ext_resource type="Texture2D" uid="uid://c40wnjjg3p2tg" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv01.png" id="1_lv01"]
+[ext_resource type="Texture2D" uid="uid://buy4e1bw8bsne" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv02.png" id="2_lv02"]
+[ext_resource type="Texture2D" uid="uid://c221a1x2y00d4" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv03.png" id="3_lv03"]
+[ext_resource type="Texture2D" uid="uid://c4jfslnyix6id" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv04.png" id="4_lv04"]
+[ext_resource type="Texture2D" uid="uid://5mgrfjaqnho3" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv05.png" id="5_lv05"]
+[ext_resource type="Texture2D" uid="uid://di0uk73md5s2l" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv06.png" id="6_lv06"]
+[ext_resource type="Texture2D" uid="uid://nmbo371nj3d3" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv07.png" id="7_lv07"]
+[ext_resource type="Texture2D" uid="uid://bui6qn2dd03n2" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv08.png" id="8_lv08"]
+[ext_resource type="Texture2D" uid="uid://ce4vln8rskllb" path="res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv09.png" id="9_lv09"]
+[ext_resource type="Texture2D" uid="uid://c1g3tijg4rt7" path="res://assets/runtime/fx/crystal_tower/charge_overlay.png" id="10_charge"]
+[ext_resource type="Texture2D" uid="uid://du30esoknog1o" path="res://assets/runtime/fx/crystal_tower/attack_beam.png" id="11_beam"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_card"]
+bg_color = Color(0.055, 0.094, 0.18, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.62, 0.92, 0.72)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_preview"]
+bg_color = Color(0.02, 0.035, 0.08, 0.7)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.17, 0.32, 0.48, 0.8)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="CrystalTowerUpgradeShowcase" type="Control" unique_id=388599850]
+custom_minimum_size = Vector2(941, 1672)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 941.0
+offset_bottom = 1672.0
+mouse_filter = 2
+
+[node name="Background" type="ColorRect" parent="." unique_id=296048701]
+layout_mode = 0
+offset_right = 941.0
+offset_bottom = 1672.0
+mouse_filter = 2
+color = Color(0.018, 0.035, 0.08, 1)
+
+[node name="Header" type="Label" parent="." unique_id=1759977251]
+layout_mode = 0
+offset_top = 26.0
+offset_right = 941.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(0.78, 0.93, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.18, 0.32, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.02, 0.06, 1)
+theme_override_constants/shadow_offset_y = 3
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 32
+text = "水晶塔升级效果素材审核"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="." unique_id=153935008]
+layout_mode = 0
+offset_top = 78.0
+offset_right = 941.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(0.56, 0.7, 0.82, 1)
+theme_override_font_sizes/font_size = 16
+text = "等级 1–9｜可直接在此场景调整图素、比例、间距与升级效果"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level01" type="Panel" parent="." unique_id=1303050650]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 150.0
+offset_right = 308.0
+offset_bottom = 585.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level01" unique_id=356404042]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 1"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level01" unique_id=1484898612]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level01/PreviewFrame" unique_id=473310269]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("1_lv01")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level01/PreviewFrame" unique_id=1930741736]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="ChargeFeedback" type="TextureRect" parent="Level01/PreviewFrame/EffectLayer" unique_id=1322225075]
+modulate = Color(1, 1, 1, 0.72)
+layout_mode = 0
+offset_left = 68.0
+offset_top = 103.0
+offset_right = 184.0
+offset_bottom = 225.44446
+mouse_filter = 2
+texture = ExtResource("10_charge")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BeamPreview" type="TextureRect" parent="Level01/PreviewFrame/EffectLayer" unique_id=159763293]
+layout_mode = 0
+offset_left = 118.0
+offset_top = -76.0
+offset_right = 136.0
+offset_bottom = 140.0
+mouse_filter = 2
+texture = ExtResource("11_beam")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectNote" type="Label" parent="Level01/PreviewFrame/EffectLayer" unique_id=2010566115]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 250.0
+offset_right = 244.0
+offset_bottom = 274.0
+theme_override_colors/font_color = Color(0.38, 0.88, 1, 0.85)
+theme_override_font_sizes/font_size = 12
+text = "EffectLayer · 可调充能范围"
+horizontal_alignment = 1
+
+[node name="Resource" type="Label" parent="Level01" unique_id=122826483]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv01.png
+可编辑节点：Level01/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level02" type="Panel" parent="." unique_id=83327508]
+layout_mode = 0
+offset_left = 326.0
+offset_top = 150.0
+offset_right = 614.0
+offset_bottom = 585.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level02" unique_id=1722057179]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 2"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level02" unique_id=1663142419]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level02/PreviewFrame" unique_id=514114057]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("2_lv02")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level02/PreviewFrame" unique_id=1754052787]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level02" unique_id=680024885]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv02.png
+可编辑节点：Level02/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level03" type="Panel" parent="." unique_id=512645045]
+layout_mode = 0
+offset_left = 632.0
+offset_top = 150.0
+offset_right = 920.0
+offset_bottom = 585.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level03" unique_id=1108319974]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 3"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level03" unique_id=950437920]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level03/PreviewFrame" unique_id=1541386165]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("3_lv03")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level03/PreviewFrame" unique_id=680889944]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level03" unique_id=287553322]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv03.png
+可编辑节点：Level03/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level04" type="Panel" parent="." unique_id=549138111]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 610.0
+offset_right = 308.0
+offset_bottom = 1045.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level04" unique_id=1800229496]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 4"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level04" unique_id=1995724231]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level04/PreviewFrame" unique_id=699306624]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("4_lv04")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level04/PreviewFrame" unique_id=737903077]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level04" unique_id=205155697]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv04.png
+可编辑节点：Level04/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level05" type="Panel" parent="." unique_id=1031897391]
+layout_mode = 0
+offset_left = 326.0
+offset_top = 610.0
+offset_right = 614.0
+offset_bottom = 1045.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level05" unique_id=844708262]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 5"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level05" unique_id=1343657796]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level05/PreviewFrame" unique_id=1448505010]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("5_lv05")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level05/PreviewFrame" unique_id=420451152]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level05" unique_id=1216754327]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv05.png
+可编辑节点：Level05/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level06" type="Panel" parent="." unique_id=1384291265]
+layout_mode = 0
+offset_left = 632.0
+offset_top = 610.0
+offset_right = 920.0
+offset_bottom = 1045.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level06" unique_id=902775263]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 6"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level06" unique_id=1716893173]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level06/PreviewFrame" unique_id=461177863]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("6_lv06")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level06/PreviewFrame" unique_id=1621897156]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level06" unique_id=1301782988]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv06.png
+可编辑节点：Level06/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level07" type="Panel" parent="." unique_id=1590631882]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 1070.0
+offset_right = 308.0
+offset_bottom = 1505.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level07" unique_id=1252295746]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 7"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level07" unique_id=1904589946]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level07/PreviewFrame" unique_id=1626194836]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("7_lv07")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level07/PreviewFrame" unique_id=1900161341]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level07" unique_id=210406952]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv07.png
+可编辑节点：Level07/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level08" type="Panel" parent="." unique_id=1629826479]
+layout_mode = 0
+offset_left = 326.0
+offset_top = 1070.0
+offset_right = 614.0
+offset_bottom = 1505.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level08" unique_id=257962256]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 8"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level08" unique_id=681262681]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level08/PreviewFrame" unique_id=1041303628]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("8_lv08")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level08/PreviewFrame" unique_id=1385821908]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level08" unique_id=1938900814]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv08.png
+可编辑节点：Level08/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Level09" type="Panel" parent="." unique_id=1433391025]
+layout_mode = 0
+offset_left = 632.0
+offset_top = 1070.0
+offset_right = 920.0
+offset_bottom = 1505.0
+theme_override_styles/panel = SubResource("StyleBox_card")
+
+[node name="Title" type="Label" parent="Level09" unique_id=1959208901]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 276.0
+offset_bottom = 47.0
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "等级 9"
+horizontal_alignment = 1
+
+[node name="PreviewFrame" type="Panel" parent="Level09" unique_id=1234527075]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 56.0
+offset_right = 270.0
+offset_bottom = 338.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBox_preview")
+
+[node name="Tower" type="TextureRect" parent="Level09/PreviewFrame" unique_id=1150242679]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 244.0
+offset_bottom = 278.0
+mouse_filter = 2
+texture = ExtResource("9_lv09")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EffectLayer" type="Control" parent="Level09/PreviewFrame" unique_id=1709725977]
+z_index = 2
+anchors_preset = 0
+offset_right = 252.0
+offset_bottom = 282.0
+mouse_filter = 2
+
+[node name="Resource" type="Label" parent="Level09" unique_id=69141616]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 350.0
+offset_right = 276.0
+offset_bottom = 411.0
+theme_override_colors/font_color = Color(0.52, 0.69, 0.82, 1)
+theme_override_font_sizes/font_size = 14
+text = "crystal_tower_lv09.png
+可编辑节点：Level09/Tower"
+horizontal_alignment = 1
+vertical_alignment = 1

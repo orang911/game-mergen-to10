@@ -1,0 +1,200 @@
+{
+  "purpose": "secondary-ui-complete-v03",
+  "version": "v03",
+  "date": "2026-08-13",
+  "visual_truth": [
+    "art/ai_generated/imagegen/2026-08-13/131530_chapter01_ui_batch2_concepts/pause_and_settings_concept_v01.png",
+    "art/ai_generated/imagegen/2026-08-13/131530_chapter01_ui_batch2_concepts/daily_tasks_and_signin_concept_v01.png",
+    "art/ai_generated/imagegen/2026-08-13/131530_chapter01_ui_batch2_concepts/lobby_growth_and_commercial_concept_v01.png"
+  ],
+  "pages": [
+    {
+      "page": "pause",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/pause_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/pause_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/pause_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_battle_pause_shell_v03.png"
+      ],
+      "logical_size": [
+        660,
+        485
+      ],
+      "runtime_size": [
+        1320,
+        970
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "exit_confirm",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/exit_confirm_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/exit_confirm_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/exit_confirm_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_exit_confirm_shell_v03.png"
+      ],
+      "logical_size": [
+        660,
+        388
+      ],
+      "runtime_size": [
+        1320,
+        776
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "settings",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/settings_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/settings_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/settings_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_settings_shell_v03.png"
+      ],
+      "logical_size": [
+        650,
+        910
+      ],
+      "runtime_size": [
+        1300,
+        1820
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "clear_confirm",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/clear_confirm_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/clear_confirm_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/clear_confirm_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_clear_data_confirm_shell_v03.png"
+      ],
+      "logical_size": [
+        660,
+        383
+      ],
+      "runtime_size": [
+        1320,
+        766
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "daily_tasks",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/daily_tasks_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/daily_tasks_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/daily_tasks_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_tasks_shell_v03_top.png",
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_tasks_shell_v03_middle.png",
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_tasks_shell_v03_bottom.png"
+      ],
+      "logical_size": [
+        880,
+        1141
+      ],
+      "runtime_size": [
+        1760,
+        2282
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "daily_signin",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/daily_signin_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/daily_signin_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/daily_signin_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_daily_signin_shell_v03.png"
+      ],
+      "logical_size": [
+        880,
+        436
+      ],
+      "runtime_size": [
+        1760,
+        872
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "benefits",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/benefits_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/benefits_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/benefits_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_benefits_shell_v03.png"
+      ],
+      "logical_size": [
+        760,
+        775
+      ],
+      "runtime_size": [
+        1520,
+        1550
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "first_purchase",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/first_purchase_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/first_purchase_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/first_purchase_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_first_purchase_gift_shell_v03.png"
+      ],
+      "logical_size": [
+        760,
+        748
+      ],
+      "runtime_size": [
+        1520,
+        1496
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "piggy",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/piggy_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/piggy_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/piggy_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_piggy_bank_shell_v03.png"
+      ],
+      "logical_size": [
+        760,
+        842
+      ],
+      "runtime_size": [
+        1520,
+        1684
+      ],
+      "text_baked": false
+    },
+    {
+      "page": "shop",
+      "source": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/shop_master_v03.png",
+      "master_chroma": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_chroma_2160x3840/shop_master_v03.png",
+      "master_alpha": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v03/masters_alpha_2160x3840/shop_master_v03.png",
+      "runtime_frames": [
+        "assets/runtime/ui/secondary_complete_v03/frames/ui_shop_shell_v03.png"
+      ],
+      "logical_size": [
+        850,
+        901
+      ],
+      "runtime_size": [
+        1700,
+        1802
+      ],
+      "text_baked": false
+    }
+  ],
+  "runtime_root": "assets/runtime/ui/secondary_complete_v03",
+  "max_runtime_texture": 2048,
+  "all_dynamic_text_programmatic": true,
+  "v02_preserved": true,
+  "runtime_png_count": 106,
+  "runtime_audit_pass": true
+}

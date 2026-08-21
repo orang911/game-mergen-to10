@@ -1,0 +1,41 @@
+{
+  "date": "2026-08-05",
+  "version": "v01",
+  "source": "C:/Users/PC/Desktop/??-16.png",
+  "source_size": [
+    715,
+    1268
+  ],
+  "outputs": [
+    {
+      "file": "20260805_item_choice_modal_reference_715x1268_v01.png",
+      "size": [
+        715,
+        1268
+      ],
+      "sha256": "a3ffa81989ecf2e7b882c80515f8575992400aad1b1d408e0759ed3655736f5b"
+    },
+    {
+      "file": "20260805_item_choice_modal_hires_1430x2536_v01.png",
+      "size": [
+        1430,
+        2536
+      ],
+      "sha256": "434183b33a1140024d2beb0516d4103ee81446037e94a6db64998a145162882b"
+    },
+    {
+      "file": "20260805_item_choice_modal_master_2860x5072_v01.png",
+      "size": [
+        2860,
+        5072
+      ],
+      "sha256": "ccc498117646ba54451f0c82633e5b11ae78cde7264cdccfa382a51f5f50085b"
+    }
+  ],
+  "constraints": [
+    "preserve composition and proportions",
+    "preserve colors, effects, icons and schematic text",
+    "only high-resolution resampling and subtle edge clarity restoration",
+    "no generative redraw"
+  ]
+}

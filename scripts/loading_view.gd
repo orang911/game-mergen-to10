@@ -1,122 +1,143 @@
 extends Control
 class_name LoadingView
 
-signal play_pressed
-signal simulation_pressed
-signal intro_finished
+signal loading_completed
+signal clear_local_data_requested
 
-const DESIGN_SIZE := Vector2(967.0, 1626.0)
-const INTRO_FADE_DURATION := 0.36
-const INTRO_ENABLE_DELAY := 0.12
+const DESIGN_SIZE := Vector2(941.0, 1672.0)
+const LOADING_DURATION := 2.5
+const FADE_DURATION := 0.18
 
 @onready var _design_root := get_node_or_null("DesignRoot") as Control
-@onready var _artwork := get_node_or_null("DesignRoot/Artwork") as TextureRect
-@onready var _play_button := get_node_or_null("DesignRoot/PlayButton") as BaseButton
+@onready var _progress_clip := get_node_or_null("DesignRoot/ProgressBar/FillClip") as Control
+@onready var _percent_label := get_node_or_null("DesignRoot/ProgressBar/PercentLabel") as Label
+@onready var _clear_data_button := get_node_or_null("DesignRoot/ClearLocalDataButton") as Button
+@onready var _clear_confirm := get_node_or_null("ClearLocalDataConfirm") as ConfirmationDialog
 
-var _intro_tween: Tween
-var _interactive := false
-var _simulation_button: Button
+var _elapsed := 0.0
+var _loading := false
+var _paused := false
+var _completion_emitted := false
+var _fade_tween: Tween
 
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_build_simulation_button()
-	if _play_button and not _play_button.pressed.is_connected(_on_play_button_pressed):
-		_play_button.pressed.connect(_on_play_button_pressed)
-	set_interactive(false)
-	if _artwork:
-		_artwork.modulate = Color.WHITE
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	if _clear_data_button and not _clear_data_button.pressed.is_connected(_show_clear_confirmation):
+		_clear_data_button.pressed.connect(_show_clear_confirmation)
+	if _clear_confirm:
+		if not _clear_confirm.confirmed.is_connected(_on_clear_confirmed):
+			_clear_confirm.confirmed.connect(_on_clear_confirmed)
+		if not _clear_confirm.canceled.is_connected(_on_clear_canceled):
+			_clear_confirm.canceled.connect(_on_clear_canceled)
+	_update_progress(0.0)
 	if size.x > 0.0 and size.y > 0.0:
 		layout_for_viewport(size)
+
+
+func _process(delta: float) -> void:
+	if not _loading or _paused or _completion_emitted:
+		return
+	_elapsed = minf(_elapsed + delta, LOADING_DURATION)
+	_update_progress(_progress_for_elapsed(_elapsed))
+	if _elapsed >= LOADING_DURATION:
+		_finish_loading()
 
 
 func layout_for_viewport(viewport_size: Vector2) -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0 or _design_root == null:
 		return
-	# Full-bleed cover keeps the login page filled without non-uniform image
-	# stretching. The play hotspot shares this transform with the artwork.
-	var scale_factor := maxf(viewport_size.x / DESIGN_SIZE.x, viewport_size.y / DESIGN_SIZE.y)
+	# Keep all controls inside the viewport while the independent background
+	# uses cover scaling to remain full bleed on tall and narrow screens.
+	var scale_factor := minf(viewport_size.x / DESIGN_SIZE.x, viewport_size.y / DESIGN_SIZE.y)
 	_design_root.position = (viewport_size - DESIGN_SIZE * scale_factor) * 0.5
 	_design_root.size = DESIGN_SIZE
 	_design_root.scale = Vector2.ONE * scale_factor
 
 
-func begin_intro() -> void:
-	stop_animations()
-	set_interactive(false)
-	if _artwork:
-		_artwork.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	_intro_tween = create_tween()
-	if _artwork:
-		_intro_tween.tween_property(_artwork, "modulate:a", 1.0, INTRO_FADE_DURATION).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	else:
-		_intro_tween.tween_interval(INTRO_FADE_DURATION)
-	_intro_tween.tween_interval(INTRO_ENABLE_DELAY)
-	_intro_tween.tween_callback(func():
-		set_interactive(true)
-		intro_finished.emit()
-	)
+func begin_loading() -> void:
+	_restart_state()
 
 
-func set_interactive(enabled: bool) -> void:
-	_interactive = enabled
-	if _play_button:
-		_play_button.disabled = not enabled
-		_play_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
-	if _simulation_button:
-		_simulation_button.disabled = not enabled
-		_simulation_button.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+func pause_loading() -> void:
+	if _loading and not _completion_emitted:
+		_paused = true
 
 
-func _build_simulation_button() -> void:
-	if _design_root == null:
-		return
-	_simulation_button = Button.new()
-	_simulation_button.name = "BalanceSimulationButton"
-	_simulation_button.text = "数值模拟"
-	_simulation_button.process_mode = Node.PROCESS_MODE_ALWAYS
-	_simulation_button.focus_mode = Control.FOCUS_NONE
-	_simulation_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_simulation_button.position = Vector2(744.0, 1532.0)
-	_simulation_button.size = Vector2(190.0, 64.0)
-	_simulation_button.add_theme_font_size_override("font_size", 24)
-	_simulation_button.add_theme_color_override("font_color", Color(0.90, 0.96, 1.0))
-	_simulation_button.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 1.0))
-	_simulation_button.add_theme_constant_override("outline_size", 2)
-	_simulation_button.add_theme_stylebox_override("normal", _simulation_button_style(Color(0.08, 0.13, 0.24, 0.82)))
-	_simulation_button.add_theme_stylebox_override("hover", _simulation_button_style(Color(0.10, 0.34, 0.62, 0.94)))
-	_simulation_button.add_theme_stylebox_override("pressed", _simulation_button_style(Color(0.06, 0.24, 0.48, 0.96)))
-	_simulation_button.add_theme_stylebox_override("disabled", _simulation_button_style(Color(0.08, 0.10, 0.16, 0.46)))
-	_simulation_button.pressed.connect(func():
-		if _interactive:
-			simulation_pressed.emit()
-	)
-	_design_root.add_child(_simulation_button)
+func resume_loading() -> void:
+	if _loading and not _completion_emitted:
+		_paused = false
 
 
-func _simulation_button_style(color: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.border_color = Color(0.42, 0.66, 0.96, color.a)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	return style
+func restart_loading() -> void:
+	_restart_state()
 
 
 func stop_animations() -> void:
-	if _intro_tween and _intro_tween.is_valid():
-		_intro_tween.kill()
-	_intro_tween = null
-	set_interactive(false)
-	if _artwork:
-		_artwork.modulate = Color.WHITE
+	_loading = false
+	_paused = false
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade_tween = null
+	modulate = Color.WHITE
 
 
-func _on_play_button_pressed() -> void:
-	if _interactive:
-		play_pressed.emit()
+func _restart_state() -> void:
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()
+	_fade_tween = null
+	_elapsed = 0.0
+	_loading = true
+	_paused = false
+	_completion_emitted = false
+	visible = true
+	modulate = Color.WHITE
+	_update_progress(0.0)
+
+
+func _progress_for_elapsed(seconds: float) -> float:
+	if seconds <= 1.75:
+		return lerpf(0.0, 85.0, seconds / 1.75)
+	if seconds <= 2.25:
+		return lerpf(85.0, 95.0, (seconds - 1.75) / 0.5)
+	return lerpf(95.0, 100.0, (seconds - 2.25) / 0.25)
+
+
+func _update_progress(percent: float) -> void:
+	var clamped := clampf(percent, 0.0, 100.0)
+	if _progress_clip:
+		_progress_clip.size.x = 576.0 * clamped / 100.0
+	if _percent_label:
+		_percent_label.text = "%d%%" % int(round(clamped))
+
+
+func _finish_loading() -> void:
+	if _completion_emitted:
+		return
+	_completion_emitted = true
+	_loading = false
+	_update_progress(100.0)
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(self, "modulate:a", 0.0, FADE_DURATION).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_fade_tween.tween_callback(func(): loading_completed.emit())
+
+
+func _show_clear_confirmation() -> void:
+	if _clear_confirm == null or _completion_emitted:
+		return
+	pause_loading()
+	_clear_confirm.popup_centered()
+
+
+func _on_clear_confirmed() -> void:
+	clear_local_data_requested.emit()
+
+
+func _on_clear_canceled() -> void:
+	resume_loading()
 
 
 func _exit_tree() -> void:
-	if _intro_tween and _intro_tween.is_valid():
-		_intro_tween.kill()
+	if _fade_tween and _fade_tween.is_valid():
+		_fade_tween.kill()

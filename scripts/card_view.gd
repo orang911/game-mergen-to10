@@ -5,8 +5,8 @@ signal pressed
 
 const BASE_SIZE := Vector2(257.0, 377.0)
 const GREEN_KEY_SHADER := preload("res://shaders/ui_green_key.gdshader")
-const STAR_ACTIVE_TEXTURE := preload("res://assets/runtime/ui/cards/stars/star_active.png")
-const STAR_SLOT_TEXTURE := preload("res://assets/runtime/ui/cards/stars/star_slot.png")
+const STAR_ACTIVE_TEXTURE := preload("res://assets/runtime/ui/components/rating_stars/icons/star_active.png")
+const STAR_SLOT_TEXTURE := preload("res://assets/runtime/ui/components/rating_stars/icons/star_slot.png")
 const NEW_TEXTURE := preload("res://assets/runtime/ui/cards/frames/badge_new.png")
 
 # These coordinates are measured against the 257x377 card-face mockup.

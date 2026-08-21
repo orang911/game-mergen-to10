@@ -5,25 +5,37 @@ class_name CrystalView
 const ATTACK_INTERVAL := CrystalSystem.ATTACK_INTERVAL
 const PANEL_DISPLAY_SCALE := Vector2(0.5, 0.5)
 const FIXED_TOWER_SIZE_START_LEVEL := 6
-const FIXED_TOWER_VISUAL_HEIGHT := 220.0
 const HIGH_LEVEL_UPGRADE_PULSE := 1.06
 const HIGH_LEVEL_REWARD_PULSE := 1.08
-const DORMANT_TEXTURE := preload("res://assets/runtime/ui/battle/core/crystal_dormant.png")
+const DORMANT_TEXTURE := preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv01.png")
+const DORMANT_MODULATE := Color(0.42, 0.48, 0.58, 1.0)
+const TOWER_CANVAS_SIZE := Vector2(512.0, 512.0)
+const TOWER_SOURCE_BASELINE := Vector2(256.0, 477.0)
+const TOWER_RENDER_BASELINE := Vector2(90.0, 204.48)
+# Charged-shot overlay. When the artist's PNG is available at this path the
+# feedback layer uses it (RGBA kept); otherwise a procedural cyan glow is drawn.
+const CHARGE_FEEDBACK_PATH := "res://assets/runtime/fx/crystal_tower/charge_overlay.png"
+const UPGRADE_SHOWCASE_SCENE_PATH := "res://scenes/tools/crystal_tower_upgrade_showcase.tscn"
+const CHARGE_FEEDBACK_MAX_ALPHA := 0.72
+const CHARGE_FEEDBACK_FADE_DURATION := 0.16
 
 const TOWER_VISUALS := {
-	1: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_01.png"), "scale": 0.75},
-	2: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_02.png"), "scale": 0.80},
-	3: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_03.png"), "scale": 0.80},
-	4: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_04.png"), "scale": 0.90},
-	5: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_05.png"), "scale": 0.86},
-	6: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_06.png"), "scale": 1.00},
-	7: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_07.png"), "scale": 1.00},
-	8: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_08.png"), "scale": 1.00},
-	9: {"texture": preload("res://assets/runtime/ui/battle/core/crystal_level_09.png"), "scale": 1.00},
+	# All source art is 512×512. Every scale is uniform; levels 6–9 retain the
+	# level-five footprint so the tower remains readable over the board.
+	# bounds are authored source-pixel alpha bounds for projectile and tip anchors.
+	1: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv01.png"), "scale": 0.530, "bounds": Rect2(127, 235, 258, 242)},
+	2: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv02.png"), "scale": 0.443, "bounds": Rect2(121, 183, 270, 294)},
+	3: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv03.png"), "scale": 0.381, "bounds": Rect2(107, 115, 298, 362)},
+	4: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv04.png"), "scale": 0.472, "bounds": Rect2(103, 125, 306, 352)},
+	5: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv05.png"), "scale": 0.476, "bounds": Rect2(102, 121, 307, 356)},
+	6: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv06.png"), "scale": 0.481, "bounds": Rect2(104, 126, 304, 351)},
+	7: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv07.png"), "scale": 0.442, "bounds": Rect2(95, 95, 322, 382)},
+	8: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv08.png"), "scale": 0.429, "bounds": Rect2(89, 83, 334, 394)},
+	9: {"texture": preload("res://assets/runtime/ui/components/crystal_tower/textures/crystal_tower_lv09.png"), "scale": 0.415, "bounds": Rect2(71, 70, 370, 407)},
 }
 
 @onready var _tower := get_node_or_null("Tower") as TextureRect
-@onready var _atk_panel := get_node_or_null("AtkPanel") as TextureRect
+@onready var _atk_panel := get_node_or_null("AtkPanel") as Control
 @onready var _lv_label := get_node_or_null("AtkPanel/AtkLabelLv") as Label
 @onready var _atk_label := get_node_or_null("AtkPanel/AtkLabelVal") as Label
 @onready var _spd_label := get_node_or_null("AtkPanel/AtkLabelSpd") as Label
@@ -42,11 +54,19 @@ var _damage_tween: Tween
 var _durability_current := GameConfig.MAX_CASTLE_DURABILITY
 var _durability_max := GameConfig.MAX_CASTLE_DURABILITY
 var _awakened := true
+var _charge_feedback: Control
+var _charge_feedback_tween: Tween
+# Normalized to the authored level-one texture canvas in the upgrade showcase.
+# The showcase is the art source of truth; the old percentage calculation below
+# remains a safe fallback if the scene is unavailable or malformed.
+var _showcase_charge_feedback_normalized := Rect2(-1.0, -1.0, 0.0, 0.0)
+var _showcase_beam_origin_normalized := Vector2(-1.0, -1.0)
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_children_ignore()
+	_load_showcase_effect_layout()
 	_update_display()
 	update_durability(_durability_current, _durability_max)
 	_hide_panel_immediate()
@@ -87,8 +107,20 @@ func is_awakened() -> bool:
 
 func get_attack_origin_global() -> Vector2:
 	if _tower and is_instance_valid(_tower):
-		return _tower.get_global_transform_with_canvas() * Vector2(_tower.size.x * 0.5, _tower.size.y * 0.5)
+		return get_global_transform_with_canvas() * _get_tower_visual_rect().get_center()
 	return get_global_transform_with_canvas() * (size * 0.5)
+
+
+func get_crystal_top_global() -> Vector2:
+	# The beam's origin is authored independently from the glow rectangle. In the
+	# showcase, BeamPreview's lower-center point is the point touching the gem;
+	# this lets art move the firing point without changing the charge overlay.
+	if _crystal_level == 1 and _showcase_beam_origin_normalized.x >= 0.0:
+		var canvas_rect := _get_tower_canvas_visual_rect()
+		var origin := canvas_rect.position + canvas_rect.size * _showcase_beam_origin_normalized
+		return get_global_transform_with_canvas() * origin
+	var rect := _get_crystal_feedback_rect()
+	return get_global_transform_with_canvas() * Vector2(rect.get_center().x, rect.position.y)
 
 
 func update_durability(current: int, max_value: int) -> void:
@@ -96,11 +128,13 @@ func update_durability(current: int, max_value: int) -> void:
 	_durability_max = maxi(1, max_value)
 	var ratio := clampf(float(_durability_current) / float(_durability_max), 0.0, 1.0)
 	if _durability_label:
+		_durability_label.position = Vector2(24.0, 208.0)
+		_durability_label.size = Vector2(132.0, 25.0)
 		_durability_label.text = "%d/%d" % [_durability_current, _durability_max]
 		var label_color := Color(0.08, 0.27, 0.65, 1.0) if ratio > 0.5 else (Color(0.95, 0.56, 0.1, 1.0) if ratio > 0.25 else Color(0.9, 0.15, 0.15, 1.0))
 		_durability_label.add_theme_color_override("font_color", label_color)
 	if _durability_back:
-		_durability_back.position = Vector2(46.0, 226.0)
+		_durability_back.position = Vector2(46.0, 234.0)
 		_durability_back.size = Vector2(88.0, 7.0)
 	if _durability_fill:
 		_durability_fill.position = Vector2(2.0, 2.0)
@@ -125,6 +159,7 @@ func play_damage(_amount: int) -> void:
 
 func reset() -> void:
 	_kill_all_tweens()
+	cancel_charge_feedback()
 	_crystal_level = 1
 	_awakened = true
 	_hide_panel_immediate()
@@ -147,10 +182,13 @@ func _kill_all_tweens() -> void:
 		_panel_tween.kill()
 	if _damage_tween and _damage_tween.is_valid():
 		_damage_tween.kill()
+	if _charge_feedback_tween and _charge_feedback_tween.is_valid():
+		_charge_feedback_tween.kill()
 	_upgrade_tween = null
 	_attack_tween = null
 	_panel_tween = null
 	_damage_tween = null
+	_charge_feedback_tween = null
 
 
 func _hide_panel_immediate() -> void:
@@ -259,15 +297,12 @@ func _update_display() -> void:
 		var tex: Texture2D = DORMANT_TEXTURE if not _awakened else data["texture"]
 		if tex:
 			_tower.texture = tex
-			var tex_sz: Vector2 = tex.get_size()
-			var panel_sz := size
-			_tower.position = Vector2((panel_sz.x - tex_sz.x) / 2.0, panel_sz.y - tex_sz.y)
-			_tower.pivot_offset = Vector2(tex_sz.x / 2.0, tex_sz.y)
-			_tower.size = tex_sz
-			var display_scale := 0.75 if not _awakened else float(data["scale"])
-			if _crystal_level >= FIXED_TOWER_SIZE_START_LEVEL:
-				display_scale = FIXED_TOWER_VISUAL_HEIGHT / tex_sz.y
+			_tower.size = TOWER_CANVAS_SIZE
+			_tower.pivot_offset = TOWER_SOURCE_BASELINE
+			_tower.position = TOWER_RENDER_BASELINE - TOWER_SOURCE_BASELINE
+			var display_scale := float(data["scale"])
 			_tower.scale = Vector2.ONE * display_scale
+			_tower.modulate = DORMANT_MODULATE if not _awakened else Color.WHITE
 			_tower.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			_tower.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
@@ -294,7 +329,9 @@ func _play_awakening_animation() -> void:
 func _spawn_awakening_fx() -> void:
 	if _tower == null:
 		return
-	var tower_center := _tower.position + _tower.size * 0.5
+	var tower_rect := _get_tower_visual_rect()
+	var tower_center := tower_rect.get_center()
+	var tower_base_y := tower_rect.end.y
 	var base_halo := Panel.new()
 	base_halo.name = "AwakeningBaseHalo"
 	base_halo.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -306,7 +343,7 @@ func _spawn_awakening_fx() -> void:
 	base_halo_style.shadow_color = Color(0.12, 0.86, 1.0, 0.88)
 	base_halo_style.shadow_size = 24
 	base_halo.add_theme_stylebox_override("panel", base_halo_style)
-	base_halo.position = Vector2(tower_center.x - 86.0, _tower.position.y + _tower.size.y * 0.76)
+	base_halo.position = Vector2(tower_center.x - 86.0, tower_base_y - 29.0)
 	base_halo.size = Vector2(172.0, 58.0)
 	base_halo.pivot_offset = base_halo.size * 0.5
 	base_halo.scale = Vector2(0.22, 0.22)
@@ -324,7 +361,7 @@ func _spawn_awakening_fx() -> void:
 	column_style.set_corner_radius_all(36)
 	column.add_theme_stylebox_override("panel", column_style)
 	column.position = Vector2(tower_center.x - 42.0, -92.0)
-	column.size = Vector2(84.0, tower_center.y + 130.0)
+	column.size = Vector2(84.0, tower_base_y + 92.0)
 	column.pivot_offset = Vector2(column.size.x * 0.5, column.size.y)
 	column.scale = Vector2(0.20, 0.15)
 	add_child(column)
@@ -341,7 +378,7 @@ func _spawn_awakening_fx() -> void:
 	ring_style.shadow_color = Color(0.16, 0.82, 1.0, 0.65)
 	ring_style.shadow_size = 12
 	ring.add_theme_stylebox_override("panel", ring_style)
-	ring.position = Vector2(tower_center.x - 65.0, _tower.position.y + _tower.size.y - 66.0)
+	ring.position = Vector2(tower_center.x - 65.0, tower_base_y - 59.0)
 	ring.size = Vector2(130.0, 54.0)
 	ring.pivot_offset = ring.size * 0.5
 	ring.scale = Vector2(0.18, 0.18)
@@ -371,9 +408,89 @@ func _spawn_awakening_fx() -> void:
 func _layout_attack_panel() -> void:
 	if not (_atk_panel and _tower):
 		return
-	var target_canvas := _tower.get_global_transform_with_canvas() * Vector2(_tower.size.x, _tower.size.y * 0.5)
-	var target_local := get_global_transform_with_canvas().affine_inverse() * target_canvas
+	var tower_rect := _get_tower_visual_rect()
+	var target_local := Vector2(tower_rect.end.x + 7.0, tower_rect.get_center().y)
 	_atk_panel.position = target_local - _atk_panel.pivot_offset
+
+
+func _get_tower_visual_rect() -> Rect2:
+	var display_level := clampi(_crystal_level, 1, GameConfig.CRYSTAL_MAX_LEVEL)
+	var data: Dictionary = TOWER_VISUALS[display_level]
+	var bounds := data.get("bounds", Rect2(Vector2.ZERO, TOWER_CANVAS_SIZE)) as Rect2
+	# Tips and projectile origins use the stable authored scale. Upgrade pulses
+	# are presentation-only and must not make their anchors drift frame to frame.
+	var uniform_scale := float(data["scale"])
+	var visual_position := TOWER_RENDER_BASELINE + (bounds.position - TOWER_SOURCE_BASELINE) * uniform_scale
+	return Rect2(visual_position, bounds.size * uniform_scale)
+
+
+func _get_tower_canvas_visual_rect() -> Rect2:
+	# _tower is a 512×512 canvas whose pivot is the authored baseline.  This is
+	# the same transform used by the TextureRect in the battle scene, so a rect
+	# authored against the showcase texture can be mapped without guessing from
+	# the alpha bounds of the stone base.
+	var display_level := clampi(_crystal_level, 1, GameConfig.CRYSTAL_MAX_LEVEL)
+	var data: Dictionary = TOWER_VISUALS[display_level]
+	var uniform_scale := float(data["scale"])
+	return Rect2(TOWER_RENDER_BASELINE - TOWER_SOURCE_BASELINE * uniform_scale, TOWER_CANVAS_SIZE * uniform_scale)
+
+
+func _load_showcase_effect_layout() -> void:
+	_showcase_charge_feedback_normalized = Rect2(-1.0, -1.0, 0.0, 0.0)
+	_showcase_beam_origin_normalized = Vector2(-1.0, -1.0)
+	if not ResourceLoader.exists(UPGRADE_SHOWCASE_SCENE_PATH):
+		return
+	var packed := load(UPGRADE_SHOWCASE_SCENE_PATH) as PackedScene
+	if packed == null:
+		return
+	var showcase := packed.instantiate()
+	var tower := showcase.get_node_or_null("Level01/PreviewFrame/Tower") as TextureRect
+	var feedback := showcase.get_node_or_null("Level01/PreviewFrame/EffectLayer/ChargeFeedback") as Control
+	var beam := showcase.get_node_or_null("Level01/PreviewFrame/EffectLayer/BeamPreview") as Control
+	if tower == null or feedback == null or tower.texture == null:
+		showcase.free()
+		return
+	var source_size := tower.texture.get_size()
+	if source_size.x <= 0.0 or source_size.y <= 0.0 or tower.size.x <= 0.0 or tower.size.y <= 0.0:
+		showcase.free()
+		return
+	# The showcase uses KEEP_ASPECT_CENTERED. Recreate the actual drawn square
+	# inside its TextureRect before normalizing the editable effect rectangle.
+	var fit_scale := minf(tower.size.x / source_size.x, tower.size.y / source_size.y)
+	var drawn_size := source_size * fit_scale
+	var drawn_position := tower.position + (tower.size - drawn_size) * 0.5
+	var effect_rect := Rect2(feedback.position, feedback.size)
+	_showcase_charge_feedback_normalized = Rect2(
+		(effect_rect.position - drawn_position) / drawn_size,
+		effect_rect.size / drawn_size
+	)
+	if beam:
+		# The supplied beam art points toward the gem. Its lower-center point is
+		# therefore the authored firing origin; the rest of the beam is visual
+		# direction/length and is not used as a hitbox.
+		var beam_rect := Rect2(beam.position, beam.size)
+		var beam_origin := Vector2(beam_rect.get_center().x, beam_rect.end.y)
+		_showcase_beam_origin_normalized = (beam_origin - drawn_position) / drawn_size
+	showcase.free()
+
+
+func _get_crystal_feedback_rect() -> Rect2:
+	# The feedback sprite is a gem glow, not a second full-tower silhouette.
+	# Keep its anchor centered on the crystal core for every tower level.
+	var tower_rect := _get_tower_visual_rect()
+	if _crystal_level == 1 and _showcase_charge_feedback_normalized.position.x >= 0.0:
+		var canvas_rect := _get_tower_canvas_visual_rect()
+		return Rect2(
+			canvas_rect.position + canvas_rect.size * _showcase_charge_feedback_normalized.position,
+			canvas_rect.size * _showcase_charge_feedback_normalized.size
+		)
+	# The lower stone ring belongs to the tower, not the crystal feedback. The
+	# tighter frame leaves the glow on the blue gem and keeps the ring readable.
+	# Match the authored blue gem bounds (rather than the much wider tower
+	# silhouette): keep the base ring and lower stonework outside this rect.
+	var feedback_size := Vector2(tower_rect.size.x * 0.34, tower_rect.size.y * 0.54)
+	var feedback_center := Vector2(tower_rect.get_center().x, tower_rect.position.y + tower_rect.size.y * 0.30)
+	return Rect2(feedback_center - feedback_size * 0.5, feedback_size)
 
 
 func _play_upgrade_animation(_old_level: int) -> void:
@@ -404,6 +521,77 @@ func play_attack_flash() -> void:
 		_attack_tween = create_tween()
 		_attack_tween.tween_property(_tower, "modulate", Color(1.4, 1.4, 1.8, 1.0), 0.08)
 		_attack_tween.tween_property(_tower, "modulate", base, 0.12)
+
+
+func play_charge_feedback(duration: float) -> void:
+	if not is_inside_tree() or _tower == null:
+		return
+	_ensure_charge_feedback()
+	if _charge_feedback_tween and _charge_feedback_tween.is_valid():
+		_charge_feedback_tween.kill()
+	# The charge image is intentionally scoped to the blue crystal only.  The
+	# stone ring/base remains the authored tower art and must not glow with it.
+	var rect := _get_crystal_feedback_rect()
+	_charge_feedback.position = rect.position
+	_charge_feedback.size = rect.size
+	_charge_feedback.pivot_offset = rect.size * 0.5
+	_charge_feedback.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_charge_feedback.visible = true
+	_charge_feedback_tween = create_tween()
+	_charge_feedback_tween.tween_property(_charge_feedback, "modulate:a", CHARGE_FEEDBACK_MAX_ALPHA, maxf(0.01, duration)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_charge_feedback_tween.tween_property(_charge_feedback, "modulate:a", 0.0, CHARGE_FEEDBACK_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_charge_feedback_tween.tween_callback(func():
+		if is_instance_valid(_charge_feedback):
+			_charge_feedback.visible = false
+		_charge_feedback_tween = null
+	)
+
+
+func cancel_charge_feedback() -> void:
+	if _charge_feedback_tween and _charge_feedback_tween.is_valid():
+		_charge_feedback_tween.kill()
+	_charge_feedback_tween = null
+	if _charge_feedback and is_instance_valid(_charge_feedback):
+		_charge_feedback.visible = false
+		_charge_feedback.modulate.a = 0.0
+
+
+func _ensure_charge_feedback() -> void:
+	if _charge_feedback and is_instance_valid(_charge_feedback):
+		return
+	var texture: Texture2D = null
+	# The production charge PNG is supplied separately by art. Avoid emitting a
+	# ResourceLoader error while that file is absent; the visual fallback keeps
+	# the timing/state path testable until the approved RGBA asset is copied in.
+	if ResourceLoader.exists(CHARGE_FEEDBACK_PATH):
+		texture = load(CHARGE_FEEDBACK_PATH) as Texture2D
+	if texture:
+		var rect := TextureRect.new()
+		rect.name = "ChargeFeedback"
+		rect.texture = texture
+		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_charge_feedback = rect
+	else:
+		# Procedural placeholder keeps the charged-shot readable without a fake
+		# texture. It intentionally mirrors the crystal element color.
+		var panel := Panel.new()
+		panel.name = "ChargeFeedback"
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.32, 0.86, 1.0, 0.85)
+		style.border_color = Color(0.68, 1.0, 1.0, 0.85)
+		style.set_border_width_all(3)
+		style.set_corner_radius_all(48)
+		style.shadow_color = Color(0.18, 0.80, 1.0, 0.55)
+		style.shadow_size = 18
+		panel.add_theme_stylebox_override("panel", style)
+		_charge_feedback = panel
+	_charge_feedback.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_charge_feedback.visible = false
+	add_child(_charge_feedback)
+	move_child(_charge_feedback, _tower.get_index() + 1)
 
 
 func play_reward_absorb() -> void:

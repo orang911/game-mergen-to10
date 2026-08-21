@@ -1,0 +1,1024 @@
+{
+  "purpose": "chapter01-centered-secondary-ui-complete",
+  "version": "v02",
+  "date": "2026-08-13",
+  "effect_reference": "art/ai_generated/imagegen/2026-08-13/131530_chapter01_ui_batch2_concepts",
+  "frames": [
+    {
+      "id": "battle_pause",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_battle_pause_shell_v02.png",
+      "size": [
+        660,
+        485
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_battle_pause_centered_implementation_v02.png"
+    },
+    {
+      "id": "exit_confirm",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_exit_confirm_shell_v02.png",
+      "size": [
+        660,
+        388
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_exit_confirm_centered_implementation_v02.png"
+    },
+    {
+      "id": "settings",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_settings_shell_v02.png",
+      "size": [
+        650,
+        910
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_settings_centered_implementation_v02.png"
+    },
+    {
+      "id": "clear_data_confirm",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_clear_data_confirm_shell_v02.png",
+      "size": [
+        660,
+        383
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_clear_data_confirm_centered_implementation_v02.png"
+    },
+    {
+      "id": "daily_tasks",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_daily_tasks_shell_v02.png",
+      "size": [
+        880,
+        1141
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_daily_tasks_centered_implementation_v02.png"
+    },
+    {
+      "id": "daily_signin",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_daily_signin_shell_v02.png",
+      "size": [
+        880,
+        436
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_daily_signin_centered_implementation_v02.png"
+    },
+    {
+      "id": "benefits",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_benefits_shell_v02.png",
+      "size": [
+        760,
+        775
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_benefits_centered_implementation_v02.png"
+    },
+    {
+      "id": "first_purchase_gift",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_first_purchase_gift_shell_v02.png",
+      "size": [
+        760,
+        748
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_first_purchase_gift_centered_implementation_v02.png"
+    },
+    {
+      "id": "piggy_bank",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_piggy_bank_shell_v02.png",
+      "size": [
+        760,
+        842
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_piggy_bank_centered_implementation_v02.png"
+    },
+    {
+      "id": "shop",
+      "shell": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/frames/ui_shop_shell_v02.png",
+      "size": [
+        850,
+        901
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "anchor": "screen_center",
+      "preview": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/previews/implementation_previews/ui_shop_centered_implementation_v02.png"
+    }
+  ],
+  "elements": [
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/badge_red_dot.png",
+      "size": [
+        48,
+        48
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_blue_default.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_blue_pressed.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_gray_disabled.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_green_default.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_red_default.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_red_pressed.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_yellow_default.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/button_yellow_pressed.png",
+      "size": [
+        192,
+        80
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/divider_diamond.png",
+      "size": [
+        420,
+        28
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/panel_dark.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/panel_light.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/progress_fill.png",
+      "size": [
+        240,
+        32
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/progress_track.png",
+      "size": [
+        240,
+        32
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/row_light.png",
+      "size": [
+        420,
+        88
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/switch_off.png",
+      "size": [
+        112,
+        60
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/switch_on.png",
+      "size": [
+        112,
+        60
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/tab_default.png",
+      "size": [
+        180,
+        64
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/tab_selected.png",
+      "size": [
+        180,
+        64
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/common/title_ribbon_blue.png",
+      "size": [
+        480,
+        92
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/ad_removed.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/arrow_right.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/back.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/check.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/chest.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/coin.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/crystal.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/double_coin.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/exit_door.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/gift.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/help.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/lock.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/music.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/privacy_shield.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/arrow_right.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/back.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/exit_door.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/help.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/music.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/privacy_shield.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/settings_gear.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/sound.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings/vibration.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/settings_gear.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/shop.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/sold_out.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/sound.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/task_kill.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/task_login.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/task_merge.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/task_star.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/task_swords.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/icons/vibration.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/badge_new_blank.png",
+      "size": [
+        72,
+        72
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/badge_owned.png",
+      "size": [
+        72,
+        72
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/benefit_card.png",
+      "size": [
+        180,
+        230
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/first_chest_closed.png",
+      "size": [
+        220,
+        180
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/first_chest_open.png",
+      "size": [
+        220,
+        180
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/first_reward_altar.png",
+      "size": [
+        220,
+        180
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/piggy_empty.png",
+      "size": [
+        160,
+        160
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/piggy_filling.png",
+      "size": [
+        160,
+        160
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/piggy_full.png",
+      "size": [
+        160,
+        160
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/piggy_owned.png",
+      "size": [
+        160,
+        160
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/reward_slot_blue.png",
+      "size": [
+        96,
+        112
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/commerce/reward_slot_purple.png",
+      "size": [
+        96,
+        112
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/activity_chest_claimed.png",
+      "size": [
+        150,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/activity_chest_locked.png",
+      "size": [
+        150,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/activity_chest_ready.png",
+      "size": [
+        150,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/signin_day_default.png",
+      "size": [
+        110,
+        206
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/signin_day_today.png",
+      "size": [
+        110,
+        206
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/status_claimable.png",
+      "size": [
+        72,
+        72
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/status_claimed.png",
+      "size": [
+        72,
+        72
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/status_incomplete.png",
+      "size": [
+        72,
+        72
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/daily/task_row.png",
+      "size": [
+        780,
+        126
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/pause/action_tile_blue.png",
+      "size": [
+        152,
+        126
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/pause/action_tile_red.png",
+      "size": [
+        152,
+        126
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_cannon.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_clockwork.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_coin_bundle.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_crystal_bundle.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_fire_conduit.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_imprint_chest.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_prism.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_star_hammer.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/icon_steam_furnace.png",
+      "size": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/price_strip_crystal.png",
+      "size": [
+        188,
+        52
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/price_strip_money.png",
+      "size": [
+        188,
+        52
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/product_slot_default.png",
+      "size": [
+        190,
+        250
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/product_slot_unavailable.png",
+      "size": [
+        190,
+        250
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/purchase_quantity_row.png",
+      "size": [
+        400,
+        76
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/status_daily_limit.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/status_insufficient.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/status_owned.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    },
+    {
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_complete_v02/cutouts/elements/pages/shop/status_sold_out.png",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "alpha": true
+    }
+  ],
+  "nine_patch_source": "assets/runtime/ui/secondary_v2/manifest_batch1.json + manifest_batch2.json",
+  "qa": {
+    "white_bg": "pass",
+    "gray_bg": "pass",
+    "black_bg": "pass",
+    "in_game": "pending"
+  },
+  "runtime_install": "not changed in this delivery"
+}

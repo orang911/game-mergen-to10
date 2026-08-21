@@ -33,6 +33,17 @@ func _run() -> void:
 	await _wait_seconds(0.28)
 	_check(flash != null and flash.color.a <= 0.001, "screen red flash should fade out after the hit")
 
+	# The tutorial exception must not weaken ordinary leak damage.
+	battle.reset_run_hud()
+	combat.castle_system.reset()
+	combat.run_leaks = 0
+	var ordinary := combat.monster_system.spawn_monster("small", 1.0, {"durability_damage": 2})
+	ordinary.reached = true
+	ordinary.reached_goal.emit(ordinary, ordinary.durability_damage)
+	await process_frame
+	_check(combat.castle_system.get_durability() == 18, "ordinary monsters should still damage crystal durability at the goal")
+	_check(combat.run_leaks == 1, "ordinary goal arrivals should still count as leaks")
+
 	battle.reset_run_hud()
 	combat.castle_system.reset()
 	await _wait_seconds(0.06)

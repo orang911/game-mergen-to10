@@ -13,16 +13,25 @@ const BLOCK_LABEL_FILL := 0.62
 const BLOCK_SHADOW_OFFSET := Vector2(0.0, 6.0)
 const BLOCK_SHADOW_SCALE := Vector2(0.97, 0.97)
 const BLOCK_SHADOW_COLOR := Color(0.05, 0.12, 0.20, 0.24)
-const BOARD_GRID_SIZE := Vector2(600.0, 600.0)
-const BOARD_GRID_POS := Vector2(160.5, 630.0)
-const BOARD_VISUAL_OFFSET := Vector2(-4.0, 0.0)
-const BOARD_GRID_BOTTOM_Y := 1235.0
-const BOARD_PLATE_SIZE := Vector2(600.0, 600.0)
-const BOARD_PLATE_OFFSET := Vector2(5.0, 0.0)
+const BOARD_GRID_SIZE := Vector2(633.0, 633.0)
+const BOARD_CONTENT_SCALE := 0.95
+# The directly referenced 1254x1254 grass board keeps the 5x5 block grid
+# centered in its inner field at the existing 941x1672 design coordinates.
+const BOARD_GRID_POS := Vector2(137.55, 690.79)
+const BOARD_VISUAL_OFFSET := Vector2.ZERO
+const BOARD_GRID_BOTTOM_Y := 1323.79
+const BOARD_PLATE_SIZE := Vector2(653.68, 649.39)
+const BOARD_PLATE_OFFSET := Vector2(-1.55, -2.43)
+## The bottom background and its HUD panel are sampled from 核心比例效果图.
+## Keep them below the lower path turn; the panel itself starts at y=1420.
+const BOTTOM_HUD_BASE_POSITION := Vector2(0.0, 1405.75)
+const BOTTOM_HUD_BASE_SIZE := Vector2(941.0, 266.25)
+const ENERGY_HUD_POSITION := Vector2(14.0, 1420.0)
+const ENERGY_HUD_SIZE := Vector2(913.0, 210.0)
 const CRYSTAL_PANEL_SIZE := Vector2(180.0, 225.0)
-# Crystal and castle are one visual/gameplay entity. This position keeps the
-# crystal's base on the former castle footprint in DesignRoot coordinates.
-const CRYSTAL_CASTLE_PANEL_POSITION := Vector2(241.0, 348.0)
+# Keep this runtime layout anchor synchronized with the authored CrystalPanel
+# position in battle_layer.tscn. BattleLayerView reapplies it during adaptation.
+const CRYSTAL_CASTLE_PANEL_POSITION := Vector2(247.20, 452.80)
 const SAVE_PATH := "user://merge_to_10.cfg"
 const MAX_BLOCK_LEVEL := 36
 const SKILL_ENERGY_MAX := 100
@@ -71,6 +80,16 @@ const SKILL_IMPRINT_IDS := [
 	"castle_cannon",
 	"dragon_catapult",
 ]
+const ENERGY_IMPRINT_POOL_IDS := [
+	"ascension_hammer",
+	"unity_dial",
+	"fate_shuffler",
+	"twin_mold",
+	"castle_cannon",
+	"dragon_catapult",
+]
+const ENERGY_IMPRINT_OFFER_COUNT := 3
+const ENERGY_IMPRINT_FREE_SLOT_COUNT := 2
 const SKILL_CARD_IDS := SKILL_IMPRINT_IDS
 const CRYSTAL_CARD_IDS := CardCatalog.CRYSTAL_CARD_IDS
 const ALL_CARD_IDS := SKILL_CARD_IDS + CRYSTAL_CARD_IDS
@@ -118,78 +137,90 @@ const CRYSTAL_EXTRA_TARGETS_BY_LEVEL := [1, 1, 1, 2, 2]
 const CRYSTAL_PIERCE_DAMAGE_RATIO := [0.35, 0.40, 0.45, 0.50, 0.55]
 
 const SKILL_IMPRINT_TEXTURES := {
-	"ascension_hammer": "res://assets/runtime/ui/cards/icons/ascension_hammer.png",
-	"unity_dial": "res://assets/runtime/ui/cards/icons/unity_dial.png",
-	"fate_shuffler": "res://assets/runtime/ui/cards/icons/fate_shuffler.png",
-	"twin_mold": "res://assets/runtime/ui/cards/icons/twin_mold.png",
-	"castle_cannon": "res://assets/runtime/ui/cards/icons/castle_cannon.png",
-	"dragon_catapult": "res://assets/runtime/ui/cards/icons/dragon_catapult.png",
-	"frost_bell": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
-	"thunder_ballista": "res://assets/runtime/ui/battle/board/imprints/combat_skill_placeholder.png",
+	"ascension_hammer": "res://assets/runtime/ui/components/card_icons/atlas_regions/ascension_hammer.tres",
+	"unity_dial": "res://assets/runtime/ui/components/card_icons/atlas_regions/unity_dial.tres",
+	"fate_shuffler": "res://assets/runtime/ui/components/card_icons/atlas_regions/fate_shuffler.tres",
+	"twin_mold": "res://assets/runtime/ui/components/card_icons/atlas_regions/twin_mold.tres",
+	"castle_cannon": "res://assets/runtime/ui/components/card_icons/atlas_regions/castle_cannon.tres",
+	"dragon_catapult": "res://assets/runtime/ui/components/card_icons/atlas_regions/dragon_catapult.tres",
+	"frost_bell": "res://assets/runtime/ui/interfaces/battle/energy_hud/icons/combat_skill_placeholder.png",
+	"thunder_ballista": "res://assets/runtime/ui/interfaces/battle/energy_hud/icons/combat_skill_placeholder.png",
 }
-const TEXT_BLOCK_DIR := "res://assets/runtime/ui/battle/board/text/"
+const TEXT_BLOCK_PATHS := [
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_1.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_2.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_3.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_4.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_5.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_6.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_7.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_8.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_9.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/number_10.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_a.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_b.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_c.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_d.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_e.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_f.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_g.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_h.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_i.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_j.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_k.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_l.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_m.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_n.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_o.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_p.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_q.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_r.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_s.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_t.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_u.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_v.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_w.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_x.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_y.tres",
+	"res://assets/runtime/ui/components/board_glyphs/atlas_regions/letter_z.tres",
+]
 
 const BLOCK_COLORS := ["green", "blue", "yellow", "purple", "red"]
 const ELEMENT_ORDER := ["poison", "ice", "lightning", "critical", "fire"]
 
-# Actual supplied road artwork size. The road is drawn from this rect and the
-# movement centerline is expressed in the same source-pixel coordinate space.
-const PATH_ROAD_IMAGE_SIZE := Vector2(773.0, 1095.0)
-# Virtual frame used only to keep the road anchor relative to the existing
-# board layout. It is intentionally separate from the PNG dimensions.
-const PATH_ROAD_LAYOUT_SIZE := Vector2(932.0, 1310.0)
-const PATH_ROAD_SCALE := 0.955
-const PATH_ROAD_OFFSET := Vector2(0.0, 0.0)
-const PATH_ROAD_TARGET_BOTTOM_Y := 1405.0
-const PATH_GATE_IMAGE_SIZE := Vector2(419.0, 143.0)
-const PATH_GATE_DOOR_CENTER_X := 209.5
-const PATH_ROAD_ENTRY_CENTER_X := 190.0
-# In the supplied effect composite the gate is placed 100 source pixels above
-# the road image. Keeping this offset makes its bottom cover the road seam
-# without swallowing the first horizontal lane.
-const PATH_GATE_TOP_OFFSET_Y := -100.0
+# The new background is 1536x2752. These values are sampled directly from
+# 核心比例效果图.png and converted into the 941x1672 design coordinate system.
+const CORE_ART_SCALE := 941.0 / 1536.0
+const CORE_ART_VERTICAL_CROP := 6.9791667
+const PATH_ROAD_IMAGE_SIZE := Vector2(1363.0, 1772.0)
+const PATH_ROAD_SCALE := CORE_ART_SCALE
+const PATH_ROAD_POSITION := Vector2(44.11, 344.67)
+const PATH_GATE_IMAGE_SIZE := Vector2(305.0, 431.0)
+const PATH_GATE_POSITION := Vector2(97.41, 201.93)
 const BOARD_TARGET_BOTTOM_Y := BOARD_GRID_BOTTOM_Y
 const PATH_ROAD_POINTS := [
-	# Centerline sampled directly from layer_003.png (773x1095).
-	# Monsters begin behind the gate and follow the short entrance down into
-	# the first lane instead of appearing at the outer edge of the bend.
-	Vector2(190.0, 1.0),
-	Vector2(190.0, 30.0),
-	Vector2(192.0, 45.0),
-	Vector2(197.0, 58.0),
-	Vector2(207.0, 68.0),
-	Vector2(220.0, 74.0),
-	Vector2(235.0, 75.0),
-	Vector2(650.0, 75.0),
-	# Rounded top-right bend.
-	Vector2(675.0, 79.0),
-	Vector2(695.0, 91.0),
-	Vector2(710.0, 112.0),
-	Vector2(715.0, 137.0),
-	# Upper-right straight and the visible outward S bend in the artwork.
-	Vector2(715.0, 420.0),
-	Vector2(717.0, 438.0),
-	Vector2(726.0, 458.0),
-	Vector2(737.0, 477.0),
-	Vector2(739.0, 990.0),
-	# Rounded bottom-right bend.
-	Vector2(737.0, 1015.0),
-	Vector2(725.0, 1037.0),
-	Vector2(705.0, 1052.0),
-	Vector2(680.0, 1060.0),
-	Vector2(75.0, 1060.0),
-	# Rounded bottom-left bend.
-	Vector2(55.0, 1057.0),
-	Vector2(40.0, 1045.0),
-	Vector2(33.0, 1025.0),
-	Vector2(33.0, 1000.0),
-	Vector2(33.0, 370.0),
-	# Rounded inner-left bend into the castle lane.
-	Vector2(35.0, 345.0),
-	Vector2(47.0, 320.0),
-	Vector2(65.0, 299.0),
-	Vector2(90.0, 280.0),
-	Vector2(300.0, 280.0),
+	# Centerline sampled from the new 路径.png (1363x1772), in source pixels.
+	# The first point is inside the entrance arch; the final horizontal segment
+	# ends at the crystal anchor above the board.
+	Vector2(240.0, 60.0),
+	Vector2(220.0, 82.0),
+	Vector2(230.0, 110.0),
+	Vector2(275.0, 135.0),
+	Vector2(1150.0, 135.0),
+	Vector2(1215.0, 145.0),
+	Vector2(1260.0, 175.0),
+	Vector2(1280.0, 230.0),
+	Vector2(1280.0, 1510.0),
+	Vector2(1260.0, 1585.0),
+	Vector2(1200.0, 1655.0),
+	Vector2(180.0, 1655.0),
+	Vector2(110.0, 1625.0),
+	Vector2(82.0, 1550.0),
+	Vector2(82.0, 600.0),
+	Vector2(105.0, 515.0),
+	Vector2(175.0, 455.0),
+	Vector2(300.0, 450.0),
+	Vector2(560.0, 450.0),
 ]
 
 const LEVEL_ATTACK := {
@@ -426,13 +457,19 @@ static func get_element_tier(level: int) -> int:
 const ELEMENT_EFFECT := {
 	AttackElement.POISON: {
 		"name": "poison",
-		"dps_ratio": 0.20, "dps_ratio_per_tier": 0.05,
+		# Poison is intentionally evaluated in full one-second ticks.  The
+		# percentage therefore describes damage dealt by each tick, not a
+		# per-frame interpolation value.
+		"dps_ratio": 0.30, "dps_ratio_per_tier": 0.05,
 		"duration": 3.0, "duration_per_tier": 0.3,
 	},
 	AttackElement.FREEZE: {
 		"name": "ice",
-		"slow_percent": 0.25, "slow_percent_per_tier": 0.04,
-		"duration": 2.0, "duration_per_tier": 0.25,
+		# All ice sources share this fixed rule: two seconds at forty percent
+		# movement speed.  Keeping the value as a slow percentage makes the
+		# existing movement path use it without a separate code path.
+		"slow_percent": 0.60, "slow_percent_per_tier": 0.0,
+		"duration": 2.0, "duration_per_tier": 0.0,
 	},
 	AttackElement.LIGHTNING: {
 		"name": "lightning",
@@ -443,6 +480,8 @@ const ELEMENT_EFFECT := {
 		"name": "critical",
 		"crit_chance": 0.25, "crit_chance_per_tier": 0.05,
 		"crit_multiplier": 2.0,
+		"annihilation_chance": 0.05, "annihilation_chance_per_tier": 0.02,
+		"annihilation_chance_max": 0.30,
 	},
 	AttackElement.FIRE: {
 		"name": "fire",
@@ -472,6 +511,11 @@ static func get_element_effect_params(level: int) -> Dictionary:
 		AttackElement.CRITICAL:
 			params["crit_chance"] = clampf(float(base["crit_chance"]) + float(base["crit_chance_per_tier"]) * (t - 1.0), 0.0, 1.0)
 			params["crit_multiplier"] = float(base["crit_multiplier"])
+			params["annihilation_chance"] = clampf(
+				float(base["annihilation_chance"]) + float(base["annihilation_chance_per_tier"]) * (t - 1.0),
+				0.0,
+				float(base["annihilation_chance_max"])
+			)
 		AttackElement.FIRE:
 			params["duration"] = float(base["duration"]) + float(base["duration_per_tier"]) * (t - 1.0)
 			params["splash_radius"] = float(base["splash_radius"]) + float(base["splash_radius_per_tier"]) * (t - 1.0)
@@ -479,11 +523,11 @@ static func get_element_effect_params(level: int) -> Dictionary:
 	return params
 
 const BLOCK_BG_PATHS := {
-	"green": "res://assets/runtime/ui/battle/blocks/block_green.png",
-	"blue": "res://assets/runtime/ui/battle/blocks/block_blue.png",
-	"yellow": "res://assets/runtime/ui/battle/blocks/block_yellow.png",
-	"purple": "res://assets/runtime/ui/battle/blocks/block_purple.png",
-	"red": "res://assets/runtime/ui/battle/blocks/block_red.png",
+	"green": "res://assets/runtime/ui/components/board_tiles/atlas_regions/block_green.tres",
+	"blue": "res://assets/runtime/ui/components/board_tiles/atlas_regions/block_blue.tres",
+	"yellow": "res://assets/runtime/ui/components/board_tiles/atlas_regions/block_yellow.tres",
+	"purple": "res://assets/runtime/ui/components/board_tiles/atlas_regions/block_purple.tres",
+	"red": "res://assets/runtime/ui/components/board_tiles/atlas_regions/block_red.tres",
 }
 
 # Color correction from the supplied tile PNGs to the board effect reference.
@@ -512,9 +556,7 @@ static func get_level_label(level: int) -> String:
 	return char(64 + level - 10)
 
 static func get_label_texture_path(level: int) -> String:
-	if level <= 10:
-		return TEXT_BLOCK_DIR + "number_" + str(level) + ".png"
-	return TEXT_BLOCK_DIR + "letter_" + char(96 + level - 10) + ".png"
+	return TEXT_BLOCK_PATHS[clampi(level, 1, MAX_BLOCK_LEVEL) - 1]
 
 static func get_element_for_level(level: int) -> int:
 	return ELEMENT_KEY_TO_ATTACK.get(get_element_key_for_level(level), AttackElement.POISON)
@@ -572,22 +614,14 @@ static func get_board_grid_offset_in_plate() -> Vector2:
 	return -BOARD_PLATE_OFFSET
 
 static func get_path_road_rect(board_pos: Vector2, board_size: Vector2) -> Rect2:
-	var road_size := PATH_ROAD_IMAGE_SIZE * PATH_ROAD_SCALE
-	var board_center := board_pos + board_size * 0.5
-	return Rect2(board_center - road_size * 0.5 + PATH_ROAD_OFFSET, road_size)
+	return Rect2(PATH_ROAD_POSITION, PATH_ROAD_IMAGE_SIZE * PATH_ROAD_SCALE)
 
 static func get_path_layout_size() -> Vector2:
-	return PATH_ROAD_LAYOUT_SIZE * PATH_ROAD_SCALE
+	return PATH_ROAD_IMAGE_SIZE * PATH_ROAD_SCALE
 
 static func get_path_gate_rect(board_pos: Vector2, board_size: Vector2) -> Rect2:
-	var road_rect := get_path_road_rect(board_pos, board_size)
-	var gate_size := PATH_GATE_IMAGE_SIZE * PATH_ROAD_SCALE
-	var door_center_x := road_rect.position.x + PATH_ROAD_ENTRY_CENTER_X * PATH_ROAD_SCALE
-	var gate_position := Vector2(
-		door_center_x - PATH_GATE_DOOR_CENTER_X * PATH_ROAD_SCALE,
-		road_rect.position.y + PATH_GATE_TOP_OFFSET_Y * PATH_ROAD_SCALE
-	)
-	return Rect2(gate_position, gate_size)
+	return Rect2(PATH_GATE_POSITION, PATH_GATE_IMAGE_SIZE * PATH_ROAD_SCALE)
+
 
 static func get_path_points_for_board(board_pos: Vector2, board_size: Vector2) -> PackedVector2Array:
 	var road_rect := get_path_road_rect(board_pos, board_size)

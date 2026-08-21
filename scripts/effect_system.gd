@@ -34,12 +34,12 @@ func _recursive_free_effect_nodes(parent: Node) -> void:
 
 func play_merge_feedback(event: MergeAttackEvent) -> float:
 	const PROMPT_SCENE = preload("res://scenes/combat/merge_attack_prompt_view.tscn")
-	const PROMPT_BACKGROUND = preload("res://assets/runtime/ui/battle/prompts/prompt_panel.png")
-	const ICON_FIRE = preload("res://assets/runtime/ui/battle/prompts/icon_fire.png")
-	const ICON_POISON = preload("res://assets/runtime/ui/battle/prompts/icon_poison.png")
-	const ICON_CRITICAL = preload("res://assets/runtime/ui/battle/prompts/icon_critical.png")
-	const ICON_LIGHTNING = preload("res://assets/runtime/ui/battle/prompts/icon_lightning.png")
-	const ICON_ICE = preload("res://assets/runtime/ui/battle/prompts/icon_ice.png")
+	const PROMPT_BACKGROUND = preload("res://assets/runtime/ui/interfaces/battle/combat_feedback/backplates/prompt_panel.png")
+	const ICON_FIRE = preload("res://assets/runtime/ui/interfaces/battle/combat_feedback/icons/icon_fire.png")
+	const ICON_POISON = preload("res://assets/runtime/ui/interfaces/battle/combat_feedback/icons/icon_poison.png")
+	const ICON_CRITICAL = preload("res://assets/runtime/ui/interfaces/battle/combat_feedback/icons/icon_critical.png")
+	const ICON_LIGHTNING = preload("res://assets/runtime/ui/interfaces/battle/combat_feedback/icons/icon_lightning.png")
+	const ICON_ICE = preload("res://assets/runtime/ui/interfaces/battle/combat_feedback/icons/icon_ice.png")
 
 	if _effect_layer == null or not is_instance_valid(_effect_layer):
 		return 0.0
@@ -105,10 +105,16 @@ func finish_merge_feedback(sequence_id: int) -> void:
 		instance.finish()
 
 
-func play_monster_hit(_monster: Monster) -> void:
-	# Generic flash/scale hit feedback is temporarily disabled. Element attacks
-	# keep their dedicated spritesheet hit sequences through play_element_hit().
-	pass
+func play_monster_hit(monster: Monster, element_key: String = "", attack_origin_global: Vector2 = Vector2.ZERO) -> void:
+	if monster == null or not is_instance_valid(monster) or monster.is_queued_for_deletion():
+		return
+	# Stage-one slimes own an authored eight-frame body reaction. Other monster
+	# stages simply return zero and keep their existing element hit effects.
+	monster.play_hit_animation()
+	if element_key.to_lower() in ["fire", "critical"]:
+		# Recoil is presentation-only: the Monster root and path_progress stay
+		# untouched, while its view briefly moves away from the attack source.
+		monster.play_element_recoil(attack_origin_global)
 
 
 func play_monster_reached_goal(monster: Monster) -> void:
@@ -202,9 +208,53 @@ func play_element_hit(element_key_or_req, position: Vector2 = Vector2.ZERO, tier
 	_play_hit_frames(frame, sheet, hit_grid, hit_start_frame, hit_frame_count, hit_fps)
 
 
-func play_critical_hit(_element_key: String, _hit_position: Vector2, _tier: int) -> void:
-	# Critical damage remains active; its temporary flash and floating hit art do not.
-	pass
+func play_critical_hit(_element_key: String, hit_position: Vector2, _tier: int) -> void:
+	_play_floating_text(hit_position + Vector2(0.0, -54.0), "暴击！", Color(0.93, 0.68, 1.0, 1.0), 25.0)
+
+
+func play_poison_tick(monster: Monster, element: int, damage: float) -> void:
+	if not is_instance_valid(monster) or damage <= 0.0:
+		return
+	if element != GameConfig.AttackElement.POISON and element != GameConfig.AttackElement.FIRE:
+		return
+	play_damage_feedback(monster, damage)
+
+
+func play_damage_feedback(monster: Monster, damage: float) -> void:
+	if not is_instance_valid(monster) or damage <= 0.0:
+		return
+	monster.play_damage_feedback()
+	var hit_position := monster.global_position + monster.size * 0.5
+	var display_damage := maxi(1, roundi(damage))
+	_play_floating_text(
+		hit_position + Vector2(0.0, -48.0),
+		"-%d" % display_damage,
+		Color(1.0, 0.28, 0.25, 1.0),
+		22.0
+	)
+
+
+func play_annihilation(monster: Monster) -> void:
+	if not is_instance_valid(monster):
+		return
+	var hit_position := monster.global_position + monster.size * 0.5
+	_play_floating_text(hit_position + Vector2(0.0, -54.0), "湮灭！", Color(0.96, 0.84, 1.0, 1.0), 28.0)
+	if _effect_layer == null or not is_instance_valid(_effect_layer):
+		return
+	var flash_size := Vector2(128.0, 128.0)
+	var flash := ColorRect.new()
+	flash.name = "Effect_AnnihilationFlash"
+	flash.color = Color(0.95, 0.84, 1.0, 0.92)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flash.size = flash_size
+	flash.position = _global_to_effect_local(hit_position) - flash_size * 0.5
+	flash.pivot_offset = flash_size * 0.5
+	_effect_layer.add_child(flash, true)
+	var tween := flash.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(flash, "scale", Vector2(1.5, 1.5), 0.16).from(Vector2(0.48, 0.48))
+	tween.tween_property(flash, "modulate:a", 0.0, 0.16)
+	tween.chain().tween_callback(flash.queue_free)
 
 
 func play_element_chain(_req: ElementFxRequest) -> void:
@@ -225,6 +275,31 @@ func play_status_tick(_req: ElementFxRequest) -> void:
 
 func play_status_end(_req: ElementFxRequest) -> void:
 	pass
+
+
+func _play_floating_text(global_position: Vector2, content: String, color: Color, font_size: float) -> void:
+	if _effect_layer == null or not is_instance_valid(_effect_layer):
+		return
+	var label := Label.new()
+	label.name = "Effect_FloatingText"
+	label.text = content
+	label.add_theme_font_size_override("font_size", roundi(font_size))
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_shadow_color", Color(0.08, 0.04, 0.12, 0.95))
+	label.add_theme_constant_override("shadow_offset_x", 2)
+	label.add_theme_constant_override("shadow_offset_y", 2)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.size = Vector2(150.0, 42.0)
+	label.position = _global_to_effect_local(global_position) - label.size * 0.5
+	label.pivot_offset = label.size * 0.5
+	_effect_layer.add_child(label, true)
+	var tween := label.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 28.0, 0.42).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.42).set_delay(0.12)
+	tween.tween_property(label, "scale", Vector2(1.06, 1.06), 0.12).from(Vector2(0.75, 0.75))
+	tween.chain().tween_callback(label.queue_free)
 
 
 func _load_texture(path: String) -> Texture2D:

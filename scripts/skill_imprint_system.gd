@@ -15,12 +15,12 @@ var _pending_fx_batches := 0
 var _choice_requested := false
 
 const IMPRINT_NAMES := {
-	"ascension_hammer": "星阶锻造锤",
-	"unity_dial": "万象铸数盘",
-	"twin_mold": "双生晶铸模",
-	"fate_shuffler": "命运洗牌箱",
-	"castle_cannon": "王城魔导炮",
-	"dragon_catapult": "火龙投石机",
+	"ascension_hammer": "星阶铸锤",
+	"unity_dial": "万象数盘",
+	"twin_mold": "双生晶模",
+	"fate_shuffler": "命运魔箱",
+	"castle_cannon": "王城魔炮",
+	"dragon_catapult": "龙焰投石",
 }
 
 
@@ -55,6 +55,16 @@ func notify_fx_batch_finished() -> void:
 
 func force_finish_fx() -> void:
 	_pending_fx_batches = 0
+	_try_request_choice()
+
+
+func request_choice_if_full() -> void:
+	# A chapter wave may unlock random offers while the meter is already full
+	# from an earlier authored teaching wave. Preserve the single pending slot
+	# rule and let any in-flight energy motes finish before raising the request.
+	if energy < GameConfig.SKILL_ENERGY_MAX or has_pending_skill():
+		return
+	_choice_requested = true
 	_try_request_choice()
 
 
@@ -109,12 +119,35 @@ func peek_pending_skill() -> Dictionary:
 	return pending_skill.duplicate(true)
 
 
+func export_state() -> Dictionary:
+	return {
+		"energy": energy,
+		"pending_skill": pending_skill.duplicate(true),
+	}
+
+
+func restore_state(state: Dictionary) -> void:
+	energy = clampi(int(state.get("energy", 0)), 0, GameConfig.SKILL_ENERGY_MAX)
+	pending_skill = (state.get("pending_skill", {}) as Dictionary).duplicate(true)
+	_pending_fx_batches = 0
+	_choice_requested = false
+	energy_changed.emit(energy, GameConfig.SKILL_ENERGY_MAX)
+	_emit_pending_changed()
+
+
 func get_imprint_name(skill_id: String) -> String:
 	return str(IMPRINT_NAMES.get(skill_id, skill_id))
 
 
 func is_full_waiting_for_choice() -> bool:
 	return energy >= GameConfig.SKILL_ENERGY_MAX and not has_pending_skill()
+
+
+func is_choice_ready() -> bool:
+	# This is deliberately derived from durable gameplay state.  Callers may
+	# query it again after tutorials, popups or save restoration without relying
+	# on the one-shot notification that first observed a full meter.
+	return is_full_waiting_for_choice() and _pending_fx_batches <= 0
 
 
 func _try_request_choice() -> void:

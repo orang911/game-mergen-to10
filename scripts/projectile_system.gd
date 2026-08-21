@@ -11,9 +11,13 @@ const MULTI_SHOT_STAGGER := 0.10
 const LIGHTNING_LINK_STAGGER := ChainBolt.FRAME_DURATION
 const CRYSTAL_RAIN_OFFSCREEN_MARGIN := 160.0
 const CRYSTAL_RAIN_FLIGHT_DURATION := 0.20
+const CRYSTAL_BEAM_FLIGHT_DURATION := 0.18
+const CRYSTAL_BEAM_WIDTH_EXPAND_DURATION := 0.08
+const CRYSTAL_BEAM_TEXTURE_PATH := "res://assets/runtime/fx/crystal_tower/attack_beam.png"
 
 var parent_layer: Control
 var _generation := 0
+var _crystal_beams: Array[MergeBolt] = []
 
 
 func setup(layer: Control) -> void:
@@ -22,6 +26,7 @@ func setup(layer: Control) -> void:
 
 func reset() -> void:
 	_generation += 1
+	cancel_crystal_beams()
 	if parent_layer == null or not is_instance_valid(parent_layer):
 		return
 	for child in parent_layer.get_children():
@@ -123,6 +128,60 @@ func _schedule_crystal_bolt(from_global: Vector2, to_global: Vector2, delay: flo
 
 func _spawn_crystal_bolt(from_global: Vector2, to_global: Vector2) -> void:
 	_spawn_crystal_bolt_visual(from_global, to_global, MERGE_BOLT_DURATION, "CrystalBolt")
+
+
+func play_crystal_beam(from_global: Vector2, target: Control, flight_duration: float = CRYSTAL_BEAM_FLIGHT_DURATION) -> void:
+	# Dedicated charged-shot visual: a single tracking column fired from the
+	# crystal tip. Damage timing stays owned by CrystalSystem; this only draws
+	# the projectile and follows the moving target until impact.
+	if parent_layer == null or not is_instance_valid(parent_layer):
+		return
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return
+	var bolt := ProjectileViewScene.instantiate() as MergeBolt
+	if bolt == null:
+		bolt = MergeBolt.new()
+	bolt.name = "CrystalBeam"
+	bolt.apply_element_key("crystal", 1)
+	var duration := maxf(0.01, flight_duration)
+	bolt.configure_trail_history(duration, ELEMENT_TRAIL_HISTORY_DURATION)
+	bolt.start_pos = _global_to_layer_local(from_global)
+	bolt.end_pos = _global_to_layer_local(target.global_position + target.size * 0.5)
+	bolt.track_target_provider(_crystal_beam_target_provider.bind(target.get_instance_id()))
+	parent_layer.add_child(bolt, true)
+	parent_layer.move_child(bolt, parent_layer.get_child_count() - 1)
+	# Configure after add_child so MergeBolt._ready() cannot overwrite the
+	# supplied beam texture with the generic crystal projectile visuals.
+	if ResourceLoader.exists(CRYSTAL_BEAM_TEXTURE_PATH):
+		bolt.configure_crystal_beam_visual(load(CRYSTAL_BEAM_TEXTURE_PATH) as Texture2D)
+	_crystal_beams.append(bolt)
+	bolt.tree_exited.connect(_on_crystal_beam_exited.bind(bolt), CONNECT_ONE_SHOT)
+	var tween := bolt.create_tween()
+	tween.tween_property(bolt, "progress", 1.0, duration).set_trans(Tween.TRANS_LINEAR)
+	# The beam reaches the target on its Y/length axis first. Only after it
+	# arrives do we run the X/width 1→4→0 burst, while damage remains owned by
+	# CrystalSystem at the original flight-duration boundary.
+	tween.tween_callback(bolt.play_crystal_beam_burst.bind(CRYSTAL_BEAM_WIDTH_EXPAND_DURATION, ELEMENT_TRAIL_COLLAPSE_DURATION))
+	tween.tween_interval(CRYSTAL_BEAM_WIDTH_EXPAND_DURATION + ELEMENT_TRAIL_COLLAPSE_DURATION)
+	tween.tween_callback(bolt.queue_free)
+
+
+func cancel_crystal_beams() -> void:
+	for beam in _crystal_beams:
+		if is_instance_valid(beam):
+			beam.queue_free()
+	_crystal_beams.clear()
+
+
+func _on_crystal_beam_exited(beam: MergeBolt) -> void:
+	_crystal_beams.erase(beam)
+
+
+func _crystal_beam_target_provider(instance_id: int) -> Control:
+	var target := instance_from_id(instance_id) as Control
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return null
+	return target
 
 
 func play_vertical_crystal_drop(target, fallback_global: Vector2, delay: float = 0.0, impact_callback: Callable = Callable()) -> void:

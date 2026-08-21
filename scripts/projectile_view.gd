@@ -37,6 +37,12 @@ var _rotation_offset := 0.0
 var _flight_duration := 0.0
 var _trail_history_duration := 0.0
 var _target_provider := Callable()
+var _crystal_beam_visual := false
+var crystal_beam_width_scale := 1.0:
+	set(value):
+		crystal_beam_width_scale = clampf(value, 0.0, 4.0)
+		queue_redraw()
+var _crystal_beam_burst_tween: Tween
 var trail_collapse_ratio := 1.0:
 	set(value):
 		trail_collapse_ratio = clampf(value, 0.0, 1.0)
@@ -86,6 +92,40 @@ func apply_element_key(key: String, tier_value: int = 1) -> void:
 	tier = tier_value
 	_apply_element_visuals()
 	_sync_visuals()
+
+
+func configure_crystal_beam_visual(texture: Texture2D = null) -> void:
+	_ensure_visual_nodes()
+	# The reference effect is a narrow cyan energy line, rather than the generic
+	# orb-and-ribbon projectile. Keep the supplied PNG attached for asset
+	# validation/fallback, but render the beam procedurally so its width stays
+	# stable while the target moves at any angle.
+	_crystal_beam_visual = true
+	crystal_beam_width_scale = 1.0
+	if texture != null:
+		_trail_rect.texture = texture
+		_trail_glow_rect.texture = texture
+	_trail_rect.material = null
+	_trail_glow_rect.material = null
+	_trail_rect.visible = false
+	_trail_glow_rect.visible = false
+	_core_rect.visible = false
+	queue_redraw()
+	_sync_visuals()
+
+
+func play_crystal_beam_burst(expand_duration: float, collapse_duration: float) -> void:
+	if not _crystal_beam_visual:
+		return
+	if _crystal_beam_burst_tween and _crystal_beam_burst_tween.is_valid():
+		_crystal_beam_burst_tween.kill()
+	crystal_beam_width_scale = 1.0
+	var expand_time := maxf(0.001, expand_duration)
+	var collapse_time := maxf(0.001, collapse_duration)
+	_crystal_beam_burst_tween = create_tween()
+	_crystal_beam_burst_tween.tween_property(self, "crystal_beam_width_scale", 4.0, expand_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_crystal_beam_burst_tween.tween_property(self, "crystal_beam_width_scale", 0.0, collapse_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_crystal_beam_burst_tween.parallel().tween_property(self, "modulate:a", 0.0, collapse_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 
 func _ensure_visual_nodes() -> void:
@@ -212,6 +252,9 @@ func begin_trail_collapse(duration: float) -> void:
 func _sync_visuals() -> void:
 	if _core_rect == null or _trail_rect == null:
 		return
+	if _crystal_beam_visual:
+		queue_redraw()
+		return
 	var head := start_pos.lerp(end_pos, progress)
 	var velocity := end_pos - start_pos
 	var angle := velocity.angle() if velocity.length_squared() > 0.001 else 0.0
@@ -249,6 +292,18 @@ func _sync_visuals() -> void:
 
 
 func _draw() -> void:
+	if _crystal_beam_visual:
+		var length_ratio := clampf(progress, 0.0, 1.0)
+		var width_ratio := clampf(crystal_beam_width_scale, 0.0, 4.0)
+		var alpha := clampf(modulate.a * trail_collapse_ratio * (width_ratio / 2.0), 0.0, 1.0)
+		var beam_end := start_pos.lerp(end_pos, length_ratio)
+		# Crystal beam animation is deliberately staged: the local Y/length axis
+		# grows from zero to the target first, then the local X/width axis expands
+		# to 4 and contracts to zero. The target can still move during flight.
+		draw_line(start_pos, beam_end, Color(0.12, 0.82, 1.0, 0.24 * alpha), maxf(0.1, 9.0 * width_ratio), true)
+		draw_line(start_pos, beam_end, Color(0.10, 0.90, 1.0, 0.78 * alpha), maxf(0.1, 2.6 * width_ratio), true)
+		draw_line(start_pos, beam_end, Color(0.78, 1.0, 1.0, 0.92 * alpha), maxf(0.1, 0.9 * width_ratio), true)
+		return
 	if _core_rect != null and is_instance_valid(_core_rect) and _core_rect.texture != null:
 		return
 	var head := start_pos.lerp(end_pos, progress)

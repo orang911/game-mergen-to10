@@ -44,7 +44,10 @@ func get_spawn_position() -> Vector2:
 func get_goal_progress_ratio() -> float:
 	if _total_length <= 0.0:
 		return 1.0
-	return (_total_length - 4.0) / _total_length
+	# The path artwork ends inside the crystal artwork.  Keep this final span as
+	# the crystal's visual footprint: monsters attack at its outer boundary
+	# instead of walking through the tower to the path endpoint.
+	return clampf((_total_length - end_offset) / _total_length, 0.0, 1.0)
 
 
 func position_at_progress(progress: float) -> Vector2:

@@ -1,0 +1,128 @@
+{
+  "source": "C:\\Users\\PC\\.codex\\generated_images\\019f6905-5ee7-71e0-9823-eaa90fefd4c7\\exec-b5ec01ba-89cb-40cf-84e3-ca01014ba539.png",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "notes": "Numeric badges and lavender background removed; contact shadows retained.",
+  "sprites": {
+    "lv01": {
+      "file": "crystal_tower_lv01.png",
+      "size": [
+        272,
+        249
+      ],
+      "source_crop": [
+        85,
+        125,
+        380,
+        425
+      ]
+    },
+    "lv02": {
+      "file": "crystal_tower_lv02.png",
+      "size": [
+        270,
+        261
+      ],
+      "source_crop": [
+        470,
+        120,
+        780,
+        425
+      ]
+    },
+    "lv03": {
+      "file": "crystal_tower_lv03.png",
+      "size": [
+        288,
+        299
+      ],
+      "source_crop": [
+        875,
+        85,
+        1195,
+        435
+      ]
+    },
+    "lv04": {
+      "file": "crystal_tower_lv04.png",
+      "size": [
+        285,
+        298
+      ],
+      "source_crop": [
+        75,
+        450,
+        385,
+        785
+      ]
+    },
+    "lv05": {
+      "file": "crystal_tower_lv05.png",
+      "size": [
+        286,
+        299
+      ],
+      "source_crop": [
+        465,
+        450,
+        785,
+        785
+      ]
+    },
+    "lv06": {
+      "file": "crystal_tower_lv06.png",
+      "size": [
+        288,
+        300
+      ],
+      "source_crop": [
+        870,
+        450,
+        1195,
+        790
+      ]
+    },
+    "lv07": {
+      "file": "crystal_tower_lv07.png",
+      "size": [
+        293,
+        315
+      ],
+      "source_crop": [
+        75,
+        805,
+        390,
+        1160
+      ]
+    },
+    "lv08": {
+      "file": "crystal_tower_lv08.png",
+      "size": [
+        296,
+        315
+      ],
+      "source_crop": [
+        460,
+        805,
+        790,
+        1160
+      ]
+    },
+    "lv09": {
+      "file": "crystal_tower_lv09.png",
+      "size": [
+        305,
+        322
+      ],
+      "source_crop": [
+        865,
+        800,
+        1200,
+        1160
+      ]
+    }
+  },
+  "atlas": "crystal_tower_levels_3x3_transparent.png"
+}

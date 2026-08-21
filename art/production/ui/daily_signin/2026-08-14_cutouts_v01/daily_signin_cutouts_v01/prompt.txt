@@ -1,0 +1,22 @@
+Tool: built-in ImageGen, followed by local chroma-key removal and Pillow cropping.
+
+Approved effect reference:
+C:/Users/PC/.codex/generated_images/019fd5b4-60d9-7872-a83f-addd7d2d350f/exec-f71362d5-2896-4052-8adc-a807686def35.png
+
+Production reconstruction brief:
+- Reconstruct the approved daily sign-in panel without redesign.
+- Match the blue header, pale ice-blue body, navy outline, rounded proportions,
+  blue tabs, gold selected state, cyan gem, star coin, blue-gold chest,
+  green claimed check and orange claim button.
+- Produce isolated components on a uniform #ff00ff chroma background.
+- Do not bake Chinese, numbers, reward counts, day labels or other dynamic data.
+- Do not add cast shadows, external glow, background texture, grid lines,
+  duplicate frames, decorations or watermarks.
+
+Generated source groups:
+1. Large blank fixed sign-in shell.
+2. Structural sheet: inactive tab, selected tab, close-button background,
+   close X icon and claim-button background.
+3. Reward sheet: default/selected/premium cards, gem, coin, chest,
+   claimed check and selected rim.
+

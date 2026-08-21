@@ -25,7 +25,7 @@ func _run() -> void:
 	_test_board_progression_suite()
 	await _test_background_runner()
 	await _test_background_cancellation()
-	await _test_login_button()
+	await _test_internal_panel_entry()
 	await _test_success_popup_card_arbitration()
 	if failures.is_empty():
 		print("BALANCE_SIMULATION_SMOKE_OK")
@@ -181,7 +181,7 @@ func _test_background_cancellation() -> void:
 	await process_frame
 	await process_frame
 
-func _test_login_button() -> void:
+func _test_internal_panel_entry() -> void:
 	var packed := load("res://scenes/main.tscn") as PackedScene
 	var game := packed.instantiate()
 	root.add_child(game)
@@ -207,13 +207,10 @@ func _test_login_button() -> void:
 		await process_frame
 		var durability_label := crystal_view.get_node_or_null("DurabilityLabel") as Label
 		_check(durability_label != null and durability_label.text == "17/20", "merged crystal should retain the local durability UI")
-	game.loading_view.set_interactive(true)
-	var button := game.loading_view.get_node_or_null("DesignRoot/BalanceSimulationButton") as Button
-	_check(button != null, "login page should expose the temporary simulation button")
-	if button:
-		button.pressed.emit()
-		await process_frame
-		_check(game.get_node_or_null("BalanceSimulationPanel") != null, "simulation button should open the result panel")
+	_check(game.loading_view.get_node_or_null("DesignRoot/BalanceSimulationButton") == null, "Loading should not expose the temporary simulation button")
+	game._show_balance_simulation()
+	await process_frame
+	_check(game.get_node_or_null("BalanceSimulationPanel") != null, "the internal simulation test entry should open the result panel")
 	game.queue_free()
 	await process_frame
 	await process_frame
@@ -226,6 +223,9 @@ func _test_success_popup_card_arbitration() -> void:
 	await process_frame
 	game.muted = true
 	game._success_popup_active = true
+	# The recoverable energy state machine now derives requests from durable
+	# meter state; model a real blocked full-energy request, not only its cache.
+	game.skill_imprint_system.restore_state({"energy": GameConfig.SKILL_ENERGY_MAX})
 	game._skill_choice_pending = true
 	game._try_open_card_choice()
 	_check(game.active_card_modal == null, "highest-level popup should block the skill choice modal")

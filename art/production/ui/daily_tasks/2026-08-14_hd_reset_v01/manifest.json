@@ -1,0 +1,224 @@
+{
+  "purpose": "daily-task-ui-hd-reset-and-cutouts",
+  "version": "v01",
+  "date": "2026-08-14",
+  "approved_effect": "C:/Users/PC/.codex/generated_images/019fd5b4-60d9-7872-a83f-addd7d2d350f/exec-ec814a89-7de6-442a-9eba-3848573af358.png",
+  "hd_master": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/previews/daily_tasks_hd_master_1882x3344_v01.png",
+  "tool": "built-in ImageGen plus local Pillow/chroma-key post-processing",
+  "runtime_root": "assets/runtime/ui/daily_tasks_hd_v01/",
+  "runtime_shell_segments": [
+    "daily_tasks_shell_fixed_v01_top.png",
+    "daily_tasks_shell_fixed_v01_middle.png",
+    "daily_tasks_shell_fixed_v01_bottom.png"
+  ],
+  "runtime_screenshot": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/qa/runtime_daily_tasks_941x1672_v01.png",
+  "assets": [
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_tasks_shell_fixed_v01.png",
+      "size": [
+        1760,
+        2176
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "fixed_size_only": true,
+      "text_safe_area": [
+        72,
+        50,
+        1616,
+        2050
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_btn_close_v01.png",
+      "size": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_chest_locked_v01.png",
+      "size": [
+        384,
+        288
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "shared_canvas_group": "daily_milestone_chest"
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_chest_ready_v01.png",
+      "size": [
+        384,
+        288
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "shared_canvas_group": "daily_milestone_chest"
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_progress_track_v01.png",
+      "size": [
+        768,
+        128
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "nine_patch": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_progress_fill_v01.png",
+      "size": [
+        768,
+        128
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "nine_patch": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_btn_go_default_v01.png",
+      "size": [
+        384,
+        160
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "nine_patch": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_btn_claim_default_v01.png",
+      "size": [
+        384,
+        160
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "nine_patch": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_btn_claimed_disabled_v01.png",
+      "size": [
+        384,
+        160
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "nine_patch": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_task_icon_slot_v01.png",
+      "size": [
+        256,
+        256
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "file": "art/production/ui/daily_tasks/2026-08-14_hd_reset_v01/cutouts/daily_task_merge_icon_v01.png",
+      "size": [
+        384,
+        384
+      ],
+      "alpha": true,
+      "text_baked": false,
+      "shadow_or_glow": false,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    }
+  ],
+  "qa": {
+    "white_background": "pass",
+    "gray_background": "pass",
+    "black_background": "pass",
+    "alpha_extrema": "pass",
+    "96px_merge_icon_readability": "pass",
+    "runtime_png_alpha_and_2048_limit": "pass",
+    "godot_941x1672_render": "pass",
+    "secondary_ui_smoke": "pass",
+    "meta_progress_service_smoke": "pass",
+    "main_hub_flow_smoke": "pass",
+    "secondary_pause_flow_smoke": "pass",
+    "in_game": "pass"
+  }
+}

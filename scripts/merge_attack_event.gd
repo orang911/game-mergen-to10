@@ -45,9 +45,9 @@ static func from_merge(source_level: int, result_level: int, count: int, attack_
 	event.origin_position = attack_origin
 	event.effect_params = GameConfig.get_element_effect_params(source_level)
 	if event.element == GameConfig.AttackElement.FREEZE:
-		# Ice keeps its dedicated multi-target identity: a merge of N blocks
-		# attacks N-1 different front monsters. One full base hit per target
-		# preserves the same B * (N-1) theoretical output.
+		# Ice locks N-1 different front monsters. Every target receives one
+		# complete base hit; an insufficient target count shortens the real
+		# sequence instead of recycling spare shots into focus fire.
 		event.target_count = GameConfig.calculate_target_count(safe_count)
 		event.attack_count = event.target_count
 		event.damage = base_attack
@@ -68,7 +68,9 @@ static func from_merge(source_level: int, result_level: int, count: int, attack_
 			safe_count
 		)
 	else:
-		# Poison, critical and fire use the sequential focus-fire rule.
+		# Poison, critical and fire use the sequential focus-fire rule.  A poison
+		# hit adds one independent poison layer, so every shot in this sequence can
+		# build the same target's damage-over-time stack.
 		event.target_count = 1
 	event.atk = roundi(event.total_damage)
 	event.board_row = merge_row

@@ -1,0 +1,8 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/daily_signin_hd_v01/signin_panel_shell_fixed_v01.png" id="1_shell"]
+
+[resource]
+atlas = ExtResource("1_shell")
+region = Rect2(75, 0, 1385, 948)
+filter_clip = true

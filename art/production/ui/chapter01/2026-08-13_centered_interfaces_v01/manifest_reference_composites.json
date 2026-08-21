@@ -1,0 +1,237 @@
+{
+  "batch": "chapter01_centered_interfaces_v01",
+  "coordinate_rule": "All popup instances use pivot (0.5, 0.5) and screen-center anchor. Scale uniformly only; non-uniform stretching is forbidden.",
+  "status": "reference geometry locked; runtime shell cleanup pending",
+  "assets": [
+    {
+      "id": "battle_pause",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_battle_pause_reference.png",
+      "size": [
+        384,
+        282
+      ],
+      "aspect_ratio": 1.3617,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        276,
+        317,
+        660,
+        599
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "exit_confirm",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_exit_confirm_reference.png",
+      "size": [
+        299,
+        176
+      ],
+      "aspect_ratio": 1.6989,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        604,
+        629,
+        903,
+        805
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "settings",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_settings_reference.png",
+      "size": [
+        512,
+        717
+      ],
+      "aspect_ratio": 0.7141,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        65,
+        873,
+        577,
+        1590
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "clear_data_confirm",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_clear_data_confirm_reference.png",
+      "size": [
+        326,
+        189
+      ],
+      "aspect_ratio": 1.7249,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        579,
+        1403,
+        905,
+        1592
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "daily_tasks",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_daily_tasks_reference.png",
+      "size": [
+        915,
+        1187
+      ],
+      "aspect_ratio": 0.7709,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        13,
+        18,
+        928,
+        1205
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "daily_signin",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_daily_signin_reference.png",
+      "size": [
+        915,
+        453
+      ],
+      "aspect_ratio": 2.0199,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        13,
+        1212,
+        928,
+        1665
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "benefits",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_benefits_reference.png",
+      "size": [
+        445,
+        454
+      ],
+      "aspect_ratio": 0.9802,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        13,
+        704,
+        458,
+        1158
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "first_purchase_gift",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_first_purchase_gift_reference.png",
+      "size": [
+        461,
+        454
+      ],
+      "aspect_ratio": 1.0154,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        468,
+        704,
+        929,
+        1158
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "piggy_bank",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_piggy_bank_reference.png",
+      "size": [
+        445,
+        493
+      ],
+      "aspect_ratio": 0.9026,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        13,
+        1165,
+        458,
+        1658
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    },
+    {
+      "id": "shop",
+      "file": "art/production/ui/chapter01/2026-08-13_centered_interfaces_v01/reference_composites/ui_shop_reference.png",
+      "size": [
+        465,
+        493
+      ],
+      "aspect_ratio": 0.9432,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "opening_anchor": "screen_center",
+      "source_box": [
+        464,
+        1165,
+        929,
+        1658
+      ],
+      "classification": "effect-image reference composite",
+      "runtime_ready": false,
+      "note": "Locks the approved effect-image geometry. Contains baked labels/content and is not a runtime shell."
+    }
+  ]
+}

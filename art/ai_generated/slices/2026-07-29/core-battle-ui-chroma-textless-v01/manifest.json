@@ -1,0 +1,101 @@
+{
+  "source": "F:\\卖肉\\godotT10\\game_mergenTo10_published\\art\\ai_generated\\imagegen\\2026-07-29\\core-battle-ui-chroma-v01\\20260729_core_battle_ui_top_bottom_chroma_v01.png",
+  "canvas": {
+    "width": 941,
+    "height": 1672
+  },
+  "background_key": "#00FF00",
+  "text_policy": "All labels, counters and values are runtime text.",
+  "assets": [
+    {
+      "file": "top/pause_button.png",
+      "bounds": [
+        22,
+        14,
+        113,
+        104
+      ]
+    },
+    {
+      "file": "top/wave_status_frame.png",
+      "bounds": [
+        204,
+        14,
+        466,
+        98
+      ]
+    },
+    {
+      "file": "top/timer_status_frame.png",
+      "bounds": [
+        476,
+        14,
+        653,
+        98
+      ]
+    },
+    {
+      "file": "top/currency_status_frame.png",
+      "bounds": [
+        666,
+        14,
+        884,
+        98
+      ]
+    },
+    {
+      "file": "bottom/skill_panel_frame.png",
+      "bounds": [
+        33,
+        1451,
+        418,
+        1604
+      ]
+    },
+    {
+      "file": "bottom/skill_disabled_icon.png",
+      "bounds": [
+        43,
+        1466,
+        153,
+        1580
+      ]
+    },
+    {
+      "file": "bottom/skill_meter_frame.png",
+      "bounds": [
+        163,
+        1537,
+        401,
+        1586
+      ]
+    },
+    {
+      "file": "bottom/item_refresh_button.png",
+      "bounds": [
+        512,
+        1454,
+        634,
+        1595
+      ]
+    },
+    {
+      "file": "bottom/item_wand_button.png",
+      "bounds": [
+        636,
+        1454,
+        759,
+        1595
+      ]
+    },
+    {
+      "file": "bottom/item_lock_button.png",
+      "bounds": [
+        762,
+        1454,
+        881,
+        1595
+      ]
+    }
+  ]
+}

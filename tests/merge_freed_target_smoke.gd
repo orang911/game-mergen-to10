@@ -35,7 +35,10 @@ func _init() -> void:
 		if shot == 0 and is_instance_valid(target) and target.get_instance_id() == second_id:
 			_retargeted = true
 	)
-	combat.handle_merge_attack(MergeAttackEvent.from_merge(1, 3, 2, Vector2(320.0, 900.0), 2))
+	var event := MergeAttackEvent.from_merge(4, 3, 2, Vector2(320.0, 900.0), 2)
+	event.effect_params["crit_chance"] = 0.0
+	event.effect_params["annihilation_chance"] = 0.0
+	combat.handle_merge_attack(event)
 	await _wait_seconds(0.60)
 	_check(_retargeted, "a freed target during flight should retarget without a typed-call error")
 

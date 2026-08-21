@@ -15,6 +15,7 @@ func _run() -> void:
 	_test_attack_rule_simulation()
 	await _test_merge_feedback_lifecycle()
 	await _test_runtime_focus_sequence()
+	await _test_poison_focus_sequence()
 	await _test_ice_multitarget_sequence()
 	await _test_lightning_bounce_sequence()
 	await _test_retarget_during_flight()
@@ -34,11 +35,16 @@ func _run() -> void:
 
 func _test_damage_formula() -> void:
 	for merge_count in range(2, 7):
-		var event := MergeAttackEvent.from_merge(1, 4, merge_count, Vector2.ZERO, 0)
+		var event := MergeAttackEvent.from_merge(4, 4, merge_count, Vector2.ZERO, 0)
 		var expected_total := 10.0 * float(merge_count - 1)
 		_check(event.attack_count == merge_count, "merge %d should create %d attacks" % [merge_count, merge_count])
 		_check(is_equal_approx(event.total_damage, expected_total), "merge %d should preserve old total output" % merge_count)
 		_check(is_equal_approx(event.damage * float(event.attack_count), expected_total), "merge %d shot sum should equal total damage" % merge_count)
+		var poison_event := MergeAttackEvent.from_merge(1, 4, merge_count, Vector2.ZERO, 0)
+		_check(poison_event.target_count == 1, "poison merge %d should focus the front monster" % merge_count)
+		_check(poison_event.attack_count == merge_count, "poison merge %d should fire once per merged card" % merge_count)
+		_check(is_equal_approx(poison_event.damage, expected_total / float(merge_count)), "poison should divide its preserved total damage across sequential shots")
+		_check(is_equal_approx(poison_event.total_damage, expected_total), "poison should preserve B*(N-1) theoretical output")
 		var ice_event := MergeAttackEvent.from_merge(2, 4, merge_count, Vector2.ZERO, 0)
 		_check(ice_event.target_count == merge_count - 1, "ice merge %d should target N-1 monsters" % merge_count)
 		_check(ice_event.attack_count == merge_count - 1, "ice merge %d should fire once per target" % merge_count)
@@ -107,15 +113,22 @@ func _test_merge_feedback_lifecycle() -> void:
 	var combat: CombatSystem = fixture["combat"]
 	_spawn_fixture_monster(combat, 100.0, 0.80)
 	var event := MergeAttackEvent.from_merge(1, 4, 2, Vector2(320.0, 900.0), 2)
-	var state := {"fired": 0}
-	combat.merge_shot_fired.connect(func(_sequence: int, _shot: int, _target: Monster): state["fired"] = int(state["fired"]) + 1)
+	var state := {"fired": 0, "first_fired_at": -1}
+	combat.merge_shot_fired.connect(func(sequence_id: int, _shot: int, _target: Monster):
+		if sequence_id != event.sequence_id:
+			return
+		state["fired"] = int(state["fired"]) + 1
+		if int(state["first_fired_at"]) < 0:
+			state["first_fired_at"] = Time.get_ticks_msec()
+	)
+	var launch_started_at := Time.get_ticks_msec()
 	combat.handle_merge_attack(event)
 	await process_frame
 	_check(combat.effect_system._merge_feedbacks.has(event.sequence_id), "merge feedback should appear before projectile launch")
-	await _wait_seconds(MergeAttackPromptView.ENTER_DURATION * 0.5)
-	_check(int(state["fired"]) == 0, "projectile should wait for merge feedback entrance")
-	await _wait_seconds(MergeAttackPromptView.ENTER_DURATION * 0.75)
-	_check(int(state["fired"]) == 1, "projectile should launch after merge feedback entrance")
+	await _wait_seconds(MergeAttackPromptView.ENTER_DURATION + 0.12)
+	var first_fired_at := int(state["first_fired_at"])
+	_check(first_fired_at >= launch_started_at + roundi(MergeAttackPromptView.ENTER_DURATION * 800.0), "projectile should wait for merge feedback entrance")
+	_check(int(state["fired"]) >= 1, "projectile should launch after merge feedback entrance")
 	_check(combat.effect_system._merge_feedbacks.has(event.sequence_id), "merge feedback should remain during the attack sequence")
 	await _wait_seconds(ProjectileSystem.MERGE_BOLT_DURATION + MergeAttackPromptView.EXIT_DURATION + 0.08)
 	_check(not combat.effect_system._merge_feedbacks.has(event.sequence_id), "merge feedback should clear after the attack sequence finishes")
@@ -134,13 +147,63 @@ func _test_runtime_focus_sequence() -> void:
 	var second_id := second.get_instance_id()
 	var resolved_targets: Array[int] = []
 	combat.merge_shot_resolved.connect(func(_sequence: int, _shot: int, target: Monster, _damage: float, _killed: bool): resolved_targets.append(target.get_instance_id()))
-	var event := MergeAttackEvent.from_merge(1, 4, 5, Vector2(320.0, 900.0), 2)
+	var event := MergeAttackEvent.from_merge(4, 4, 5, Vector2(320.0, 900.0), 2)
+	event.effect_params["crit_chance"] = 0.0
+	event.effect_params["annihilation_chance"] = 0.0
 	combat.handle_merge_attack(event)
 	await _wait_seconds(1.25)
 	_check(resolved_targets.size() == 5, "five-block merge should resolve five attacks")
 	if resolved_targets.size() == 5:
 		_check(resolved_targets[0] == first_id and resolved_targets[1] == first_id and resolved_targets[2] == first_id, "sequence should focus the front monster until death")
 		_check(resolved_targets[3] == second_id and resolved_targets[4] == second_id, "shots after the kill should switch to the next monster")
+	_cleanup_game(game)
+	await process_frame
+	await process_frame
+
+
+func _test_poison_focus_sequence() -> void:
+	var fixture := await _make_combat_fixture()
+	var game = fixture["game"]
+	var combat: CombatSystem = fixture["combat"]
+	var targets: Array[Monster] = [
+		_spawn_fixture_monster(combat, 100.0, 0.80),
+		_spawn_fixture_monster(combat, 100.0, 0.70),
+		_spawn_fixture_monster(combat, 100.0, 0.60),
+		_spawn_fixture_monster(combat, 100.0, 0.50),
+	]
+	var event := MergeAttackEvent.from_merge(1, 4, 4, Vector2(320.0, 900.0), 2)
+	combat.handle_merge_attack(event)
+	await _wait_seconds(1.10)
+	_check(is_equal_approx(targets[0].hp, targets[0].max_hp - event.total_damage), "poison should deal every sequential shot to the front monster while it survives")
+	_check(targets[0].get_poison_layer_count() == 4, "a four-card poison merge should add one poison layer for each of its four hits")
+	for index in range(1, targets.size()):
+		_check(is_equal_approx(targets[index].hp, targets[index].max_hp), "poison should not spread to target %d while the front monster survives" % index)
+		_check(targets[index].get_poison_layer_count() == 0, "poison should not add a layer to target %d while the front monster survives" % index)
+	_cleanup_game(game)
+	await process_frame
+	await process_frame
+
+	fixture = await _make_combat_fixture()
+	game = fixture["game"]
+	combat = fixture["combat"]
+	var first := _spawn_fixture_monster(combat, 10.0, 0.80)
+	var second := _spawn_fixture_monster(combat, 100.0, 0.60)
+	var first_id := first.get_instance_id()
+	var second_id := second.get_instance_id()
+	var resolved_targets: Array[int] = []
+	var retarget_event := MergeAttackEvent.from_merge(1, 4, 5, Vector2(320.0, 900.0), 2)
+	var retarget_sequence_id := retarget_event.sequence_id
+	combat.merge_shot_resolved.connect(func(sequence_id: int, _shot: int, target: Monster, _damage: float, _killed: bool):
+		if sequence_id == retarget_sequence_id:
+			resolved_targets.append(target.get_instance_id())
+	)
+	combat.handle_merge_attack(retarget_event)
+	await _wait_seconds(1.20)
+	_check(resolved_targets.size() == 5, "poison should preserve one resolved attack per merged card")
+	if resolved_targets.size() == 5:
+		_check(resolved_targets[0] == first_id and resolved_targets[1] == first_id, "poison should focus the front monster until it is defeated")
+		_check(resolved_targets[2] == second_id and resolved_targets[3] == second_id and resolved_targets[4] == second_id, "poison should move to the next monster only after the front target is defeated")
+	_check(second.get_poison_layer_count() == 3, "every non-lethal poison hit on the new front monster should add a layer")
 	_cleanup_game(game)
 	await process_frame
 	await process_frame
@@ -206,7 +269,10 @@ func _test_retarget_during_flight() -> void:
 		if shot == 0:
 			state["resolved_id"] = target.get_instance_id()
 	)
-	combat.handle_merge_attack(MergeAttackEvent.from_merge(1, 3, 2, Vector2(320.0, 900.0), 2))
+	var event := MergeAttackEvent.from_merge(4, 3, 2, Vector2(320.0, 900.0), 2)
+	event.effect_params["crit_chance"] = 0.0
+	event.effect_params["annihilation_chance"] = 0.0
+	combat.handle_merge_attack(event)
 	await _wait_seconds(0.50)
 	_check(int(state["resolved_id"]) == second_id, "a target killed during flight should retarget the next front monster")
 	_cleanup_game(game)
@@ -231,7 +297,10 @@ func _test_retarget_after_reaching_goal() -> void:
 		if shot == 0:
 			state["resolved_id"] = target.get_instance_id()
 	)
-	combat.handle_merge_attack(MergeAttackEvent.from_merge(1, 3, 2, Vector2(320.0, 900.0), 2))
+	var event := MergeAttackEvent.from_merge(4, 3, 2, Vector2(320.0, 900.0), 2)
+	event.effect_params["crit_chance"] = 0.0
+	event.effect_params["annihilation_chance"] = 0.0
+	combat.handle_merge_attack(event)
 	await _wait_seconds(0.50)
 	_check(int(state["resolved_id"]) == second_id, "a target reaching the crystal during flight should retarget the next monster")
 	_cleanup_game(game)
@@ -259,8 +328,12 @@ func _test_independent_sequences() -> void:
 	var game = fixture["game"]
 	var combat: CombatSystem = fixture["combat"]
 	_spawn_fixture_monster(combat, 1000.0, 0.70)
-	var first_event := MergeAttackEvent.from_merge(1, 3, 2, Vector2(280.0, 900.0), 2)
+	var first_event := MergeAttackEvent.from_merge(4, 3, 2, Vector2(280.0, 900.0), 2)
+	first_event.effect_params["crit_chance"] = 0.0
+	first_event.effect_params["annihilation_chance"] = 0.0
 	var second_event := MergeAttackEvent.from_merge(4, 4, 3, Vector2(380.0, 900.0), 2)
+	second_event.effect_params["crit_chance"] = 0.0
+	second_event.effect_params["annihilation_chance"] = 0.0
 	var counts := {first_event.sequence_id: 0, second_event.sequence_id: 0}
 	combat.merge_shot_resolved.connect(func(sequence_id: int, _shot: int, _target: Monster, _damage: float, _killed: bool):
 		if counts.has(sequence_id):
@@ -284,7 +357,7 @@ func _test_single_shot_attribute_basis() -> void:
 	var poison_event := MergeAttackEvent.from_merge(1, 4, 2, Vector2(320.0, 900.0), 2)
 	combat.handle_merge_attack(poison_event)
 	await _wait_seconds(0.42)
-	_check(is_equal_approx(float(target.poison_status.get("atk", 0.0)), poison_event.damage), "poison should use per-shot damage")
+	_check(is_equal_approx(float(target.poison_status.get("atk", 0.0)), poison_event.damage), "poison should use its per-shot damage for each applied layer")
 	var ice_event := MergeAttackEvent.from_merge(2, 4, 2, Vector2(320.0, 900.0), 2)
 	combat.handle_merge_attack(ice_event)
 	await _wait_seconds(0.42)
@@ -302,6 +375,7 @@ func _test_single_shot_attribute_basis() -> void:
 	var critical_event := MergeAttackEvent.from_merge(4, 4, 2, Vector2(320.0, 900.0), 2)
 	critical_event.effect_params["crit_chance"] = 1.0
 	critical_event.effect_params["crit_multiplier"] = 2.0
+	critical_event.effect_params["annihilation_chance"] = 0.0
 	var critical_state := {"damage": 0.0}
 	combat.merge_shot_resolved.connect(func(sequence_id: int, shot: int, _hit_target: Monster, damage: float, _killed: bool):
 		if sequence_id == critical_event.sequence_id and shot == 0:

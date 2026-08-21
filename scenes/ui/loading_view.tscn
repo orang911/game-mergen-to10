@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/loading_view.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/runtime/ui/screens/login/login_background.png" id="2_artwork"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/loading/standalone/loading_background_clean_hd_941x1672_v01.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/loading/progress/ui_loading_track_empty_576x48_1x_v01.png" id="3_track"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/loading/progress/ui_loading_fill_green_full_576x48_1x_v01.png" id="4_fill"]
 
 [node name="LoadingView" type="Control"]
 layout_mode = 3
@@ -10,32 +12,109 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
+mouse_filter = 0
 script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="DesignRoot" type="Control" parent="."]
 layout_mode = 0
-offset_right = 967.0
-offset_bottom = 1626.0
-mouse_filter = 2
+offset_right = 941.0
+offset_bottom = 1672.0
+mouse_filter = 1
 
-[node name="Artwork" type="TextureRect" parent="DesignRoot"]
+[node name="ProgressBar" type="Control" parent="DesignRoot"]
 layout_mode = 0
-offset_right = 967.0
-offset_bottom = 1626.0
+offset_left = 182.5
+offset_top = 1420.0
+offset_right = 758.5
+offset_bottom = 1468.0
 mouse_filter = 2
-texture = ExtResource("2_artwork")
-expand_mode = 1
-stretch_mode = 0
 
-[node name="PlayButton" type="Button" parent="DesignRoot"]
+[node name="Track" type="TextureRect" parent="DesignRoot/ProgressBar"]
+layout_mode = 0
+offset_right = 576.0
+offset_bottom = 48.0
+mouse_filter = 2
+texture = ExtResource("3_track")
+expand_mode = 1
+
+[node name="FillClip" type="Control" parent="DesignRoot/ProgressBar"]
+clip_contents = true
+layout_mode = 0
+offset_right = 0.0
+offset_bottom = 48.0
+mouse_filter = 2
+
+[node name="Fill" type="TextureRect" parent="DesignRoot/ProgressBar/FillClip"]
+layout_mode = 0
+offset_right = 576.0
+offset_bottom = 48.0
+mouse_filter = 2
+texture = ExtResource("4_fill")
+expand_mode = 1
+
+[node name="PercentLabel" type="Label" parent="DesignRoot/ProgressBar"]
+layout_mode = 0
+offset_right = 576.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.055, 0.11, 0.075, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 26
+text = "0%"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="DesignRoot"]
+layout_mode = 0
+offset_left = 182.5
+offset_top = 1485.0
+offset_right = 758.5
+offset_bottom = 1533.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.055, 0.11, 0.075, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "正在加载…"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ClearLocalDataButton" type="Button" parent="DesignRoot"]
 process_mode = 3
 layout_mode = 0
-offset_left = 205.0
-offset_top = 1258.0
-offset_right = 762.0
-offset_bottom = 1423.0
+offset_left = 24.0
+offset_top = 1594.0
+offset_right = 190.0
+offset_bottom = 1642.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
-self_modulate = Color(1, 1, 1, 0)
+theme_override_colors/font_color = Color(1, 1, 1, 0.78)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "清空本地数据"
 flat = true
+
+[node name="ClearLocalDataConfirm" type="ConfirmationDialog" parent="."]
+process_mode = 3
+title = "清空本地数据"
+initial_position = 1
+size = Vector2i(620, 280)
+min_size = Vector2i(620, 280)
+dialog_text = "将删除本机的章节进度、卡片等级、货币与新手记录。此操作无法撤销。"
+ok_button_text = "确认清空"
+cancel_button_text = "取消"

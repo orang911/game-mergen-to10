@@ -6,38 +6,42 @@ signal revive_pressed
 signal home_pressed
 
 const DESIGN_SIZE := Vector2(941.0, 1672.0)
-const ASSET_DIR := "res://assets/runtime/ui/screens/settlement/"
+const ASSET_ROOT := "res://assets/runtime/ui/interfaces/settlement/"
+const BACKPLATE_DIR := ASSET_ROOT + "backplates/"
+const DECORATION_DIR := ASSET_ROOT + "decorations/"
+const ICON_DIR := ASSET_ROOT + "icons/"
+const TAB_DIR := ASSET_ROOT + "tabs/"
 
-const PANEL_TEXTURE := preload(ASSET_DIR + "settlement_panel.png")
-const WIN_TITLE := preload(ASSET_DIR + "title_victory.png")
-const LOSE_TITLE := preload(ASSET_DIR + "title_defeat.png")
-const RECORD_TEXTURE := preload(ASSET_DIR + "badge_new_record.png")
-const REWARD_PANEL := preload(ASSET_DIR + "reward_panel.png")
-const REWARD_CHEST := preload(ASSET_DIR + "reward_chest.png")
-const REWARD_COIN := preload(ASSET_DIR + "reward_coin.png")
-const REWARD_CRYSTAL := preload(ASSET_DIR + "reward_crystal.png")
+const PANEL_TEXTURE := preload(BACKPLATE_DIR + "settlement_panel.png")
+const WIN_TITLE := preload(DECORATION_DIR + "title_victory.png")
+const LOSE_TITLE := preload(DECORATION_DIR + "title_defeat.png")
+const RECORD_TEXTURE := preload(DECORATION_DIR + "badge_new_record.png")
+const REWARD_PANEL := preload(BACKPLATE_DIR + "reward_panel.png")
+const REWARD_CHEST := preload(ICON_DIR + "reward_chest.png")
+const REWARD_COIN := preload(ICON_DIR + "reward_coin.png")
+const REWARD_CRYSTAL := preload(ICON_DIR + "reward_crystal.png")
 
-const TAB_STATS := preload(ASSET_DIR + "tab_stats_active.png")
-const TAB_DECK := preload(ASSET_DIR + "tab_deck_inactive.png")
-const MAIN_HIGHEST := preload(ASSET_DIR + "main_highest_frame.png")
-const MAIN_KILLS := preload(ASSET_DIR + "main_kills_frame.png")
-const SUMMARY_FRAME := preload(ASSET_DIR + "summary_frame.png")
-const SECONDARY_LEFT := preload(ASSET_DIR + "secondary_left_frame.png")
-const SECONDARY_RIGHT := preload(ASSET_DIR + "secondary_right_frame.png")
-const DAMAGE_FRAME := preload(ASSET_DIR + "damage_frame.png")
-const DAMAGE_ROW := preload(ASSET_DIR + "damage_row.png")
+const TAB_STATS := preload(TAB_DIR + "tab_stats_active.png")
+const TAB_DECK := preload(TAB_DIR + "tab_deck_inactive.png")
+const MAIN_HIGHEST := preload(BACKPLATE_DIR + "main_highest_frame.png")
+const MAIN_KILLS := preload(BACKPLATE_DIR + "main_kills_frame.png")
+const SUMMARY_FRAME := preload(BACKPLATE_DIR + "summary_frame.png")
+const SECONDARY_LEFT := preload(BACKPLATE_DIR + "secondary_left_frame.png")
+const SECONDARY_RIGHT := preload(BACKPLATE_DIR + "secondary_right_frame.png")
+const DAMAGE_FRAME := preload(BACKPLATE_DIR + "damage_frame.png")
+const DAMAGE_ROW := preload(BACKPLATE_DIR + "damage_row.png")
 
-const ICON_HIGHEST := preload(ASSET_DIR + "icon_highest_number.png")
-const ICON_KILLS := preload(ASSET_DIR + "icon_kills.png")
-const ICON_MERGES := preload(ASSET_DIR + "icon_merges.png")
-const ICON_MAX_MERGE := preload(ASSET_DIR + "icon_max_merge.png")
-const ICON_CASTLE := preload(ASSET_DIR + "icon_castle_health.png")
-const ICON_LEAKS := preload(ASSET_DIR + "icon_leaks.png")
-const ICON_BOARD_DAMAGE := preload(ASSET_DIR + "icon_board_damage.png")
-const ICON_CRYSTAL_DAMAGE := preload(ASSET_DIR + "icon_crystal_damage.png")
-const ICON_SKILL_DAMAGE := preload(ASSET_DIR + "icon_skill_damage.png")
-const STAR_ACTIVE_TEXTURE := preload("res://assets/runtime/ui/cards/stars/star_active.png")
-const STAR_SLOT_TEXTURE := preload("res://assets/runtime/ui/cards/stars/star_slot.png")
+const ICON_HIGHEST := preload(ICON_DIR + "icon_highest_number.png")
+const ICON_KILLS := preload(ICON_DIR + "icon_kills.png")
+const ICON_MERGES := preload(ICON_DIR + "icon_merges.png")
+const ICON_MAX_MERGE := preload(ICON_DIR + "icon_max_merge.png")
+const ICON_CASTLE := preload(ICON_DIR + "icon_castle_health.png")
+const ICON_LEAKS := preload(ICON_DIR + "icon_leaks.png")
+const ICON_BOARD_DAMAGE := preload(ICON_DIR + "icon_board_damage.png")
+const ICON_CRYSTAL_DAMAGE := preload(ICON_DIR + "icon_crystal_damage.png")
+const ICON_SKILL_DAMAGE := preload(ICON_DIR + "icon_skill_damage.png")
+const STAR_ACTIVE_TEXTURE := preload("res://assets/runtime/ui/components/rating_stars/icons/star_active.png")
+const STAR_SLOT_TEXTURE := preload("res://assets/runtime/ui/components/rating_stars/icons/star_slot.png")
 
 const PAGE_STATS := "stats"
 const PAGE_DECK := "deck"

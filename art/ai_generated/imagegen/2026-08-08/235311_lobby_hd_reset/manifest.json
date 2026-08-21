@@ -1,0 +1,10 @@
+{
+  "purpose": "lobby-hd-reset-and-cutout",
+  "version": "v01",
+  "date": "2026-08-08",
+  "tool": "Codex built-in ImageGen",
+  "source_reference": "references/layout_content_reference.png",
+  "master": "lobby_hd_reset_imagegen_builtin_9x16_v01.png",
+  "production_directory": "../../../../production/lobby/2026-08-08_lobby_hd_reset_and_cutout_v01",
+  "notes": "High-definition reset only; no layout or functional redesign. Purple and pink assets use green chroma-key correction sources."
+}

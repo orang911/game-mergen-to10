@@ -5,7 +5,7 @@ signal skip_pressed
 signal awakening_core_pressed
 
 const DESIGN_SIZE := Vector2(941.0, 1672.0)
-const CORE_TEXTURE := preload("res://assets/runtime/ui/battle/tutorial/icon_crystal_awakening_level_01.png")
+const CORE_TEXTURE := preload("res://assets/runtime/ui/interfaces/battle/tutorial/icons/icon_crystal_awakening_level_01.png")
 const CARD_ICON_SIZE := Vector2(76.0, 76.0)
 const CRYSTAL_CARD_SIZE := Vector2(520.0, 128.0)
 
@@ -28,8 +28,10 @@ var _card_crystal_icon: TextureRect
 var _core_title: Label
 var _core_desc: Label
 var _crystal_highlight: Panel
+var _awakening_screen_button: Button
 var _core_tween: Tween
 var _crystal_halo_tween: Tween
+var _awakening_tap_armed := false
 
 
 func _ready() -> void:
@@ -71,19 +73,9 @@ func show_basic_progress(killed: int, total: int) -> void:
 			_hide_message()
 
 
-func show_breakthrough_primary() -> void:
+func show_core_reward() -> void:
 	_set_focus_visible(false)
 	_progress_panel.visible = false
-	_red_warning.visible = true
-	_show_message("怪物突破防线会损伤水晶！", "水晶耐久：18 / 20", 2, Color(1.0, 0.78, 0.70))
-	_pulse_warning()
-
-
-func show_breakthrough_secondary() -> void:
-	_show_message("合成更高的数字，才能发动更强的攻击！", "重甲怪已被冲击眩晕", 2, Color(1.0, 0.91, 0.64))
-
-
-func show_core_reward() -> void:
 	_red_warning.visible = false
 	_hide_message()
 	_core_button.visible = true
@@ -91,8 +83,11 @@ func show_core_reward() -> void:
 	_core_button.modulate = Color.WHITE
 	_core_button.scale = Vector2.ONE
 	_core_button.rotation = 0.0
+	_awakening_tap_armed = true
+	_awakening_screen_button.visible = true
+	_awakening_screen_button.disabled = false
 	_card_crystal_icon.visible = false
-	_show_crystal_card("唤醒晶核", "唤醒水晶，解锁持续攻击。", Color(0.80, 0.98, 1.0))
+	_show_crystal_card("唤醒晶核", "点击屏幕唤醒水晶，解锁持续攻击。", Color(0.80, 0.98, 1.0))
 	_crystal_highlight.visible = true
 	_set_rect(_crystal_highlight, _crystal_anchor + Vector2(-104.0, 10.0), Vector2(208.0, 74.0))
 	_set_rect(_core_button, _card_icon_position(), CARD_ICON_SIZE)
@@ -112,6 +107,9 @@ func play_core_fly() -> void:
 	if _core_button == null or not _core_button.visible:
 		return
 	_core_button.disabled = true
+	_awakening_tap_armed = false
+	_awakening_screen_button.disabled = true
+	_awakening_screen_button.visible = false
 	if _core_tween:
 		_core_tween.kill()
 	if _crystal_halo_tween and _crystal_halo_tween.is_valid():
@@ -199,6 +197,7 @@ func hide_crystal_card() -> void:
 
 
 func cleanup() -> void:
+	_awakening_tap_armed = false
 	if _core_tween:
 		_core_tween.kill()
 	if _crystal_halo_tween and _crystal_halo_tween.is_valid():
@@ -329,11 +328,28 @@ func _build_view() -> void:
 	add_child(_crystal_highlight)
 	_crystal_highlight.visible = false
 
+	_awakening_screen_button = Button.new()
+	_awakening_screen_button.name = "AwakeningScreenTap"
+	_awakening_screen_button.flat = true
+	_awakening_screen_button.text = ""
+	_awakening_screen_button.focus_mode = Control.FOCUS_NONE
+	_awakening_screen_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_awakening_screen_button.z_index = 3
+	_awakening_screen_button.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	_awakening_screen_button.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
+	_awakening_screen_button.add_theme_stylebox_override("pressed", StyleBoxEmpty.new())
+	_awakening_screen_button.add_theme_stylebox_override("disabled", StyleBoxEmpty.new())
+	_set_rect(_awakening_screen_button, Vector2.ZERO, DESIGN_SIZE)
+	_awakening_screen_button.pressed.connect(_on_awakening_screen_pressed)
+	add_child(_awakening_screen_button)
+	_awakening_screen_button.visible = false
+
 	var skip := Button.new()
 	skip.name = "SkipTutorial"
 	skip.text = "跳过教学"
 	skip.focus_mode = Control.FOCUS_NONE
 	skip.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	skip.z_index = 4
 	skip.add_theme_font_size_override("font_size", 22)
 	skip.add_theme_color_override("font_color", Color(0.88, 0.94, 1.0))
 	skip.add_theme_stylebox_override("normal", _round_label_style(Color(0.03, 0.06, 0.14, 0.78), Color(0.45, 0.62, 0.86, 0.90), 16))
@@ -346,6 +362,15 @@ func _build_view() -> void:
 	_layout_focus()
 	_message_panel.visible = false
 	_progress_panel.visible = false
+
+
+func _on_awakening_screen_pressed() -> void:
+	if not _awakening_tap_armed or _awakening_screen_button.disabled:
+		return
+	_awakening_tap_armed = false
+	_awakening_screen_button.disabled = true
+	_awakening_screen_button.visible = false
+	awakening_core_pressed.emit()
 
 
 func _layout_focus() -> void:

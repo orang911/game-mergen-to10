@@ -1,0 +1,71 @@
+{
+  "scanned_at": "2026-08-20T08:53:42.678Z",
+  "groups": [
+    {
+      "output": "assets/runtime/characters/monsters/atlases/slime_stage_01_walk_sheet.png",
+      "output_exists": true,
+      "source_total": 18,
+      "present": 18,
+      "missing": 0,
+      "missing_sources": []
+    },
+    {
+      "output": "assets/runtime/characters/monsters/atlases/slime_stage_01_hit_sheet.png",
+      "output_exists": true,
+      "source_total": 8,
+      "present": 8,
+      "missing": 0,
+      "missing_sources": []
+    },
+    {
+      "output": "assets/runtime/characters/monsters/atlases/monster_death_sheet.png",
+      "output_exists": true,
+      "source_total": 19,
+      "present": 19,
+      "missing": 0,
+      "missing_sources": []
+    },
+    {
+      "output": "assets/runtime/characters/monsters/atlases/tutorial_armored_walk_sheet.png",
+      "output_exists": true,
+      "source_total": 28,
+      "present": 28,
+      "missing": 0,
+      "missing_sources": []
+    },
+    {
+      "output": "assets/runtime/characters/monsters/atlases/tutorial_armored_hit_sheet.png",
+      "output_exists": true,
+      "source_total": 5,
+      "present": 5,
+      "missing": 0,
+      "missing_sources": []
+    },
+    {
+      "output": "assets/runtime/fx/merge/atlases/merge_sheet.png",
+      "output_exists": true,
+      "source_total": 13,
+      "present": 13,
+      "missing": 0,
+      "missing_sources": []
+    },
+    {
+      "output": "assets/runtime/fx/elements/lightning/atlases/beam_sheet.png",
+      "output_exists": true,
+      "source_total": 3,
+      "present": 3,
+      "missing": 0,
+      "missing_sources": []
+    },
+    {
+      "output": "assets/runtime/fx/portal/atlases/gate_portal_sheet_mobile.png",
+      "output_exists": true,
+      "source_total": 20,
+      "present": 20,
+      "missing": 0,
+      "missing_sources": []
+    }
+  ],
+  "total_present": 114,
+  "total_missing": 0
+}

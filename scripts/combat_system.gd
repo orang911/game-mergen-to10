@@ -7,7 +7,12 @@ const TUTORIAL_BASIC_COUNT := 4
 const TUTORIAL_WAVE_TOTAL := 5
 const TUTORIAL_BASIC_SPAWN_DELAY := 0.45
 const TUTORIAL_HEAVY_SPAWN_DELAY := 0.65
+const TUTORIAL_BREAKTHROUGH_BASE_SPEED := 78.0
+const TUTORIAL_BREAKTHROUGH_SPEED_MULTIPLIER := 2.0
 const MERGE_SHOT_INTERVAL := 0.05
+const HUD_WARNING_PATH_PROGRESS := 0.85
+const HUD_WARNING_DURABILITY_RATIO := 0.25
+const HUD_THREAT_POLL_INTERVAL := 0.10
 
 signal merge_attack_received(event: MergeAttackEvent)
 signal castle_destroyed
@@ -18,6 +23,8 @@ signal level_completed
 signal back_pressed
 signal normal_attack_hit(position: Vector2)
 signal normal_attack_kill(position: Vector2)
+signal monster_killed(monster: Monster)
+signal castle_hit(is_boss: bool)
 signal tutorial_basic_progress(killed: int, total: int)
 signal tutorial_breakthrough_reached(monster: Monster)
 signal tutorial_first_strike_finished
@@ -50,10 +57,23 @@ var _tutorial_mode := false
 var _tutorial_paused := false
 var _tutorial_basic_kills := 0
 var _tutorial_generation := 0
-var _tutorial_breakthrough_monster: Monster
+var _tutorial_breakthrough_monster = null
+var _tutorial_breakthrough_triggered := false
 var _merge_attack_generation := 0
 var _active_merge_sequences: Dictionary = {}
 var _merge_sequence_outcomes: Dictionary = {}
+var _hud_threat_poll_elapsed := 0.0
+var _hud_durability_ratio := 1.0
+
+
+func _process(delta: float) -> void:
+	if not running or battle_layer == null or not is_instance_valid(battle_layer):
+		return
+	_hud_threat_poll_elapsed += delta
+	if _hud_threat_poll_elapsed < HUD_THREAT_POLL_INTERVAL:
+		return
+	_hud_threat_poll_elapsed = 0.0
+	_refresh_hud_danger_state()
 
 
 func setup(p_game_layer: Control) -> void:
@@ -109,16 +129,22 @@ func _build_children() -> void:
 		crystal_system.tutorial_first_strike_finished.connect(func(): tutorial_first_strike_finished.emit())
 
 func _connect_signals() -> void:
-	wave_system.spawn_requested.connect(func(monster_type: String, hp_multiplier: float, visual_tier: int):
-		monster_system.spawn_monster(monster_type, hp_multiplier, {"visual_tier": visual_tier})
+	wave_system.spawn_requested.connect(func(monster_type: String, hp_multiplier: float, visual_tier: int, overrides: Dictionary):
+		var spawn_overrides := overrides.duplicate(true)
+		spawn_overrides["visual_tier"] = visual_tier
+		monster_system.spawn_monster(monster_type, hp_multiplier, spawn_overrides)
 	)
 
-	monster_system.monster_spawned.connect(func(_monster: Monster):
+	monster_system.monster_spawned.connect(func(monster: Monster):
+		if is_instance_valid(monster):
+			monster.damage_feedback_requested.connect(_on_monster_damage_feedback_requested)
+			monster.tutorial_hold_reached.connect(_on_tutorial_hold_reached)
 		wave_system.monsters_are_clear = false
 		_refresh_wave_progress()
 	)
 	monster_system.monster_died.connect(func(monster: Monster):
 		run_kills += 1
+		monster_killed.emit(monster)
 		if monster.death_source == "normal":
 			normal_attack_kill.emit(monster.global_position + monster.size * 0.5)
 		_handle_tutorial_monster_died(monster)
@@ -126,14 +152,14 @@ func _connect_signals() -> void:
 	)
 
 	monster_system.monster_reached_goal.connect(func(monster: Monster, durability_damage: int):
-		run_leaks += 1
 		if _tutorial_mode and monster.tutorial_role == "breakthrough":
-			castle_system.damage(durability_damage)
-			monster.set_tutorial_stunned(true)
-			set_tutorial_paused(true)
-			tutorial_breakthrough_reached.emit(monster)
-			_refresh_wave_progress()
+			# Defensive fallback only: the authored tutorial stop at 0.92 should
+			# always fire first. Never let this teaching target damage durability.
+			monster.tutorial_hold_at_goal = true
+			_trigger_tutorial_breakthrough(monster)
 			return
+		run_leaks += 1
+		castle_hit.emit(monster.is_boss)
 		if effect_system:
 			effect_system.play_monster_reached_goal(monster)
 		castle_system.damage(durability_damage)
@@ -144,6 +170,8 @@ func _connect_signals() -> void:
 		castle_destroyed.emit()
 	)
 	castle_system.durability_changed.connect(func(current: int, max_value: int):
+		_hud_durability_ratio = clampf(float(current) / float(maxi(1, max_value)), 0.0, 1.0)
+		_refresh_hud_danger_state()
 		castle_durability_changed.emit(current, max_value)
 	)
 
@@ -160,41 +188,94 @@ func _connect_signals() -> void:
 		else:
 			display = str(wave_index + 1)
 		if battle_layer and is_instance_valid(battle_layer):
-			battle_layer.set_wave_text("Wave " + display)
+			var wave_data := wave_system.get_current_wave()
+			var display_label := str(wave_data.get("display_label", ""))
+			var node_id := str(wave_data.get("node_id", ""))
+			battle_layer.set_wave_text(display_label if not display_label.is_empty() else (node_id if not node_id.is_empty() else "Wave " + display))
+			battle_layer.set_wave_base_state(bool(wave_data.get("is_boss", false)))
 			battle_layer.set_wave_progress(_current_wave_total, _current_wave_total)
+			_refresh_hud_danger_state()
 		if crystal_system:
 			crystal_system.notify_wave_started()
 	)
 
 	wave_system.wave_cleared.connect(func(wave_index: int):
 		_refresh_wave_progress()
+		if battle_layer and is_instance_valid(battle_layer):
+			battle_layer.set_wave_complete(true)
 		if crystal_system:
 			crystal_system.notify_wave_cleared()
 		wave_cleared.emit(wave_index)
 	)
-	wave_system.level_completed.connect(func(): level_completed.emit())
+	wave_system.level_completed.connect(func():
+		if battle_layer and is_instance_valid(battle_layer):
+			battle_layer.set_wave_complete(true)
+		level_completed.emit()
+	)
 
 	battle_layer.back_pressed.connect(func(): back_pressed.emit())
 
 
-func start_run(tutorial_mode: bool = false) -> void:
+func _on_monster_damage_feedback_requested(monster: Monster, damage: float, _element: int) -> void:
+	if effect_system:
+		effect_system.play_damage_feedback(monster, damage)
+
+
+func start_run(tutorial_mode: bool = false, elapsed_start: float = 0.0, wave_config: Array = [], start_wave_index: int = 0) -> void:
 	running = true
 	reset()
 	_tutorial_mode = tutorial_mode
-	wave_system.setup(GameConfig.get_level_waves())
+	wave_system.setup(wave_config if not wave_config.is_empty() else GameConfig.get_level_waves())
 	monster_system.start()
 	castle_system.reset()
 	if crystal_system:
 		crystal_system.set_awakened(not _tutorial_mode)
 		crystal_system.start()
 	if battle_layer and is_instance_valid(battle_layer):
-		battle_layer.start_run_hud()
+		battle_layer.start_run_hud(elapsed_start)
 	if _tutorial_mode:
 		wave_system.start_scripted_first_wave(TUTORIAL_WAVE_TOTAL)
 		tutorial_basic_progress.emit(0, TUTORIAL_BASIC_COUNT)
 		_schedule_tutorial_spawn("basic", 0.35)
 	else:
-		wave_system.start_first_wave()
+		wave_system.start_first_wave(start_wave_index)
+
+
+func get_current_wave_config() -> Dictionary:
+	return wave_system.get_current_wave() if wave_system else {}
+
+
+func export_chapter_state() -> Dictionary:
+	return {
+		"wave_system": wave_system.export_state() if wave_system else {},
+		"monsters": monster_system.export_states() if monster_system else [],
+		"castle_durability": castle_system.get_durability() if castle_system else GameConfig.MAX_CASTLE_DURABILITY,
+		"crystal": crystal_system.export_state() if crystal_system else {},
+		"elapsed": battle_layer.get_elapsed_seconds() if battle_layer else 0.0,
+		"run_kills": run_kills,
+		"run_leaks": run_leaks,
+	}
+
+
+func restore_chapter_run(wave_config: Array, state: Dictionary) -> void:
+	running = true
+	reset()
+	_tutorial_mode = false
+	wave_system.setup(wave_config)
+	monster_system.start()
+	castle_system.reset()
+	castle_system.set_durability(int(state.get("castle_durability", GameConfig.MAX_CASTLE_DURABILITY)))
+	if crystal_system:
+		crystal_system.start()
+		crystal_system.restore_state(state.get("crystal", {}) as Dictionary)
+	if battle_layer and is_instance_valid(battle_layer):
+		battle_layer.start_run_hud(float(state.get("elapsed", 0.0)))
+	run_kills = int(state.get("run_kills", 0))
+	run_leaks = int(state.get("run_leaks", 0))
+	wave_system.restore_state(state.get("wave_system", {}) as Dictionary)
+	monster_system.restore_states(state.get("monsters", []) as Array)
+	_refresh_wave_progress()
+	_refresh_hud_danger_state()
 
 func stop_run() -> void:
 	running = false
@@ -217,7 +298,10 @@ func reset() -> void:
 	_tutorial_paused = false
 	_tutorial_basic_kills = 0
 	_tutorial_breakthrough_monster = null
+	_tutorial_breakthrough_triggered = false
 	_current_wave_total = 0
+	_hud_threat_poll_elapsed = 0.0
+	_hud_durability_ratio = 1.0
 	run_kills = 0
 	run_leaks = 0
 	wave_system.reset()
@@ -274,6 +358,19 @@ func _refresh_wave_progress() -> void:
 	battle_layer.set_wave_progress(remaining, _current_wave_total)
 
 
+func _refresh_hud_danger_state() -> void:
+	if battle_layer == null or not is_instance_valid(battle_layer):
+		return
+	var danger := _hud_durability_ratio <= HUD_WARNING_DURABILITY_RATIO
+	if not danger and monster_system:
+		for monster in monster_system.get_alive_monsters():
+			if monster != null and is_instance_valid(monster) and monster.is_alive() and not monster.reached:
+				if monster.path_progress >= HUD_WARNING_PATH_PROGRESS:
+					danger = true
+					break
+	battle_layer.set_wave_danger(danger)
+
+
 func is_first_wave_tutorial_active() -> bool:
 	return _tutorial_mode
 
@@ -308,7 +405,15 @@ func play_tutorial_first_strike() -> void:
 	if crystal_system == null:
 		tutorial_first_strike_finished.emit()
 		return
-	crystal_system.play_tutorial_first_strike(_tutorial_breakthrough_monster)
+	var target = _tutorial_breakthrough_monster
+	if target == null or not is_instance_valid(target) or not (target is Monster):
+		crystal_system.play_tutorial_first_strike(null)
+		return
+	# Before the old goal-boundary flow, `reached` disabled this guard. The new
+	# 0.92 stop remains before the goal, so explicitly release the scripted
+	# minimum HP only when the awakened crystal is ready to execute the target.
+	target.tutorial_min_hp_before_goal = 0.0
+	crystal_system.play_tutorial_first_strike(target)
 
 
 func complete_tutorial_first_wave() -> void:
@@ -368,16 +473,39 @@ func _schedule_tutorial_spawn(role: String, delay: float) -> void:
 	else:
 		_tutorial_breakthrough_monster = monster_system.spawn_monster("tutorial_armored", 1.0, {
 			"hp": 24.0,
-			"speed": 78.0,
-			"durability_damage": 2,
+			# This is the crystal-activation Boss. Keep its accelerated tutorial
+			# pacing local to this scripted spawn so normal and chapter Boss speeds
+			# are unchanged.
+			"speed": TUTORIAL_BREAKTHROUGH_BASE_SPEED * TUTORIAL_BREAKTHROUGH_SPEED_MULTIPLIER,
+			"durability_damage": 0,
 			"scale": 1.85,
 			"tutorial_role": "breakthrough",
-			"tutorial_hold_at_goal": true,
+			"tutorial_hold_progress": 0.92,
 			"tutorial_min_hp_before_goal": 8.0,
 			"tutorial_bob": true,
 		})
 		if battle_layer and is_instance_valid(battle_layer):
 			battle_layer.set_tutorial_breakthrough_foreground(_tutorial_breakthrough_monster)
+
+
+func _on_tutorial_hold_reached(monster: Monster) -> void:
+	if not _tutorial_mode or monster == null or not is_instance_valid(monster):
+		return
+	if monster.tutorial_role != "breakthrough":
+		return
+	_trigger_tutorial_breakthrough(monster)
+
+
+func _trigger_tutorial_breakthrough(monster: Monster) -> void:
+	if _tutorial_breakthrough_triggered or not _tutorial_mode:
+		return
+	_tutorial_breakthrough_triggered = true
+	_tutorial_breakthrough_monster = monster
+	set_tutorial_paused(true)
+	if battle_layer and is_instance_valid(battle_layer):
+		battle_layer.play_tutorial_danger_flash()
+	tutorial_breakthrough_reached.emit(monster)
+	_refresh_wave_progress()
 
 func layout_for_board(new_board_pos: Vector2, new_board_size: Vector2, new_visual_board_pos: Vector2) -> void:
 	board_pos = new_board_pos
@@ -409,20 +537,29 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 	if effect_system:
 		launch_delay = effect_system.play_merge_feedback(event)
 	if launch_delay > 0.0:
-		await get_tree().create_timer(launch_delay).timeout
+		# The first SceneTreeTimer created while the battle scene is attaching can
+		# complete immediately in embedded/headless editor runs.  Keep the
+		# presentation delay frame-driven instead, so prompt → projectile ordering
+		# has the same guaranteed minimum duration everywhere.
+		var launch_deadline := Time.get_ticks_msec() + roundi(launch_delay * 1000.0)
+		while Time.get_ticks_msec() < launch_deadline:
+			await get_tree().process_frame
+			if generation != _merge_attack_generation or not running:
+				return
 	if generation != _merge_attack_generation or not running:
 		return
 	if effect_system:
 		effect_system.begin_merge_feedback_attack(event.sequence_id)
 	if event.element == GameConfig.AttackElement.FREEZE:
-		_play_merge_freeze_multitarget(event, generation)
+		_play_merge_distinct_multitarget(event, generation)
 	else:
-		# Lightning reaches this path with attack_count == 1 and then starts its
-		# dedicated bounce chain from _resolve_merge_sequence_hit().
+		# Poison, critical and fire resolve as sequential focus fire. Lightning
+		# reaches this path with attack_count == 1 and starts its dedicated bounce
+		# chain from _resolve_merge_sequence_hit().
 		_play_merge_attack_sequence(event, generation)
 
 
-func _play_merge_freeze_multitarget(event: MergeAttackEvent, generation: int) -> void:
+func _play_merge_distinct_multitarget(event: MergeAttackEvent, generation: int) -> void:
 	var targets := monster_system.get_front_monsters(maxi(1, event.target_count))
 	if targets.is_empty():
 		_finish_merge_sequence(event.sequence_id, generation, 0)
@@ -446,13 +583,13 @@ func _play_merge_freeze_multitarget(event: MergeAttackEvent, generation: int) ->
 				target,
 				Callable(self, "_provide_specific_merge_visual_target").bind(target.get_instance_id())
 			)
-		_resolve_merge_freeze_shot(event, target, shot_index, generation)
+		_resolve_merge_distinct_shot(event, target, shot_index, generation)
 	if fired_count > 0:
 		await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION).timeout
 	_finish_merge_sequence(event.sequence_id, generation, fired_count)
 
 
-func _resolve_merge_freeze_shot(event: MergeAttackEvent, target: Monster, shot_index: int, generation: int) -> void:
+func _resolve_merge_distinct_shot(event: MergeAttackEvent, target: Monster, shot_index: int, generation: int) -> void:
 	await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION).timeout
 	if generation != _merge_attack_generation or not running:
 		return
@@ -537,24 +674,35 @@ func _resolve_merge_sequence_hit(event: MergeAttackEvent, target: Monster) -> Di
 		return {"damage": 0.0, "killed": false}
 	var hit_center := target.global_position + target.size * 0.5
 	var final_damage := event.damage
+	var annihilated := false
 	if event.element == GameConfig.AttackElement.CRITICAL:
-		var crit_chance := float(event.effect_params.get("crit_chance", 0.0))
-		if GameConfig.is_critical(randf(), crit_chance):
-			final_damage *= float(event.effect_params.get("crit_multiplier", 2.0))
+		var annihilation_chance := float(event.effect_params.get("annihilation_chance", 0.0))
+		if not target.is_annihilation_immune() and GameConfig.is_critical(randf(), annihilation_chance):
+			final_damage = target.hp
+			annihilated = true
 			if effect_system:
-				effect_system.play_critical_hit(event.element_key, hit_center, event.element_tier)
-	target.apply_damage(final_damage)
+				effect_system.play_annihilation(target)
+			target.kill("annihilation")
+		else:
+			var crit_chance := float(event.effect_params.get("crit_chance", 0.0))
+			if GameConfig.is_critical(randf(), crit_chance):
+				final_damage *= float(event.effect_params.get("crit_multiplier", 2.0))
+				if effect_system:
+					effect_system.play_critical_hit(event.element_key, hit_center, event.element_tier)
+	if not annihilated:
+		target.apply_damage(final_damage)
 	var killed := not target.is_alive()
 	normal_attack_hit.emit(hit_center)
 	if target.is_alive() and (
 		event.element == GameConfig.AttackElement.POISON
 		or event.element == GameConfig.AttackElement.FREEZE
+		or event.element == GameConfig.AttackElement.LIGHTNING
 		or event.element == GameConfig.AttackElement.FIRE
 	):
 		target.apply_element_effect(event)
 	if effect_system:
 		effect_system.play_element_hit(event.element_key, hit_center + Vector2(0.0, -10.0), event.element_tier)
-		effect_system.play_monster_hit(target)
+		effect_system.play_monster_hit(target, event.element_key, event.origin_position)
 	if event.element == GameConfig.AttackElement.FIRE:
 		_apply_merge_fire_splash(event, target, hit_center)
 	elif event.element == GameConfig.AttackElement.LIGHTNING:
@@ -595,7 +743,7 @@ func _apply_merge_fire_splash(event: MergeAttackEvent, primary: Monster, hit_cen
 		if nearby.is_alive():
 			nearby.apply_element_effect(event)
 		if effect_system:
-			effect_system.play_monster_hit(nearby)
+			effect_system.play_monster_hit(nearby, "fire", hit_center)
 
 
 func _finish_merge_sequence(sequence_id: int, generation: int, fired_count: int) -> void:
@@ -653,8 +801,8 @@ func _play_merge_lightning_chain(event: MergeAttackEvent, first_target: Monster,
 func trigger_card_attack(card_id: String, trigger_level: int, card_level: int, origin: Vector2) -> void:
 	if not running or monster_system == null:
 		return
-	if card_id == "frost_bell" or card_id == "thunder_ballista":
-		return
+	# Ice and lightning cards remain absent from the current random pools, but
+	# direct/debug/imprint invocations use the same live element implementation.
 	var level := clampi(card_level, 1, GameConfig.MAX_CARD_LEVEL)
 	var base_damage := float(GameConfig.get_base_attack(trigger_level))
 	match card_id:
@@ -725,13 +873,28 @@ func _resolve_skill_hit(event: MergeAttackEvent, target, damage: float, element_
 	var monster := target as Monster
 	if monster == null or not monster.is_alive():
 		return
-	monster.apply_damage(damage, "skill")
 	var hit_pos := monster.global_position + monster.size * 0.5
+	var final_damage := damage
+	var annihilated := false
+	if event.element == GameConfig.AttackElement.CRITICAL:
+		var annihilation_chance := float(event.effect_params.get("annihilation_chance", 0.0))
+		if not monster.is_annihilation_immune() and GameConfig.is_critical(randf(), annihilation_chance):
+			final_damage = monster.hp
+			annihilated = true
+			if effect_system:
+				effect_system.play_annihilation(monster)
+			monster.kill("annihilation")
+		elif GameConfig.is_critical(randf(), float(event.effect_params.get("crit_chance", 0.0))):
+			final_damage *= float(event.effect_params.get("crit_multiplier", 2.0))
+			if effect_system:
+				effect_system.play_critical_hit(element_key, hit_pos, event.element_tier)
+	if not annihilated:
+		monster.apply_damage(final_damage, "skill")
 	if monster.is_alive() and element_key != "critical":
 		monster.apply_element_effect(event, "skill")
 	if effect_system:
 		effect_system.play_element_hit(element_key, hit_pos, event.element_tier)
-		effect_system.play_monster_hit(monster)
+		effect_system.play_monster_hit(monster, element_key, event.origin_position)
 
 
 func _play_ballista_strike(targets: Array[Monster], damage: float, chain_ratio: float, origin: Vector2, level: int) -> void:
@@ -746,6 +909,8 @@ func _play_ballista_strike(targets: Array[Monster], damage: float, chain_ratio: 
 		projectile_system.play_merge_attack(event, [first_target])
 	var first_hit_pos := first_target.global_position + first_target.size * 0.5
 	first_target.apply_damage(damage, "skill")
+	if first_target.is_alive():
+		first_target.apply_element_effect(event, "skill")
 	if effect_system:
 		effect_system.play_element_hit("lightning", first_hit_pos, level)
 		effect_system.play_monster_hit(first_target)
@@ -772,6 +937,8 @@ func _play_ballista_chain_sequence(event: MergeAttackEvent, first_target: Monste
 		if projectile_system:
 			projectile_system.play_chain(source_pos, hit_pos, event, source_control, target)
 		target.apply_damage(damage, "skill")
+		if target.is_alive():
+			target.apply_element_effect(event, "skill")
 		if effect_system:
 			effect_system.play_element_hit("lightning", hit_pos, level)
 			effect_system.play_monster_hit(target)

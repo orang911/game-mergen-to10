@@ -1,111 +1,54 @@
-# 视觉、场景与 UI 拆分方案 / Visual, Scene, And UI Split Plan
+# 当前界面与美术需求 / UI And Art Plan
 
-## 主场景层级建议 / Suggested Main Scene Hierarchy
+更新：2026-08-06
+上位规则：`00_current_product_baseline.md`
+
+## 界面层级
 
 ```text
-Main
-├─ Background
-├─ Decor
-├─ MainMenu
-│  └─ LoadingView
-├─ Game
-│  ├─ BattleLayer
-│  │  ├─ MonsterPath
-│  │  ├─ MonsterVisualLayer
-│  │  ├─ CrystalAnchor
-│  │  ├─ CastleAnchor
-│  │  └─ WaveLabel
-│  ├─ BoardBackdrop
-│  ├─ Board
-│  ├─ Score
-│  ├─ Best
-│  ├─ RestartButton
-│  ├─ BackButton
-│  └─ MergeEffect
-└─ Popups
+Loading
+├─ 新用户：第一章战斗
+└─ 老用户：大厅 → 继续/开始章节 → 战斗
+
+战斗
+├─ 顶部：章节/续战波次、Boss 与危险状态
+├─ 中部：水晶城堡、怪物路径、棋盘与合成攻击
+├─ 底部：能量、唯一待触发印记、水晶状态
+└─ 二级弹窗：印记选择、水晶强化、节点过场、失败、章节完成
 ```
 
-## BattleLayer / 战斗层
+## 当前界面规则
 
-- 放在 `Game` 下。
-- 视觉上位于棋盘背景和方块之间，或棋盘背景后方。
-- 不应遮挡棋盘输入。
-- 承载怪物路径、怪物显示、城堡耐久、波次提示、水晶锚点。
+- Loading 仅展示加载进度（“正在加载”+ 百分比），无开始按钮；时长 2.5 秒。
+- Loading 左下角有小型“清空本地数据”，二次确认时暂停加载，取消后继续。
+- 大厅是老用户入口；按钮文案需要反映“开始第一章 / 继续章节 / 继续续战”。
+- 新用户不先进入大厅，Loading 后直接进入 1-1 教学。
+- 节点切换使用轻量过场；不弹回大厅、不重置局内状态。
+- Boss 波必须显示 Boss 标记、血条与危险状态。
 
-## MonsterPath / 怪物路径
+## 二级弹窗出图清单
 
-- 使用 `Path2D`。
-- 路径围绕棋盘外圈。
-- 在布局时根据棋盘位置和尺寸重新生成。
-- 入口在棋盘左上角外侧。
-- 终点在入口旁边，接近绕满一圈但不重合。
+以下是美术需要优先完成的 6 张效果图，不是新增功能：
 
-路径伪代码：
+| 编号 | 画面 | 目的 |
+|---|---|---|
+| 01 | 印记选择 | 解释“选择后，下一次合成立即释放”；突出单一待触发槽位。 |
+| 02 | 水晶苏醒 | 暗淡水晶被攻击、核心点亮、首次反击。 |
+| 03 | 小 Boss 后水晶强化 | 星核蒸汽炉卡牌飞入水晶，明确 `+10%` 普攻。 |
+| 04 | 节点过场 | 仅显示 `1-1`、`1-2` 等进度与“继续前进”，不堆叠表格信息。 |
+| 05 | 失败与复活 | 优先表达守护失败、重试/复活/返回大厅的行动入口。 |
+| 06 | 第一章节算 | 大 Boss 击败、章节完成、进入续战或返回大厅。 |
 
-```gdscript
-func build_monster_path(board_pos: Vector2, board_size: Vector2) -> void:
-	var margin := 42.0
-	var left := board_pos.x - margin
-	var top := board_pos.y - margin
-	var right := board_pos.x + board_size.x + margin
-	var bottom := board_pos.y + board_size.y + margin
-	var end_offset := 72.0
+## 怪物美术方向
 
-	var curve := Curve2D.new()
-	curve.add_point(Vector2(left, top))
-	curve.add_point(Vector2(right, top))
-	curve.add_point(Vector2(right, bottom))
-	curve.add_point(Vector2(left, bottom))
-	curve.add_point(Vector2(left, top + end_offset))
-	monster_path.curve = curve
-```
+- 角色为短手短脚、Q 化、方圆概括造型，不做巨型写实比例。
+- 基础阵容：史莱姆、哥布林、装备哥布林、小僵尸。
+- 小 Boss 使用方盾哥布林强化外观；大 Boss 使用铁甲小僵尸强化外观。
+- 图标、按钮、怪物和方块统一圆润的魔法蒸汽城堡调性；避免硬边 AI 素材与旧卡通素材混用。
 
-## 水晶表现 / Crystal Presentation
+## 表现优先级
 
-- `CrystalAnchor` 可放在棋盘上方、终点附近或棋盘中轴视觉焦点。
-- 水晶等级提升时播放升级脉冲。
-- 水晶持续攻击时发射低噪声光束或能量弹。
-- 水晶颜色可跟随当前最高等级属性，也可以先固定为中性色。
-
-## UI 第一版元素 / First UI Pass
-
-- 城堡耐久显示。
-- 当前波次显示。
-- 怪物路径。
-- 怪物血量或受击反馈。
-- 合成攻击飞行特效。
-- 水晶等级或水晶升级反馈。
-
-## Web 发布与分段加载 / Web Release And Staged Loading
-
-后续 Web 版本需要避免首屏加载过慢：
-
-- 启动必需资源优先加载。
-- 战斗、怪物、弹道、特效资源可延后加载。
-- 大图和音频尽量按场景或阶段拆分。
-- `LoadingView` 负责启动阶段淡入和主菜单展示；真实资源进度接入前，使用约 1.2 秒的阶段动画。
-
-## LoadingView / 启动主菜单
-
-- 场景：`scenes/ui/loading_view.tscn`；脚本：`scripts/loading_view.gd`。
-- 资源统一放在 `assets/UI/登录页/`，当前使用完整登录页效果图作为整屏主视觉。
-- 设计坐标以效果图原始 `967×1626` 为基准，按视口等比覆盖并居中裁切。
-- “开始游戏”是当前唯一可交互元素；账号与设置图标暂时仅作为效果图视觉。
-- Logo、水晶、方块、怪物和 PLAY 使用低幅度、不同周期的浮动/呼吸动画；进入游戏或离开菜单时统一清理 Tween。
-
-## 视觉拆分原则 / Visual Split Principles
-
-- 玩法逻辑不直接写视觉动画细节。
-- 方块表现放进 `BlockView`。
-- 怪物表现放进 `MonsterView`。
-- 水晶表现放进 `CrystalView`。
-- 弹道表现放进 `ProjectileSystem` / `ProjectileView`。
-- 通用反馈放进 `EffectSystem`。
-
-## 合成攻击行提示 / Merge Attack Row Prompt
-
-- `MergeAttackPromptView` 实例化在 `EffectLayer/FloatingText` 下，位于棋盘/弹道之上、HUD 之下，忽略鼠标。
-- 横幅尺寸 640×64，在可视棋盘区域水平居中；数字区域为 (435, 3, 160, 58)。
-- 逻辑行 y=4..0 分别映射到 941×1672 设计坐标系中的顶部目标值 642, 750, 858, 966, 1074。
-- 动画：向上平移 24 px；0.18s 淡入/入场，0.30s 停留，0.27s 淡出。
-- 临时节点名称以 `Effect_` 开头，确保 reset/restart 时一次性清理所有实例。
+1. 水晶被攻击、苏醒、普通攻击和强化。
+2. 五属性命中差异：毒红闪飘字、冰蓝色减速、雷依次硬直、暴击湮灭、火燃烧溅射。
+3. Boss 的血条、尺寸、徽记和集火可读性。
+4. 章节完成/失败的行动引导。

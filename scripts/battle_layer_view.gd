@@ -5,13 +5,10 @@ class_name BattleLayerView
 signal back_pressed
 
 const DESIGN_SIZE := Vector2(941, 1672)
-const TOP_FILL_POS := Vector2(40.0, 112.0)
-const TOP_FILL_SIZE := Vector2(837.0, 31.0)
 const MONSTER_LAYER_Z := 13
 const CRYSTAL_NORMAL_Z := 15
 const TUTORIAL_BREAKTHROUGH_Z := 16
 const TUTORIAL_CRYSTAL_FOREGROUND_Z := 17
-
 @onready var _design_root := get_node_or_null("DesignRoot") as Control
 @onready var _board_guide := get_node_or_null("DesignRoot/BoardGuide") as Control
 @onready var _decor_layer := get_node_or_null("DesignRoot/DecorLayer") as Control
@@ -24,11 +21,16 @@ const TUTORIAL_CRYSTAL_FOREGROUND_Z := 17
 @onready var _wave_count_label := get_node_or_null("DesignRoot/HudLayer/WaveCountLabel") as Label
 @onready var _time_label := get_node_or_null("DesignRoot/HudLayer/TimeLabel") as Label
 @onready var _wave_banner := get_node_or_null("DesignRoot/HudLayer/WaveBanner") as Control
-@onready var _top_fill_clip := get_node_or_null("DesignRoot/HudLayer/TopFillClip") as Control
-@onready var _top_fill := get_node_or_null("DesignRoot/HudLayer/TopFillClip/TopFill") as TextureRect
-@onready var _castle_status_label := get_node_or_null("DesignRoot/HudLayer/CastleStatusPanel/CastleStatusLabel") as Label
+@onready var _time_banner := get_node_or_null("DesignRoot/HudLayer/TimeBanner") as Control
+@onready var _currency_banner := get_node_or_null("DesignRoot/HudLayer/CurrencyBanner") as Control
+@onready var _wave_status_icon := get_node_or_null("DesignRoot/HudLayer/WaveStatusIcon") as TextureRect
+@onready var _timer_status_icon := get_node_or_null("DesignRoot/HudLayer/TimerStatusIcon") as TextureRect
+@onready var _currency_icon := get_node_or_null("DesignRoot/HudLayer/CurrencyIcon") as TextureRect
+@onready var _currency_label := get_node_or_null("DesignRoot/HudLayer/CurrencyLabel") as Label
 @onready var _crystal_panel := get_node_or_null("DesignRoot/CrystalPanel") as Control
 @onready var _back_button := get_node_or_null("DesignRoot/HudLayer/BackButton") as TextureButton
+@onready var _music_button := get_node_or_null("DesignRoot/HudLayer/MusicButton") as TextureButton
+@onready var _home_button := get_node_or_null("DesignRoot/HudLayer/HomeButton") as TextureButton
 @onready var _gate_view := get_node_or_null("DesignRoot/DecorLayer/Gate") as Control
 @onready var _gate_portal_effect := get_node_or_null("DesignRoot/DecorLayer/GatePortalEffect") as GatePortalEffect
 
@@ -37,7 +39,11 @@ var _elapsed_seconds := 0.0
 var _last_display_second := -1
 var _timer_running := false
 var _timer_paused := false
-var _castle_durability_ratio := 1.0
+var _sound_muted := false
+var _base_wave_is_boss := false
+var _danger_active := false
+var _wave_complete := false
+var _coin_value := 0
 var _tutorial_crystal_foreground := false
 var _last_castle_durability := -1
 var _damage_flash: ColorRect
@@ -61,6 +67,12 @@ func _ready() -> void:
 	_apply_runtime_layer_order()
 	if _back_button:
 		_back_button.pressed.connect(func(): back_pressed.emit())
+	_connect_press_feedback(_back_button)
+	_connect_press_feedback(_music_button)
+	_connect_press_feedback(_home_button)
+	_refresh_control_icons()
+	_refresh_wave_status_icon()
+	set_coin_value(_coin_value)
 	_refresh_time_label()
 	if Engine.is_editor_hint():
 		call_deferred("_show_editor_preview")
@@ -144,36 +156,96 @@ func set_wave_text(text_value: String) -> void:
 	if _wave_label == null:
 		_wave_label = get_node_or_null("DesignRoot/HudLayer/WaveLabel") as Label
 	if _wave_label:
-		_wave_label.text = "第%s波" % text_value.trim_prefix("Wave ") if text_value.begins_with("Wave ") else text_value
+		var clean_text := text_value.strip_edges()
+		if clean_text.begins_with("Wave "):
+			clean_text = clean_text.trim_prefix("Wave ")
+		if clean_text.begins_with("续战"):
+			# Continuation already is a complete player-facing label. Adding
+			# another "第/波" made it collide with the remaining-count text.
+			_wave_label.add_theme_font_size_override("font_size", 28)
+			_wave_label.text = clean_text.replace("续战 ", "续战")
+		else:
+			_wave_label.add_theme_font_size_override("font_size", 32)
+			_wave_label.text = "第%s波" % clean_text if not clean_text.is_empty() else ""
 
 
 func set_wave_progress(remaining: int, total: int) -> void:
 	if _wave_count_label == null:
 		_wave_count_label = get_node_or_null("DesignRoot/HudLayer/WaveCountLabel") as Label
 	if _wave_count_label:
-		_wave_count_label.text = "(%d/%d)" % [maxi(0, remaining), maxi(0, total)]
+		_wave_count_label.text = "%d/%d" % [maxi(0, remaining), maxi(0, total)]
 
 
-func start_run_hud() -> void:
-	_elapsed_seconds = 0.0
+func set_coin_value(value: int) -> void:
+	_coin_value = maxi(0, value)
+	if _currency_label == null:
+		_currency_label = get_node_or_null("DesignRoot/HudLayer/CurrencyLabel") as Label
+	if _currency_label:
+		_currency_label.text = str(_coin_value)
+
+
+func set_wave_base_state(is_boss: bool) -> void:
+	_base_wave_is_boss = is_boss
+	_wave_complete = false
+	_refresh_wave_status_icon()
+
+
+func set_wave_danger(enabled: bool) -> void:
+	_danger_active = enabled
+	_refresh_wave_status_icon()
+
+
+func set_wave_complete(enabled: bool = true) -> void:
+	_wave_complete = enabled
+	_refresh_wave_status_icon()
+
+
+func get_wave_status_name() -> String:
+	if _wave_complete:
+		return "complete"
+	if _danger_active:
+		return "warning"
+	return "boss" if _base_wave_is_boss else "wave"
+
+
+func start_run_hud(elapsed_start: float = 0.0) -> void:
+	_elapsed_seconds = maxf(0.0, elapsed_start)
 	_last_display_second = -1
 	_timer_running = true
 	_timer_paused = false
+	_base_wave_is_boss = false
+	_danger_active = false
+	_wave_complete = false
 	set_wave_progress(0, 0)
+	_refresh_control_icons()
+	_refresh_wave_status_icon()
 	_refresh_time_label()
 
 
 func stop_run_hud() -> void:
 	_timer_running = false
 	_timer_paused = false
+	_refresh_control_icons()
 
 
 func set_run_hud_paused(paused: bool) -> void:
 	_timer_paused = paused
+	_refresh_control_icons()
+
+
+func set_sound_muted(muted: bool) -> void:
+	_sound_muted = muted
+	_refresh_control_icons()
 
 
 func get_elapsed_seconds() -> float:
 	return _elapsed_seconds
+
+
+func set_elapsed_seconds(value: float) -> void:
+	_elapsed_seconds = maxf(0.0, value)
+	_last_display_second = -1
+	_refresh_time_label()
 
 
 func reset_run_hud() -> void:
@@ -182,10 +254,26 @@ func reset_run_hud() -> void:
 	_elapsed_seconds = 0.0
 	_last_display_second = -1
 	_last_castle_durability = -1
+	_base_wave_is_boss = false
+	_danger_active = false
+	_wave_complete = false
 	_stop_damage_flash()
 	set_wave_text("")
 	set_wave_progress(0, 0)
+	_refresh_control_icons()
+	_refresh_wave_status_icon()
 	_refresh_time_label()
+
+
+func _refresh_control_icons() -> void:
+	# The v3 HUD bakes the pause symbol into its button art and removes the
+	# sound/home controls. Runtime state is still retained for gameplay code.
+	pass
+
+
+func _refresh_wave_status_icon() -> void:
+	# The new text-only wave panel deliberately has no status glyph.
+	pass
 
 
 func _refresh_time_label() -> void:
@@ -200,12 +288,6 @@ func _refresh_time_label() -> void:
 func set_castle_status(current: int, max_value: int) -> void:
 	var was_damaged := _last_castle_durability >= 0 and current < _last_castle_durability
 	_last_castle_durability = current
-	if _castle_status_label == null:
-		_castle_status_label = get_node_or_null("DesignRoot/HudLayer/CastleStatusPanel/CastleStatusLabel") as Label
-	if _castle_status_label:
-		_castle_status_label.text = "%d/%d" % [current, max_value]
-	_castle_durability_ratio = clampf(float(current) / float(maxi(1, max_value)), 0.0, 1.0)
-	_layout_castle_fill()
 	if was_damaged:
 		play_crystal_damage_feedback()
 
@@ -215,6 +297,16 @@ func play_crystal_damage_feedback() -> void:
 	# CastleSystem.damage() call.  This overlay is deliberately short and
 	# starts on the durability signal, so the whole battle frame flashes with
 	# the crystal hit without affecting popup input.
+	_play_fullscreen_red_flash()
+
+
+func play_tutorial_danger_flash() -> void:
+	# The tutorial warning reuses only the screen overlay. It deliberately does
+	# not touch CastleSystem or CrystalView damage feedback.
+	_play_fullscreen_red_flash()
+
+
+func _play_fullscreen_red_flash() -> void:
 	if _damage_flash == null or not is_inside_tree():
 		return
 	if _damage_flash_tween and _damage_flash_tween.is_valid():
@@ -264,6 +356,9 @@ func layout_for_board(board_pos: Vector2, board_size: Vector2, path_margin: floa
 		var gate_rect := GameConfig.get_path_gate_rect(board_pos, board_size)
 		_gate_view.scale = Vector2.ONE
 		_set_rect(_gate_view, gate_rect.position, gate_rect.size)
+	# GatePortalEffect keeps the transform authored in battle_layer.tscn. Do not
+	# assign its position, size, scale or rotation here: artists must be able to
+	# adjust the portal directly in the scene without runtime layout overwriting it.
 	_layout_crystal()
 	_castle_anchor_position = goal_pos
 
@@ -274,7 +369,8 @@ func _apply_runtime_layer_order() -> void:
 	_set_canvas_z(_decor_layer, 2)
 	_set_canvas_z(_path_view, 5)
 	_set_canvas_z(_monster_layer, MONSTER_LAYER_Z)
-	_set_canvas_z(_gate_portal_effect, 11)
+	# Portal animation belongs above the background/decor but below the road.
+	_set_canvas_z(_gate_portal_effect, 4)
 	# Monsters stay in front of the entrance; their scale-in intro makes them
 	# appear to emerge from the portal instead of popping through the gate.
 	_set_canvas_z(_gate_view, 12)
@@ -318,25 +414,34 @@ func _set_canvas_z(node: CanvasItem, z: int) -> void:
 
 func _layout_hud(viewport_size: Vector2) -> void:
 	if _wave_banner:
-		_set_rect(_wave_banner, Vector2(185.0, 24.0), Vector2(420, 76))
+		_set_rect(_wave_banner, Vector2(216.0, 7.0), Vector2(268, 84))
+	if _time_banner:
+		_set_rect(_time_banner, Vector2(506.0, 7.0), Vector2(178, 84))
+	if _currency_banner:
+		# The supplied currency plate has transparent vertical padding. Give
+		# its nine-patch the full HUD height so the visible pill is not
+		# compressed into a thin line behind the number.
+		_set_rect(_currency_banner, Vector2(772.0, 15.0), Vector2(153, 84))
+	if _wave_status_icon:
+		_wave_status_icon.visible = false
+	if _timer_status_icon:
+		_set_rect(_timer_status_icon, Vector2(519.0, 30.0), Vector2(37, 37))
+	if _currency_icon:
+		_set_rect(_currency_icon, Vector2(713.0, 14.0), Vector2(82, 86))
 	if _wave_label:
-		_set_rect(_wave_label, Vector2(205.0, 22.0), Vector2(118, 79))
+		_set_rect(_wave_label, Vector2(231.0, 11.0), Vector2(143, 74))
 	if _wave_count_label:
-		_set_rect(_wave_count_label, Vector2(312.0, 24.0), Vector2(111, 75))
+		_set_rect(_wave_count_label, Vector2(374.0, 11.0), Vector2(104, 74))
 	if _time_label:
-		_set_rect(_time_label, Vector2(447.0, 19.0), Vector2(141, 83))
-	_layout_castle_fill()
-
-
-func _layout_castle_fill() -> void:
-	if _top_fill_clip == null:
-		_top_fill_clip = get_node_or_null("DesignRoot/HudLayer/TopFillClip") as Control
-	if _top_fill == null:
-		_top_fill = get_node_or_null("DesignRoot/HudLayer/TopFillClip/TopFill") as TextureRect
-	if _top_fill_clip:
-		_set_rect(_top_fill_clip, TOP_FILL_POS, Vector2(TOP_FILL_SIZE.x * _castle_durability_ratio, TOP_FILL_SIZE.y))
-	if _top_fill:
-		_set_rect(_top_fill, Vector2.ZERO, TOP_FILL_SIZE)
+		_set_rect(_time_label, Vector2(553.0, 11.0), Vector2(123, 74))
+	if _currency_label:
+		_set_rect(_currency_label, Vector2(795.0, 19.0), Vector2(127, 75))
+	if _back_button:
+		_set_rect(_back_button, Vector2(30.0, 14.0), Vector2(84, 88))
+	if _music_button:
+		_music_button.visible = false
+	if _home_button:
+		_home_button.visible = false
 
 
 func _layout_decor(viewport_size: Vector2) -> void:
@@ -371,8 +476,27 @@ func _configure_texture_rects(root: Node) -> void:
 			texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_configure_texture_rects(child)
-	if _wave_banner and is_instance_valid(_wave_banner):
-		(_wave_banner as TextureRect).stretch_mode = TextureRect.STRETCH_SCALE
+	for panel in [_wave_banner, _time_banner, _currency_banner]:
+		if panel is TextureRect and is_instance_valid(panel):
+			(panel as TextureRect).stretch_mode = TextureRect.STRETCH_SCALE
+
+
+func _connect_press_feedback(button: BaseButton) -> void:
+	if button == null:
+		return
+	button.button_down.connect(func(): _animate_button_scale(button, Vector2(0.96, 0.96), 0.045))
+	button.button_up.connect(func(): _animate_button_scale(button, Vector2.ONE, 0.075))
+	button.mouse_exited.connect(func():
+		if not button.button_pressed:
+			_animate_button_scale(button, Vector2.ONE, 0.075)
+	)
+
+
+func _animate_button_scale(button: Control, target_scale: Vector2, duration: float) -> void:
+	if button == null or not is_instance_valid(button):
+		return
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", target_scale, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 func _set_full_rect(node: Control, node_size: Vector2) -> void:
@@ -396,13 +520,13 @@ func _viewport_size() -> Vector2:
 func _show_editor_preview() -> void:
 	var preview_board_size := GameConfig.get_board_size()
 	var preview_visual_board_pos := GameConfig.BOARD_GRID_POS
-	var road_size := GameConfig.get_path_layout_size()
-	var preview_path_board_pos := Vector2(
-		preview_visual_board_pos.x,
-		GameConfig.PATH_ROAD_TARGET_BOTTOM_Y - preview_board_size.y * 0.5 - road_size.y * 0.5 - GameConfig.PATH_ROAD_OFFSET.y
-	)
-	layout_for_board(preview_path_board_pos, preview_board_size, 99.0, preview_path_board_pos + Vector2(-16, -99), preview_path_board_pos + Vector2(-125, -16), preview_visual_board_pos)
+	var preview_points := GameConfig.get_path_points_for_board(preview_visual_board_pos, preview_board_size)
+	var preview_spawn := preview_points[0] if not preview_points.is_empty() else preview_visual_board_pos
+	var preview_goal := preview_points[-1] if not preview_points.is_empty() else preview_visual_board_pos
+	layout_for_board(preview_visual_board_pos, preview_board_size, 99.0, preview_spawn, preview_goal, preview_visual_board_pos)
 	set_wave_text("Wave 8")
 	set_wave_progress(8, 200)
+	set_wave_base_state(false)
+	set_coin_value(1804)
 	_elapsed_seconds = 45.0
 	_refresh_time_label()

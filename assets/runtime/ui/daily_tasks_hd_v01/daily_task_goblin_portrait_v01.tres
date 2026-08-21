@@ -1,0 +1,8 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/runtime/characters/monsters/goblin_stage_01.png" id="1_goblin"]
+
+[resource]
+atlas = ExtResource("1_goblin")
+region = Rect2(64, 96, 384, 320)
+filter_clip = true

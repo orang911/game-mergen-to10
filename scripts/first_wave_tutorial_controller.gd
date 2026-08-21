@@ -7,6 +7,7 @@ signal finished(skipped: bool)
 
 const TutorialViewScript := preload("res://scripts/first_wave_tutorial_view.gd")
 const FIRST_GROUP: Array[Vector2i] = [Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1)]
+const BREAKTHROUGH_FLASH_DURATION := 0.22
 
 enum State {
 	IDLE,
@@ -98,14 +99,7 @@ func _on_breakthrough_reached(_monster: Monster) -> void:
 		return
 	state = State.BREAKTHROUGH
 	var sequence_generation := _generation
-	if _view:
-		_view.show_breakthrough_primary()
-	await get_tree().create_timer(1.05).timeout
-	if sequence_generation != _generation or state != State.BREAKTHROUGH:
-		return
-	if _view:
-		_view.show_breakthrough_secondary()
-	await get_tree().create_timer(1.05).timeout
+	await get_tree().create_timer(BREAKTHROUGH_FLASH_DURATION).timeout
 	if sequence_generation != _generation or state != State.BREAKTHROUGH:
 		return
 	state = State.CORE_REWARD

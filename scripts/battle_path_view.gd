@@ -2,7 +2,7 @@
 extends Control
 class_name BattlePathView
 
-const ROAD_TEXTURE_PATH := "res://assets/runtime/ui/battle/core/monster_road.png"
+const ROAD_TEXTURE_PATH := "res://assets/runtime/ui/interfaces/battle/standalone/monster_path.png"
 
 var board_pos := Vector2.ZERO
 var board_size := Vector2.ZERO

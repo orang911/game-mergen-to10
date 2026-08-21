@@ -1,0 +1,12 @@
+{
+  "purpose": "crystal-stage-background",
+  "version": "v01",
+  "date": "2026-08-09",
+  "tool": "Codex built-in ImageGen",
+  "source_reference": "references/layout_content_reference.png",
+  "generated_sources": [
+    "lobby_grass_background_clean_imagegen_builtin_v01.png",
+    "lobby_crystal_stage_chroma_imagegen_builtin_v01.png"
+  ],
+  "production_directory": "../../../../production/lobby/2026-08-09_crystal_stage_background_v01"
+}

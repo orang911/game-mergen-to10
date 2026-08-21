@@ -1082,7 +1082,6 @@ class RunModel:
 			"merge_size": merged,
 		})
 
-
 	func _dispatch_ice_multitarget_attack(base_damage: float, merged: int, tier: int) -> void:
 		var target_count := maxi(1, merged - 1)
 		var targets := _get_front_targets(target_count)
@@ -1218,14 +1217,14 @@ class RunModel:
 				return {"dps_ratio": float(base.get("dps_ratio", 0.20)) + float(base.get("dps_ratio_per_tier", 0.05)) * step,
 					"duration": float(base.get("duration", 3.0)) + float(base.get("duration_per_tier", 0.3)) * step}
 			1:
-				return {"slow_percent": float(base.get("slow_percent", 0.25)) + float(base.get("slow_percent_per_tier", 0.04)) * step,
-					"duration": float(base.get("duration", 2.0)) + float(base.get("duration_per_tier", 0.25)) * step}
+				return {"slow_percent": 0.60, "duration": 2.0}
 			2:
 				return {"chain_count": int(base.get("chain_count", 1)) + floori(step / float(base.get("chain_count_per_tiers", 2))),
 					"chain_damage_ratio": float(base.get("chain_damage_ratio", 0.50)) + float(base.get("chain_damage_ratio_per_tier", 0.05)) * step}
 			3:
 				return {"crit_chance": clampf(float(base.get("crit_chance", 0.25)) + float(base.get("crit_chance_per_tier", 0.05)) * step, 0.0, 1.0),
-					"crit_multiplier": float(base.get("crit_multiplier", 2.0))}
+					"crit_multiplier": float(base.get("crit_multiplier", 2.0)),
+					"annihilation_chance": clampf(float(base.get("annihilation_chance", 0.05)) + float(base.get("annihilation_chance_per_tier", 0.02)) * step, 0.0, float(base.get("annihilation_chance_max", 0.30)))}
 			4:
 				var splash_ratio := float(base.get("splash_damage_ratio", 0.30)) + float(base.get("splash_damage_ratio_per_tier", 0.04)) * step
 				return {"duration": float(base.get("duration", 2.0)) + float(base.get("duration_per_tier", 0.2)) * step,
@@ -1263,8 +1262,13 @@ class RunModel:
 		var damage := float(data["damage"])
 		var element := int(data["element"])
 		var params := data["params"] as Dictionary
-		if element == 3 and crit_rng.randf() < float(params.get("crit_chance", 0.0)):
-			damage *= float(params.get("crit_multiplier", 2.0))
+		if element == 3:
+			var monster_for_crit := monsters[target_id]
+			var annihilation_immune := bool(monster_for_crit.get("is_boss", false)) or bool(monster_for_crit.get("annihilation_immune", false))
+			if not annihilation_immune and crit_rng.randf() < float(params.get("annihilation_chance", 0.0)):
+				damage = float(monster_for_crit["hp"])
+			elif crit_rng.randf() < float(params.get("crit_chance", 0.0)):
+				damage *= float(params.get("crit_multiplier", 2.0))
 		var hit_progress := float(monsters[target_id]["progress"])
 		var hp_before := float(monsters[target_id]["hp"])
 		var dealt := _apply_damage(target_id, damage, str(data["source"]))
@@ -1286,6 +1290,8 @@ class RunModel:
 				_apply_status(target_id, "poison", damage * float(params.get("dps_ratio", 0.0)), float(params.get("duration", 0.0)), 0.0)
 			1:
 				_apply_status(target_id, "freeze", 0.0, float(params.get("duration", 0.0)), float(params.get("slow_percent", 0.0)))
+			2:
+				_apply_status(target_id, "lightning_stun", 0.0, 1.0, 0.0)
 			4:
 				_apply_status(target_id, "burn", damage * float(params.get("dps_ratio", 0.0)), float(params.get("duration", 0.0)), 0.0)
 				_apply_fire_splash(target_id, hit_progress, damage, params)
@@ -1355,15 +1361,72 @@ class RunModel:
 		var monster := monsters[target_id]
 		match status:
 			"poison":
-				monster["poison_dps"] = dps
-				monster["poison_end"] = time + duration
+				_add_sim_dot_layer(monster, "poison", dps, time + duration)
 			"burn":
-				monster["burn_dps"] = dps
-				monster["burn_end"] = time + duration
+				_add_sim_dot_layer(monster, "burn", dps, time + duration)
 			"freeze":
-				monster["freeze_slow"] = slow
-				monster["freeze_end"] = time + duration
+				monster["freeze_slow"] = 0.60
+				monster["freeze_end"] = time + 2.0
+			"lightning_stun":
+				monster["lightning_stun_end"] = time + 1.0
 		_schedule_monster_state(target_id)
+
+
+	func _add_sim_dot_layer(monster: Dictionary, status: String, dps: float, end_time: float) -> void:
+		var layers_key := "%s_layers" % status
+		var layers: Array = monster.get(layers_key, [])
+		var active_layers: Array = []
+		for layer_value in layers:
+			var layer := layer_value as Dictionary
+			if float(layer.get("end", -1.0)) > time + 0.000001:
+				active_layers.append(layer)
+		var new_layer := {"dps": maxf(0.0, dps), "end": maxf(time, end_time)}
+		if active_layers.size() < 4:
+			active_layers.append(new_layer)
+		else:
+			var replace_index := 0
+			var earliest_end := INF
+			for index in range(active_layers.size()):
+				var layer := active_layers[index] as Dictionary
+				var layer_end := float(layer.get("end", -1.0))
+				if layer_end < earliest_end:
+					earliest_end = layer_end
+					replace_index = index
+			active_layers[replace_index] = new_layer
+		monster[layers_key] = active_layers
+		if status == "poison":
+			if float(monster.get("poison_next_tick", -1.0)) <= time:
+				monster["poison_next_tick"] = time + 1.0
+			_refresh_sim_dot_summary(monster, "poison")
+		else:
+			_refresh_sim_dot_summary(monster, "burn")
+
+
+	func _refresh_sim_dot_summary(monster: Dictionary, status: String) -> void:
+		var layers_key := "%s_layers" % status
+		var layers: Array = monster.get(layers_key, [])
+		var total_dps := 0.0
+		var latest_end := -1.0
+		for layer_value in layers:
+			var layer := layer_value as Dictionary
+			total_dps += maxf(0.0, float(layer.get("dps", 0.0)))
+			latest_end = maxf(latest_end, float(layer.get("end", -1.0)))
+		monster["%s_dps" % status] = total_dps
+		monster["%s_end" % status] = latest_end
+		if status == "poison" and layers.is_empty():
+			monster["poison_next_tick"] = -1.0
+
+
+	func _prune_sim_dot_layers(monster: Dictionary, status: String, cursor: float) -> void:
+		var layers_key := "%s_layers" % status
+		var layers: Array = monster.get(layers_key, [])
+		var active_layers: Array = []
+		for layer_value in layers:
+			var layer := layer_value as Dictionary
+			if float(layer.get("end", -1.0)) > cursor + 0.000001:
+				active_layers.append(layer)
+		monster[layers_key] = active_layers
+		_refresh_sim_dot_summary(monster, status)
 
 
 	func _start_wave(wave_index: int) -> void:
@@ -1411,8 +1474,14 @@ class RunModel:
 			"durability": int(config.get("durability_damage", 1)),
 			"progress": 0.0, "last_time": time,
 			"poison_dps": 0.0, "poison_end": -1.0,
+			"poison_next_tick": -1.0,
+			"poison_layers": [],
 			"burn_dps": 0.0, "burn_end": -1.0,
+			"burn_layers": [],
 			"freeze_slow": 0.0, "freeze_end": -1.0,
+			"lightning_stun_end": -1.0,
+			"is_boss": bool(config.get("is_boss", false)) or bool(wave.get("is_boss", false)),
+			"annihilation_immune": bool(config.get("annihilation_immune", false)),
 			"state_version": 0, "alive_index": alive_ids.size(),
 		}
 		monsters.append(monster)
@@ -1450,19 +1519,31 @@ class RunModel:
 		_sync_monster(monster, time)
 		monster["state_version"] = int(monster["state_version"]) + 1
 		var next_time := INF
+		var hard_stunned := float(monster.get("lightning_stun_end", -1.0)) > time
 		var speed_multiplier := 1.0 - float(monster["freeze_slow"]) if float(monster["freeze_end"]) > time else 1.0
-		var progress_speed := float(monster["speed"]) * maxf(0.1, speed_multiplier) / float(settings["path_length"])
+		var progress_speed := 0.0 if hard_stunned else float(monster["speed"]) * maxf(0.1, speed_multiplier) / float(settings["path_length"])
 		if progress_speed > 0.0:
 			next_time = minf(next_time, time + (float(settings["goal_progress"]) - float(monster["progress"])) / progress_speed)
 		var dps := 0.0
-		if float(monster["poison_end"]) > time:
-			dps += float(monster["poison_dps"])
-			next_time = minf(next_time, float(monster["poison_end"]))
-		if float(monster["burn_end"]) > time:
-			dps += float(monster["burn_dps"])
-			next_time = minf(next_time, float(monster["burn_end"]))
+		var poison_layers: Array = monster.get("poison_layers", [])
+		for layer_value in poison_layers:
+			var layer := layer_value as Dictionary
+			var layer_end := float(layer.get("end", -1.0))
+			if layer_end > time:
+				next_time = minf(next_time, layer_end)
+		if not poison_layers.is_empty():
+			next_time = minf(next_time, float(monster.get("poison_next_tick", INF)))
+		var burn_layers: Array = monster.get("burn_layers", [])
+		for layer_value in burn_layers:
+			var layer := layer_value as Dictionary
+			var layer_end := float(layer.get("end", -1.0))
+			if layer_end > time:
+				dps += maxf(0.0, float(layer.get("dps", 0.0)))
+				next_time = minf(next_time, layer_end)
 		if float(monster["freeze_end"]) > time:
 			next_time = minf(next_time, float(monster["freeze_end"]))
+		if float(monster.get("lightning_stun_end", -1.0)) > time:
+			next_time = minf(next_time, float(monster["lightning_stun_end"]))
 		if dps > 0.0:
 			next_time = minf(next_time, time + float(monster["hp"]) / dps)
 		if next_time < INF:
@@ -1475,36 +1556,62 @@ class RunModel:
 			return
 		while cursor < target_time - 0.0000001:
 			var segment_end := target_time
-			for key in ["poison_end", "burn_end", "freeze_end"]:
+			for key in ["freeze_end", "lightning_stun_end"]:
 				var end_time := float(monster[key])
 				if end_time > cursor + 0.0000001:
 					segment_end = minf(segment_end, end_time)
+			for status in ["poison", "burn"]:
+				var layers: Array = monster.get("%s_layers" % status, [])
+				for layer_value in layers:
+					var layer := layer_value as Dictionary
+					var layer_end := float(layer.get("end", -1.0))
+					if layer_end > cursor + 0.0000001:
+						segment_end = minf(segment_end, layer_end)
+			var poison_tick_time := float(monster.get("poison_next_tick", INF))
+			var poison_layers: Array = monster.get("poison_layers", [])
+			if not poison_layers.is_empty() and poison_tick_time > cursor + 0.0000001:
+				segment_end = minf(segment_end, poison_tick_time)
 			var delta := maxf(0.0, segment_end - cursor)
 			var dps := 0.0
-			if float(monster["poison_end"]) > cursor:
-				dps += float(monster["poison_dps"])
-			if float(monster["burn_end"]) > cursor:
-				dps += float(monster["burn_dps"])
+			var burn_layers: Array = monster.get("burn_layers", [])
+			for layer_value in burn_layers:
+				var layer := layer_value as Dictionary
+				if float(layer.get("end", -1.0)) > cursor:
+					dps += maxf(0.0, float(layer.get("dps", 0.0)))
 			if dps > 0.0:
 				var dealt := minf(float(monster["hp"]), dps * delta)
 				monster["hp"] = float(monster["hp"]) - dealt
 				status_damage += dealt
 			var slow := float(monster["freeze_slow"]) if float(monster["freeze_end"]) > cursor else 0.0
-			monster["progress"] = float(monster["progress"]) + float(monster["speed"]) * maxf(0.1, 1.0 - slow) / float(settings["path_length"]) * delta
+			var stunned := float(monster.get("lightning_stun_end", -1.0)) > cursor
+			if not stunned:
+				monster["progress"] = float(monster["progress"]) + float(monster["speed"]) * maxf(0.1, 1.0 - slow) / float(settings["path_length"]) * delta
 			cursor = segment_end
+			if not poison_layers.is_empty() and float(monster.get("poison_next_tick", INF)) <= cursor + 0.0000001:
+				var combined_poison_dps := 0.0
+				for layer_value in poison_layers:
+					var layer := layer_value as Dictionary
+					if float(layer.get("end", -1.0)) >= cursor - 0.0000001:
+						combined_poison_dps += maxf(0.0, float(layer.get("dps", 0.0)))
+				var poison_damage := minf(float(monster["hp"]), combined_poison_dps)
+				monster["hp"] = float(monster["hp"]) - poison_damage
+				status_damage += poison_damage
+				monster["poison_next_tick"] = float(monster["poison_next_tick"]) + 1.0
+				if float(monster["hp"]) <= 0.00001:
+					break
+			_prune_sim_dot_layers(monster, "poison", cursor)
+			_prune_sim_dot_layers(monster, "burn", cursor)
 		monster["last_time"] = target_time
 
 
 	func _clear_expired_statuses(monster: Dictionary) -> void:
-		if float(monster["poison_end"]) <= time:
-			monster["poison_end"] = -1.0
-			monster["poison_dps"] = 0.0
-		if float(monster["burn_end"]) <= time:
-			monster["burn_end"] = -1.0
-			monster["burn_dps"] = 0.0
+		_prune_sim_dot_layers(monster, "poison", time)
+		_prune_sim_dot_layers(monster, "burn", time)
 		if float(monster["freeze_end"]) <= time:
 			monster["freeze_end"] = -1.0
 			monster["freeze_slow"] = 0.0
+		if float(monster.get("lightning_stun_end", -1.0)) <= time:
+			monster["lightning_stun_end"] = -1.0
 
 
 	func _ensure_monster_current(target_id: int) -> bool:

@@ -2,12 +2,13 @@
 extends Control
 class_name ChainBolt
 
-
-const FRAME_TEXTURES: Array[Texture2D] = [
-	preload("res://assets/runtime/fx/elements/lightning/beam/frame_00.png"),
-	preload("res://assets/runtime/fx/elements/lightning/beam/frame_01.png"),
-	preload("res://assets/runtime/fx/elements/lightning/beam/frame_02.png"),
-]
+const RuntimeAtlasScript := preload("res://scripts/runtime_atlas.gd")
+static var FRAME_TEXTURES: Array[Texture2D] = RuntimeAtlasScript.load_grid(
+	"res://assets/runtime/fx/elements/lightning/atlases/beam_sheet.png",
+	Vector2(258.0, 516.0),
+	3,
+	3
+)
 const FRAME_SEQUENCE := [0, 1, 2, 0, 1, 2]
 const PLAY_DURATION := 0.4
 const FRAME_DURATION := PLAY_DURATION / 6.0

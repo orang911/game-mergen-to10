@@ -1,0 +1,163 @@
+{
+  "package": "loading-bar-v01",
+  "date": "2026-08-05",
+  "source_reference": "C:\\Users\\PC\\AppData\\Local\\Temp\\codex-clipboard-c0a2d6b3-5fea-4dcb-a77d-2b685d2607b1.jpg",
+  "text_baked": false,
+  "base_canvas": [
+    576,
+    48
+  ],
+  "layers": {
+    "track": {
+      "stem": "ui_loading_track_empty",
+      "nine_patch_margins_1x": [
+        24,
+        24,
+        24,
+        24
+      ]
+    },
+    "fill": {
+      "stem": "ui_loading_fill_green_full",
+      "aligned_canvas": [
+        576,
+        48
+      ],
+      "visible_inset_1x": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "nine_patch_margins_1x": [
+        18,
+        18,
+        18,
+        18
+      ]
+    },
+    "reference_65": {
+      "stem": "ui_loading_bar_65_reference_blank",
+      "usage": "visual alignment reference only; percentage text is programmatic"
+    },
+    "background_clean": {
+      "file": "loading_background_clean_864x1536_v01.png",
+      "size": [
+        864,
+        1536
+      ],
+      "hd_file": "loading_background_clean_hd_941x1672_v01.png",
+      "edit_scope": "loading bar, percentage and status text removed"
+    }
+  },
+  "files": [
+    {
+      "name": "ui_loading_track_empty_576x48_1x_v01.png",
+      "size": [
+        576,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "06ef8d824d60e2c275b8a4a6ce64ec5a53923a0f1924aee7b3eb1e289f23f3be"
+    },
+    {
+      "name": "ui_loading_track_empty_1152x96_2x_v01.png",
+      "size": [
+        1152,
+        96
+      ],
+      "mode": "RGBA",
+      "sha256": "f56c6845368b023da0cf1aed68ed803ff76292d0c2aedcbd2ee54e34efa8c7db"
+    },
+    {
+      "name": "ui_loading_track_empty_2304x192_4x_v01.png",
+      "size": [
+        2304,
+        192
+      ],
+      "mode": "RGBA",
+      "sha256": "08e002f969f6a7311d8b1d6df02d0818a67a857739b7ca9ef34b62873e03d9a8"
+    },
+    {
+      "name": "ui_loading_fill_green_full_576x48_1x_v01.png",
+      "size": [
+        576,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "ff2d808ee6c2ce426691f7d95010d913a03df21e13927ef1b24ce3447ce3a2ef"
+    },
+    {
+      "name": "ui_loading_fill_green_full_1152x96_2x_v01.png",
+      "size": [
+        1152,
+        96
+      ],
+      "mode": "RGBA",
+      "sha256": "7f41b71b429837a96cde2b3b6575f9d18cfac181bf869c46831b6dc740fdea81"
+    },
+    {
+      "name": "ui_loading_fill_green_full_2304x192_4x_v01.png",
+      "size": [
+        2304,
+        192
+      ],
+      "mode": "RGBA",
+      "sha256": "49e2f38f0f56b022ab96ba867900589badd6bba9eb0dc805ffaed9433ab9e28c"
+    },
+    {
+      "name": "ui_loading_bar_65_reference_blank_576x48_1x_v01.png",
+      "size": [
+        576,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "a59d96bf4da21e542325eb4e399d42c817bf831e6718d8ea563687d13f93975a"
+    },
+    {
+      "name": "ui_loading_bar_65_reference_blank_1152x96_2x_v01.png",
+      "size": [
+        1152,
+        96
+      ],
+      "mode": "RGBA",
+      "sha256": "90ce3108b7d52adbf151aa70e22b40fa1e2070ac38f670bc27e6c65d3f9b992f"
+    },
+    {
+      "name": "ui_loading_bar_65_reference_blank_2304x192_4x_v01.png",
+      "size": [
+        2304,
+        192
+      ],
+      "mode": "RGBA",
+      "sha256": "1ccbdde429d82d1c7dc1a2f4282d8f287bcab43d7ce3e35c3cb390447998ca00"
+    },
+    {
+      "name": "20260805_loading_bar_components_checker_preview_v01.png",
+      "size": [
+        1240,
+        420
+      ],
+      "mode": "RGB",
+      "sha256": "e4cfa27949664eb92bbfd9864570c02a33b686a8815898846fc58a322ba25a73"
+    },
+    {
+      "name": "loading_background_clean_864x1536_v01.png",
+      "size": [
+        864,
+        1536
+      ],
+      "mode": "RGB",
+      "sha256": "db95d800b0bf31bf70ec96b2aa1276daffea6838176ffef05fb963cc2a564dc0"
+    },
+    {
+      "name": "loading_background_clean_hd_941x1672_v01.png",
+      "size": [
+        941,
+        1672
+      ],
+      "mode": "RGB",
+      "sha256": "7b2919c22573594e2f5fe450ce4c79654b07dc11dca05a4203b715de6911da9c"
+    }
+  ]
+}

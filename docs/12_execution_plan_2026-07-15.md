@@ -1,4 +1,6 @@
-# 当前执行计划 / Current Execution Plan
+# 历史执行计划 / Archived Execution Plan
+
+> 归档：2026-08-06 起不再作为当前执行依据。本文记录的是第一章、自动 Loading、12 张运行时卡池和续战接入前的收口计划；当前优先级见 `00_current_product_baseline.md` 与 `07_roadmap.md`。
 
 日期：2026-07-15  
 适用版本：`game_mergenTo10_published`  
