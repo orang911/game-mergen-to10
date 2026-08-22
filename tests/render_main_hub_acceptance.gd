@@ -1,7 +1,7 @@
 extends SceneTree
 
 const HUB_SCENE := preload("res://scenes/ui/main_hub.tscn")
-const OUT := "res://art/production/lobby/2026-08-16_main_hub_runtime_alignment_v01/"
+const OUT := "res://../art/production/lobby/2026-08-16_main_hub_runtime_alignment_v01/"
 
 
 func _init() -> void:

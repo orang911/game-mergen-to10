@@ -1,6 +1,6 @@
 extends SceneTree
 
-const OUT := "res://art/production/ui/chapter01/2026-08-13_centered_interfaces_runtime_v04/qa/runtime_941x1672/"
+const OUT := "res://../art/production/ui/chapter01/2026-08-13_centered_interfaces_runtime_v04/qa/runtime_941x1672/"
 
 
 func _init() -> void:

@@ -16,8 +16,6 @@ const ELEMENTS := ROOT + "elements/"
 const COMMON := ELEMENTS + "common/"
 const ICONS := ELEMENTS + "icons/"
 const SETTINGS_ICONS := ICONS + "settings/"
-const DAILY_HD := "res://assets/runtime/ui/daily_tasks_hd_v01/"
-const SIGNIN_HD := "res://assets/runtime/ui/daily_signin_hd_v01/"
 const SHARED_BUTTONS := "res://assets/runtime/ui/shared/buttons/states/"
 const SHARED_PANEL := "res://assets/runtime/ui/shared/backplates/panels/panel_light.png"
 const SHARED_TITLE := "res://assets/runtime/ui/shared/decorations/titles/title_ribbon_blue.png"
@@ -270,42 +268,7 @@ func _layout_v03_shell() -> void:
 
 
 func _add_daily_task_shell() -> void:
-	var segments := [
-		["daily_tasks_shell_fixed_v01_top.png", 0.0, 400.0],
-		["daily_tasks_shell_fixed_v01_middle.png", 400.0, 400.0],
-		["daily_tasks_shell_fixed_v01_bottom.png", 800.0, 288.0],
-	]
-	for spec in segments:
-		var piece := TextureRect.new()
-		piece.texture = load(DAILY_HD + str(spec[0]))
-		piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		piece.stretch_mode = TextureRect.STRETCH_SCALE
-		piece.position = Vector2(0, float(spec[1]))
-		piece.size = Vector2(880, float(spec[2]))
-		piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		piece.show_behind_parent = true
-		_content.add_child(piece)
-		_content.move_child(piece, 0)
-
-
-func _add_daily_signin_shell() -> void:
-	var shell := TextureRect.new()
-	shell.name = "DailySigninShell"
-	# The production cutout keeps transparent/stray pixels around the actual
-	# frame.  Crop to its continuous painted span so the visible outline—not
-	# the source canvas—aligns to the 941x1672 approval image.
-	shell.texture = load(SIGNIN_HD + "signin_panel_shell_cropped_v01.tres")
-	shell.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	shell.stretch_mode = TextureRect.STRETCH_SCALE
-	# The source has a deliberate transparent tail below its visible panel.
-	# Scale by the non-transparent 12..830 range so the visible shell lands at
-	# y=552..1080 without cutting the blue bottom outline.
-	shell.position = Vector2(6, -8)
-	shell.size = Vector2(907, 617)
-	shell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shell.show_behind_parent = true
-	_content.add_child(shell)
-	_content.move_child(shell, 0)
+	pass
 
 
 func _refresh() -> void:
@@ -992,8 +955,8 @@ func _build_task_content() -> void:
 	var rewards := {"settle_once": "×10", "merge_20": "×30", "kill_30": "×50", "login": "×20"}
 	var task_icons := {
 		"settle_once": ICONS + "task_swords.png",
-		"merge_20": DAILY_HD + "daily_task_merge_icon_v01.png",
-		"kill_30": DAILY_HD + "daily_task_goblin_portrait_v01.tres",
+		"merge_20": DAILY_PROGRAM_ICONS + "daily_icon_merge_v01.png",
+		"kill_30": DAILY_PROGRAM_ICONS + "daily_icon_monster_v01.png",
 		"login": "res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_signin_calendar_v01.tres",
 	}
 	var reward_icons := {
@@ -1015,7 +978,7 @@ func _build_task_content() -> void:
 		row.size = Vector2(774, 158)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_content.add_child(row)
-		_add_icon(row, DAILY_HD + "daily_task_icon_slot_v01.png", Rect2(14, 15, 112, 112))
+		_add_icon(row, DAILY_PROGRAM_ICONS + "daily_icon_slot_v01.png", Rect2(14, 15, 112, 112))
 		_add_icon(row, str(task_icons[task_id]), Rect2(28, 28, 84, 84))
 		var name_label := _label(str(names[task_id]), 25, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
 		name_label.position = Vector2(145, 17)
@@ -1086,7 +1049,7 @@ func _build_activity_strip() -> void:
 		if index > 0:
 			var milestone := int(points[index])
 			var chest_file := "daily_chest_ready_v01.png" if activity >= milestone else "daily_chest_locked_v01.png"
-			_add_icon(_content, DAILY_HD + chest_file, Rect2(centers[index] - 42, 177, 84, 63))
+			_add_icon(_content, DAILY_PROGRAM_ICONS + "daily_icon_chest_v01.png", Rect2(centers[index] - 42, 177, 84, 63))
 		var number := _label(str(points[index]), 19, Color("73440c"))
 		number.position = Vector2(centers[index] - 38, 247)
 		number.size = Vector2(76, 32)
@@ -1103,7 +1066,7 @@ func _build_activity_strip() -> void:
 
 func _add_progress_to(parent: Control, rect: Rect2, ratio: float) -> void:
 	var track := TextureRect.new()
-	track.texture = load(DAILY_HD + "daily_progress_track_v01.tres")
+	track.texture = load(DAILY_PROGRAM_BACKPLATES + "daily_progress_track_v01.png")
 	track.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	track.stretch_mode = TextureRect.STRETCH_SCALE
 	track.position = rect.position
@@ -1117,7 +1080,7 @@ func _add_progress_to(parent: Control, rect: Rect2, ratio: float) -> void:
 	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(clip)
 	var fill := TextureRect.new()
-	fill.texture = load(DAILY_HD + "daily_progress_fill_v01.tres")
+	fill.texture = load(DAILY_PROGRAM_BACKPLATES + "daily_progress_fill_v01.png")
 	fill.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	fill.stretch_mode = TextureRect.STRETCH_SCALE
 	fill.size = Vector2(rect.size.x - 8, rect.size.y - 8)
@@ -1127,8 +1090,8 @@ func _add_progress_to(parent: Control, rect: Rect2, ratio: float) -> void:
 
 func _add_task_button(parent: Control, text: String, rect: Rect2, callback: Callable, color: String, enabled: bool) -> void:
 	var button := TextureButton.new()
-	var art: String = str({"gray": "daily_btn_claimed_disabled_v01.tres", "claim": "daily_btn_claim_default_v01.tres", "go": "daily_btn_go_default_v01.tres"}.get(color, "daily_btn_go_default_v01.tres"))
-	var normal_path := DAILY_HD + str(art)
+	var button_file := "daily_button_disabled_v01.png" if color == "gray" else "daily_button_claim_v01.png" if color == "claim" else "daily_return_button_v02.png"
+	var normal_path := DAILY_PROGRAM_BACKPLATES + button_file
 	button.texture_normal = load(normal_path)
 	button.texture_pressed = button.texture_normal
 	button.texture_disabled = button.texture_normal
@@ -1146,105 +1109,6 @@ func _add_task_button(parent: Control, text: String, rect: Rect2, callback: Call
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	button.add_child(label)
 	parent.add_child(button)
-
-
-func _add_signin_tab(texture_path: String, rect: Rect2, text: String, callback: Callable, selected: bool) -> void:
-	var button := TextureButton.new()
-	button.texture_normal = load(texture_path)
-	button.texture_pressed = button.texture_normal
-	button.texture_disabled = button.texture_normal
-	button.ignore_texture_size = true
-	button.stretch_mode = TextureButton.STRETCH_SCALE
-	button.position = rect.position
-	button.size = rect.size
-	button.focus_mode = Control.FOCUS_NONE
-	button.disabled = selected
-	if not selected and callback.is_valid():
-		button.pressed.connect(callback)
-	var label := _label(text, 31, Color.WHITE if selected else Color("d7d8dd"))
-	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	label.add_theme_color_override("font_outline_color", Color("07172f"))
-	label.add_theme_constant_override("outline_size", 4)
-	button.add_child(label)
-	_content.add_child(button)
-
-
-func _add_signin_texture(texture_path: String, rect: Rect2) -> TextureRect:
-	var texture_rect := TextureRect.new()
-	texture_rect.texture = load(texture_path)
-	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	texture_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	texture_rect.position = rect.position
-	texture_rect.size = rect.size
-	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content.add_child(texture_rect)
-	return texture_rect
-
-
-func _build_signin_content() -> void:
-	var reward_labels := ["水晶 ×20", "金币 ×30", "水晶 ×20", "金币 ×50", "水晶 ×20", "金币 ×30", "金币 ×100"]
-	var reward_art := [
-		"signin_reward_gem_v01.png", "signin_reward_coin_v01.png", "signin_reward_gem_v01.png",
-		"signin_reward_coin_v01.png", "signin_reward_gem_v01.png", "signin_reward_coin_v01.png",
-		"signin_reward_chest_v01.png",
-	]
-	var raw_x := [27.0, 144.0, 262.0, 383.0, 520.0, 637.0, 756.0]
-	var current_index := service.get_signin_preview_day() - 1
-	var claimed_days := service.get_signin_claimed_days()
-	var available := service.is_signin_available()
-	for index in range(7):
-		var is_current := index == current_index
-		var is_premium := index == 6
-		var card_rect := Rect2(raw_x[index], 192, 124, 288)
-		var card_file := "signin_card_premium_v01.png" if is_premium else "signin_card_default_v01.png"
-		if is_premium:
-			card_rect.size.x = 138
-		if is_current:
-			card_rect = Rect2(raw_x[index] - 4, 187, 152, 302)
-			card_file = "signin_card_selected_v01.png"
-		_add_signin_texture(SIGNIN_HD + card_file, card_rect)
-
-		var day_label := _label("第%d天" % [index + 1], 25, Color.WHITE)
-		day_label.position = Vector2(card_rect.position.x + 5, card_rect.position.y + 10)
-		day_label.size = Vector2(card_rect.size.x - 10, 42)
-		day_label.add_theme_color_override("font_outline_color", Color("17345d"))
-		day_label.add_theme_constant_override("outline_size", 3)
-		_content.add_child(day_label)
-
-		var icon_size := Vector2(84, 92)
-		if index == 1 or index == 3 or index == 5:
-			icon_size = Vector2(82, 84)
-		elif is_premium:
-			icon_size = Vector2(104, 92)
-		var icon_rect := Rect2(card_rect.position.x + (card_rect.size.x - icon_size.x) * 0.5, card_rect.position.y + 74, icon_size.x, icon_size.y)
-		_add_icon(_content, SIGNIN_HD + str(reward_art[index]), icon_rect)
-
-		var reward := _label(str(reward_labels[index]), 20, Color.WHITE)
-		reward.position = Vector2(card_rect.position.x + 2, card_rect.position.y + 158)
-		reward.size = Vector2(card_rect.size.x - 4, 44)
-		reward.add_theme_color_override("font_outline_color", Color("17345d"))
-		reward.add_theme_constant_override("outline_size", 3)
-		_content.add_child(reward)
-
-		if index < claimed_days:
-			_add_icon(_content, SIGNIN_HD + "signin_claimed_check_v01.png", Rect2(card_rect.position.x + (card_rect.size.x - 54) * 0.5, card_rect.position.y + 209, 54, 44))
-		if is_current and available:
-			var claim_rect := Rect2(card_rect.position.x + 12, card_rect.position.y + 221, card_rect.size.x - 24, 56)
-			var claim_button := TextureButton.new()
-			claim_button.texture_normal = load(SIGNIN_HD + "signin_claim_button_default_v01.png")
-			claim_button.texture_pressed = claim_button.texture_normal
-			claim_button.ignore_texture_size = true
-			claim_button.stretch_mode = TextureButton.STRETCH_SCALE
-			claim_button.position = claim_rect.position
-			claim_button.size = claim_rect.size
-			claim_button.focus_mode = Control.FOCUS_NONE
-			claim_button.pressed.connect(_claim_signin)
-			claim_button.button_down.connect(func(): claim_button.scale = Vector2(0.96, 0.96); claim_button.pivot_offset = claim_button.size * 0.5)
-			claim_button.button_up.connect(func(): claim_button.scale = Vector2.ONE)
-			var claim_label := _label("今日签到", 18, Color("8a4a08"))
-			claim_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-			claim_button.add_child(claim_label)
-			_content.add_child(claim_button)
 
 
 func _claim_task(task_id: String) -> void:

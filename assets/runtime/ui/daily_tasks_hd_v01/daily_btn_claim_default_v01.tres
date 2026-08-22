@@ -1,8 +1,0 @@
-[gd_resource type="AtlasTexture" load_steps=2 format=3]
-
-[ext_resource type="Texture2D" path="res://assets/runtime/ui/daily_tasks_hd_v01/daily_btn_claim_default_v01.png" id="1_button"]
-
-[resource]
-atlas = ExtResource("1_button")
-region = Rect2(54, 14, 275, 132)
-filter_clip = true

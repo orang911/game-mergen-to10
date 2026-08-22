@@ -1,6 +1,6 @@
 extends SceneTree
 
-const SOURCE := "res://art/production/lobby/2026-08-08_lobby_hd_reset_and_cutout_v01/cutouts/frames/"
+const SOURCE := "res://../art/production/lobby/2026-08-08_lobby_hd_reset_and_cutout_v01/cutouts/frames/"
 const OUTPUT := "res://assets/runtime/ui/interfaces/main_hub/backplates/"
 const MISSION_PANEL_WITH_SOCKET := "lobby_mission_panel_with_reward_slot_default_v01.png"
 const MISSION_PANEL_PLAIN := "lobby_mission_panel_plain_default_v01.png"

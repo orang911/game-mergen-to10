@@ -1,6 +1,6 @@
 extends SceneTree
 
-const OUT := "res://art/production/ui/chapter01/2026-08-14_secondary_in_game_acceptance/"
+const OUT := "res://../art/production/ui/chapter01/2026-08-14_secondary_in_game_acceptance/"
 const HUB_SCENE := preload("res://scenes/ui/main_hub.tscn")
 
 
@@ -77,13 +77,13 @@ func _render_hub_pages() -> void:
 		if spec[0] == "daily":
 			await _save(
 				viewport,
-				"res://art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_941x1672_v02.png"
+				"res://../art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_941x1672_v02.png"
 			)
 			game.meta_progress.claim_signin()
 			await _settle_frames()
 			await _save(
 				viewport,
-				"res://art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_after_claim_941x1672_v02.png"
+				"res://../art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_after_claim_941x1672_v02.png"
 			)
 			game.meta_progress.signin_last_date = ""
 			game.meta_progress.signin_streak = 0
@@ -91,7 +91,7 @@ func _render_hub_pages() -> void:
 			await _settle_frames()
 			await _save(
 				viewport,
-				"res://art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_day1_941x1672_v02.png"
+				"res://../art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_day1_941x1672_v02.png"
 			)
 			game.meta_progress.signin_last_date = "2026-08-13"
 			game.meta_progress.signin_streak = 3
@@ -122,7 +122,7 @@ func _render_daily_narrow() -> void:
 	await _settle_frames()
 	await _save(
 		viewport,
-		"res://art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_day1_568x1012_v02.png"
+		"res://../art/production/ui/daily_program_composition/2026-08-16_cutouts_v02/previews/daily_program_runtime_day1_568x1012_v02.png"
 	)
 	game.queue_free()
 	viewport.queue_free()
