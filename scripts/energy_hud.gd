@@ -14,11 +14,14 @@ const ENERGY_FILL_POS := Vector2(176.0, 129.0)
 const ENERGY_FILL_SIZE := Vector2(212.0, 21.0)
 const PENDING_ICON_POS := Vector2(35.0, 52.0)
 const PENDING_ICON_SIZE := Vector2(105.0, 114.0)
+const PENDING_CONTENT_POS := Vector2(49.0, 67.0)
+const PENDING_CONTENT_SIZE := Vector2(77.0, 84.0)
 const READY_LABEL_POS := Vector2(151.0, 43.0)
-const READY_LABEL_SIZE := Vector2(260.0, 78.0)
+const READY_LABEL_SIZE := Vector2(260.0, 74.0)
 const READY_LABEL_SINGLE_FONT_SIZE := 27
-const READY_LABEL_DOUBLE_FONT_SIZE := 22
-const READY_LABEL_DOUBLE_LINE_SPACING := -4
+const READY_LABEL_DOUBLE_FONT_SIZE := 20
+const READY_LABEL_DOUBLE_MIN_FONT_SIZE := 18
+const READY_LABEL_DOUBLE_LINE_SPACING := -5
 const CLUSTER_SWAP_ITEM_ID := "cluster_swap"
 const CLUSTER_SWAP_TEXTURE := preload("res://assets/runtime/ui/interfaces/battle/energy_hud/icons/instant_cluster_swap.png")
 const CRYSTAL_RAIN_ITEM_ID := "crystal_rain"
@@ -33,6 +36,7 @@ var _energy_label: Label
 var _ready_label: Label
 var _pending_icon: TextureRect
 var _disabled_skill_icon: TextureRect
+var _inactive_skill_icon: TextureRect
 var _pending_skill_id := ""
 var _pending_trigger_tween: Tween
 var _pending_arrival_tween: Tween
@@ -100,6 +104,12 @@ func _build() -> void:
 	_set_rect(_disabled_skill_icon, PENDING_ICON_POS, PENDING_ICON_SIZE)
 	add_child(_disabled_skill_icon)
 
+	_inactive_skill_icon = _texture("res://assets/runtime/ui/interfaces/battle/energy_hud/icons/skill_disabled_icon1.png")
+	_inactive_skill_icon.name = "SkillInactiveIcon"
+	_inactive_skill_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_set_rect(_inactive_skill_icon, PENDING_ICON_POS, PENDING_ICON_SIZE)
+	add_child(_inactive_skill_icon)
+
 	_fill_clip = Control.new()
 	_fill_clip.name = "EnergyFillClip"
 	_fill_clip.clip_contents = true
@@ -129,8 +139,10 @@ func _build() -> void:
 	add_child(meter_frame)
 
 	_pending_icon = _texture("")
+	_pending_icon.name = "PendingSkillIcon"
 	_pending_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_set_rect(_pending_icon, PENDING_ICON_POS, PENDING_ICON_SIZE)
+	_set_rect(_pending_icon, PENDING_CONTENT_POS, PENDING_CONTENT_SIZE)
+	_pending_icon.visible = false
 	add_child(_pending_icon)
 
 	_energy_label = _label("0/100", 20, Color(0.95, 0.98, 1.0))
@@ -139,6 +151,7 @@ func _build() -> void:
 
 	_ready_label = _label("技能未激活", READY_LABEL_SINGLE_FONT_SIZE, Color(1.0, 1.0, 1.0))
 	_ready_label.clip_text = true
+	_ready_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_set_rect(_ready_label, READY_LABEL_POS, READY_LABEL_SIZE)
 	add_child(_ready_label)
 	_build_cluster_swap_item()
@@ -318,20 +331,19 @@ func set_pending_skill(skill_id: String, _quality: int = 1) -> void:
 		return
 	var should_animate_arrival := _pending_skill_id.is_empty() and not skill_id.is_empty()
 	_pending_skill_id = skill_id
-	_pending_icon.visible = true
-	if _disabled_skill_icon:
-		_disabled_skill_icon.visible = skill_id.is_empty()
 	if skill_id.is_empty():
 		_kill_pending_skill_arrival(true)
 		_pending_icon.texture = null
 		_pending_icon.modulate = Color.WHITE
+		_refresh_skill_slot_visual()
 		_refresh_ready_label()
 	else:
 		_pending_icon.texture = load(GameConfig.SKILL_IMPRINT_TEXTURES.get(skill_id, "")) as Texture2D
 		_pending_icon.modulate = Color.WHITE
+		_refresh_skill_slot_visual()
 		var imprint_name := str(SkillImprintSystem.IMPRINT_NAMES.get(skill_id, skill_id))
 		_set_ready_label_text("下一次合成：待触发\n%s" % imprint_name, true, imprint_name)
-		if should_animate_arrival:
+		if should_animate_arrival and _pending_icon.texture != null:
 			_play_pending_skill_arrival()
 		elif not _pending_trigger_active:
 			_pending_icon.scale = Vector2.ONE
@@ -545,8 +557,7 @@ func clear_fx() -> void:
 	for child in get_children():
 		if child is EnergyGainFx:
 			child.queue_free()
-	if _pending_icon:
-		_pending_icon.visible = true
+	_refresh_skill_slot_visual()
 	_active_motes = 0
 	_visual_energy = _logical_energy
 	_was_full_visual = _visual_energy >= _maximum
@@ -603,10 +614,21 @@ func _refresh() -> void:
 	var full := _visual_energy >= _maximum
 	if _pending_skill_id.is_empty():
 		_refresh_ready_label()
-		if _disabled_skill_icon:
-			_disabled_skill_icon.visible = true
+	_refresh_skill_slot_visual()
 	if not full:
 		_was_full_visual = false
+
+
+func _refresh_skill_slot_visual() -> void:
+	# The black/silver frame is structural and must never disappear.  Only the
+	# inner content switches between the inactive glyph and the selected imprint.
+	if _disabled_skill_icon:
+		_disabled_skill_icon.visible = true
+	var has_pending_icon := not _pending_skill_id.is_empty() and _pending_icon != null and _pending_icon.texture != null
+	if _inactive_skill_icon:
+		_inactive_skill_icon.visible = not has_pending_icon
+	if _pending_icon:
+		_pending_icon.visible = has_pending_icon and not _pending_trigger_active
 
 
 func _refresh_ready_label() -> void:
@@ -623,7 +645,9 @@ func _set_ready_label_text(value: String, double_line: bool, detail_text: String
 	var font_size := READY_LABEL_SINGLE_FONT_SIZE
 	var line_spacing := 0
 	if double_line:
-		font_size = READY_LABEL_DOUBLE_FONT_SIZE if detail_text.length() <= 6 else 19
+		font_size = READY_LABEL_DOUBLE_FONT_SIZE
+		if detail_text.length() > 6:
+			font_size = READY_LABEL_DOUBLE_MIN_FONT_SIZE
 		line_spacing = READY_LABEL_DOUBLE_LINE_SPACING
 	_ready_label.add_theme_font_size_override("font_size", font_size)
 	_ready_label.add_theme_constant_override("line_spacing", line_spacing)

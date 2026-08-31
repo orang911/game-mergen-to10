@@ -1,9 +1,12 @@
 extends Node
 class_name EffectSystem
 
+const SequenceFinishGlowScript := preload("res://scripts/sequence_finish_glow.gd")
+
 var _effect_layer: Control
 var _texture_cache: Dictionary = {}
 var _merge_feedbacks: Dictionary = {}
+var _sequence_finish_ids: Dictionary = {}
 var _visual_board_pos := GameConfig.BOARD_GRID_POS
 var _board_size := GameConfig.get_board_size()
 
@@ -19,6 +22,7 @@ func layout_for_board(new_visual_board_pos: Vector2, new_board_size: Vector2) ->
 
 func reset() -> void:
 	_merge_feedbacks.clear()
+	_sequence_finish_ids.clear()
 	if _effect_layer == null or not is_instance_valid(_effect_layer):
 		return
 	_recursive_free_effect_nodes(_effect_layer)
@@ -103,6 +107,33 @@ func finish_merge_feedback(sequence_id: int) -> void:
 	_merge_feedbacks.erase(sequence_id)
 	if instance and is_instance_valid(instance):
 		instance.finish()
+
+
+func play_merge_sequence_finish_once(sequence_id: int, element_key: String, global_position: Vector2) -> void:
+	if sequence_id <= 0 or _sequence_finish_ids.has(sequence_id):
+		return
+	if _effect_layer == null or not is_instance_valid(_effect_layer):
+		return
+	_sequence_finish_ids[sequence_id] = true
+	while _sequence_finish_ids.size() > 64:
+		_sequence_finish_ids.erase(_sequence_finish_ids.keys()[0])
+
+	var glow := SequenceFinishGlowScript.new() as SequenceFinishGlow
+	if glow == null:
+		return
+	glow.name = "Effect_MergeSequenceFinish"
+	glow.size = Vector2(180.0, 180.0)
+	glow.position = _global_to_effect_local(global_position) - glow.size * 0.5
+	glow.glow_color = _element_color(element_key)
+	glow.radius = 22.0
+	glow.glow_alpha = 0.74
+	_effect_layer.add_child(glow, true)
+
+	var tween := glow.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(glow, "radius", 92.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(glow, "glow_alpha", 0.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(glow.queue_free)
 
 
 func play_monster_hit(monster: Monster, element_key: String = "", attack_origin_global: Vector2 = Vector2.ZERO) -> void:

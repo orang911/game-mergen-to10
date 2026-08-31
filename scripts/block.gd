@@ -17,6 +17,9 @@ var _imprint_rect: TextureRect
 var _label_rect: TextureRect
 var _merge_highlight_tween: Tween
 var _merge_reveal_tween: Tween
+var _motion_tween: Tween
+var _motion_base_position := Vector2.ZERO
+var _motion_controls_position := false
 var skill_imprint_id := ""
 var skill_imprint_quality := 1
 
@@ -198,21 +201,54 @@ func _refresh_imprint() -> void:
 func _refresh_selected_motion() -> void:
 	if not is_inside_tree():
 		return
+	_kill_motion_tween(true)
 	pivot_offset = size * 0.5
-	var tween := create_tween()
+	_motion_tween = create_tween()
 	if selected:
-		tween.tween_property(self, "scale", Vector2(1.025, 1.025), 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		_motion_tween.tween_property(self, "scale", Vector2(1.025, 1.025), 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	else:
-		tween.tween_property(self, "scale", Vector2.ONE, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		_motion_tween.tween_property(self, "scale", Vector2.ONE, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func shake() -> void:
 	if not is_inside_tree():
 		return
-	var base_pos := position
-	var tween := create_tween()
-	tween.tween_property(self, "position", base_pos + Vector2(8, 0), 0.04)
-	tween.tween_property(self, "position", base_pos + Vector2(-8, 0), 0.04)
-	tween.tween_property(self, "position", base_pos, 0.04)
+	_kill_motion_tween(true)
+	_motion_base_position = position
+	_motion_controls_position = true
+	_motion_tween = create_tween()
+	_motion_tween.tween_property(self, "position", _motion_base_position + Vector2(8, 0), 0.04)
+	_motion_tween.tween_property(self, "position", _motion_base_position + Vector2(-8, 0), 0.04)
+	_motion_tween.tween_property(self, "position", _motion_base_position, 0.04)
+	_motion_tween.tween_callback(func():
+		_motion_controls_position = false
+		_motion_tween = null
+	)
+
+
+func play_merge_result_pop() -> void:
+	if not is_inside_tree():
+		return
+	_kill_motion_tween(true)
+	pivot_offset = size * 0.5
+	scale = Vector2.ONE * 0.90
+	_motion_tween = create_tween()
+	_motion_tween.tween_property(self, "scale", Vector2.ONE * 1.14, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_motion_tween.tween_property(self, "scale", Vector2.ONE, 0.11).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_motion_tween.tween_callback(func(): _motion_tween = null)
+
+
+func reset_motion() -> void:
+	_kill_motion_tween(true)
+	scale = Vector2.ONE
+
+
+func _kill_motion_tween(restore_position: bool) -> void:
+	if _motion_tween and _motion_tween.is_valid():
+		_motion_tween.kill()
+	_motion_tween = null
+	if restore_position and _motion_controls_position:
+		position = _motion_base_position
+	_motion_controls_position = false
 
 
 func begin_merge_highlight(duration: float) -> void:
@@ -245,15 +281,14 @@ func play_merge_result_reveal() -> void:
 		return
 	if _merge_reveal_tween and _merge_reveal_tween.is_valid():
 		_merge_reveal_tween.kill()
-	_label_rect.pivot_offset = _label_rect.size * 0.5
 	_label_rect.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	_label_rect.scale = Vector2(0.72, 0.72)
+	_label_rect.scale = Vector2.ONE
 	_merge_reveal_tween = create_tween()
 	_merge_reveal_tween.tween_property(_label_rect, "modulate:a", 1.0, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_merge_reveal_tween.parallel().tween_property(_label_rect, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func cancel_merge_highlight() -> void:
+	reset_motion()
 	_kill_merge_highlight_tween()
 	if _merge_reveal_tween and _merge_reveal_tween.is_valid():
 		_merge_reveal_tween.kill()

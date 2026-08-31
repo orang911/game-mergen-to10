@@ -8,6 +8,8 @@ func _init() -> void:
 
 
 func _run() -> void:
+	_test_multi_shot_schedule()
+	_test_merge_bolt_presentation_metrics()
 	_test_damage_formula()
 	_test_runtime_attribute_cycle()
 	_test_merge_feedback_presentation_tiers()
@@ -22,6 +24,7 @@ func _run() -> void:
 	await _test_retarget_after_reaching_goal()
 	await _test_no_target_stops_sequence()
 	await _test_independent_sequences()
+	await _test_multi_shot_pause_resume()
 	await _test_single_shot_attribute_basis()
 	await _test_reset_cancels_sequence()
 	if failures.is_empty():
@@ -31,6 +34,41 @@ func _run() -> void:
 		for failure in failures:
 			push_error(failure)
 		quit(1)
+
+
+func _test_multi_shot_schedule() -> void:
+	var expected_offsets := [0.0, 0.07, 0.14, 0.34]
+	for index in range(expected_offsets.size()):
+		_check(
+			is_equal_approx(ProjectileSystem.get_multi_shot_launch_offset(index, 4), expected_offsets[index]),
+			"N=4 independent launch offset %d should be %.2f seconds" % [index, expected_offsets[index]]
+		)
+	_check(is_equal_approx(ProjectileSystem.get_multi_shot_gap_before(1, 4), 0.07), "N=4 early gap should be 0.07 seconds")
+	_check(is_equal_approx(ProjectileSystem.get_multi_shot_gap_before(3, 4), 0.20), "N=4 final gap should be 0.20 seconds")
+	_check(is_equal_approx(ProjectileSystem.get_multi_shot_post_hit_gap(2, 4), 0.20), "focus sequence final post-hit gap should be 0.20 seconds")
+	_check(is_equal_approx(ProjectileSystem.get_multi_shot_post_hit_gap(1, 4), 0.07), "focus sequence early post-hit gap should be 0.07 seconds")
+
+
+func _test_merge_bolt_presentation_metrics() -> void:
+	var bolt := MergeBolt.new()
+	bolt.apply_element_key("poison", 1)
+	var previous_core := 0.0
+	for shot_count in range(1, 7):
+		bolt.configure_sequence_presentation(0, shot_count)
+		var metrics := bolt.get_sequence_presentation_metrics()
+		var core_scale := float(metrics["core_scale"])
+		if shot_count == 1:
+			_check(is_equal_approx(core_scale, 1.0), "N=1 must keep the base bolt size")
+			_check(not bool(metrics["final"]), "N=1 must not emit final-shot presentation")
+		else:
+			_check(core_scale >= previous_core, "bolt core scale should grow monotonically with N")
+		previous_core = core_scale
+		bolt.configure_sequence_presentation(shot_count - 1, shot_count)
+		var final_metrics := bolt.get_sequence_presentation_metrics()
+		if shot_count >= 2:
+			_check(bool(final_metrics["final"]), "N>=2 final shot should be marked for finish presentation")
+			_check(float(final_metrics["opacity_scale"]) > 1.0, "final shot should brighten its trail/core glow")
+	bolt.free()
 
 
 func _test_damage_formula() -> void:
@@ -151,7 +189,7 @@ func _test_runtime_focus_sequence() -> void:
 	event.effect_params["crit_chance"] = 0.0
 	event.effect_params["annihilation_chance"] = 0.0
 	combat.handle_merge_attack(event)
-	await _wait_seconds(1.25)
+	await _wait_seconds(1.80)
 	_check(resolved_targets.size() == 5, "five-block merge should resolve five attacks")
 	if resolved_targets.size() == 5:
 		_check(resolved_targets[0] == first_id and resolved_targets[1] == first_id and resolved_targets[2] == first_id, "sequence should focus the front monster until death")
@@ -173,7 +211,9 @@ func _test_poison_focus_sequence() -> void:
 	]
 	var event := MergeAttackEvent.from_merge(1, 4, 4, Vector2(320.0, 900.0), 2)
 	combat.handle_merge_attack(event)
-	await _wait_seconds(1.10)
+	# Stop just after the fourth hit and before the first one-second poison tick;
+	# this isolates the sequence's direct damage from the independent status tick.
+	await _wait_seconds(1.25)
 	_check(is_equal_approx(targets[0].hp, targets[0].max_hp - event.total_damage), "poison should deal every sequential shot to the front monster while it survives")
 	_check(targets[0].get_poison_layer_count() == 4, "a four-card poison merge should add one poison layer for each of its four hits")
 	for index in range(1, targets.size()):
@@ -198,7 +238,7 @@ func _test_poison_focus_sequence() -> void:
 			resolved_targets.append(target.get_instance_id())
 	)
 	combat.handle_merge_attack(retarget_event)
-	await _wait_seconds(1.20)
+	await _wait_seconds(1.80)
 	_check(resolved_targets.size() == 5, "poison should preserve one resolved attack per merged card")
 	if resolved_targets.size() == 5:
 		_check(resolved_targets[0] == first_id and resolved_targets[1] == first_id, "poison should focus the front monster until it is defeated")
@@ -221,7 +261,7 @@ func _test_ice_multitarget_sequence() -> void:
 	]
 	var event := MergeAttackEvent.from_merge(2, 4, 4, Vector2(320.0, 900.0), 2)
 	combat.handle_merge_attack(event)
-	await _wait_seconds(0.70)
+	await _wait_seconds(1.20)
 	for index in range(3):
 		_check(targets[index].hp < targets[index].max_hp, "ice N-1 target %d should take damage" % index)
 		_check(not targets[index].freeze_status.is_empty(), "ice N-1 target %d should be slowed" % index)
@@ -341,9 +381,39 @@ func _test_independent_sequences() -> void:
 	)
 	combat.handle_merge_attack(first_event)
 	combat.handle_merge_attack(second_event)
-	await _wait_seconds(0.85)
+	await _wait_seconds(1.20)
 	_check(int(counts[first_event.sequence_id]) == 2, "first merge sequence should keep its own two shots")
 	_check(int(counts[second_event.sequence_id]) == 3, "second merge sequence should independently keep its three shots")
+	_cleanup_game(game)
+	await process_frame
+	await process_frame
+
+
+func _test_multi_shot_pause_resume() -> void:
+	var fixture := await _make_combat_fixture()
+	var game = fixture["game"]
+	var combat: CombatSystem = fixture["combat"]
+	_spawn_fixture_monster(combat, 1000.0, 0.70)
+	var event := MergeAttackEvent.from_merge(1, 4, 3, Vector2(320.0, 900.0), 2)
+	var state := {"fired": 0, "resolved": 0}
+	combat.merge_shot_fired.connect(func(sequence_id: int, _shot: int, _target: Monster):
+		if sequence_id == event.sequence_id:
+			state["fired"] = int(state["fired"]) + 1
+	)
+	combat.merge_shot_resolved.connect(func(sequence_id: int, _shot: int, _target: Monster, _damage: float, _killed: bool):
+		if sequence_id == event.sequence_id:
+			state["resolved"] = int(state["resolved"]) + 1
+	)
+	combat.handle_merge_attack(event)
+	await _wait_seconds(0.42)
+	paused = true
+	var fired_at_pause := int(state["fired"])
+	var resolved_at_pause := int(state["resolved"])
+	await _wait_seconds(0.50)
+	_check(int(state["fired"]) == fired_at_pause and int(state["resolved"]) == resolved_at_pause, "paused multi-shot sequence must not advance timers")
+	paused = false
+	await _wait_seconds(1.20)
+	_check(int(state["fired"]) == 3 and int(state["resolved"]) == 3, "resuming should continue the remaining multi-shot schedule")
 	_cleanup_game(game)
 	await process_frame
 	await process_frame

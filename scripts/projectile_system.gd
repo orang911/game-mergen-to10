@@ -7,7 +7,11 @@ const MERGE_BOLT_DURATION := 0.14
 const ELEMENT_TRAIL_HISTORY_DURATION := 0.10
 const ELEMENT_TRAIL_COLLAPSE_FRAMES := 3.0
 const ELEMENT_TRAIL_COLLAPSE_DURATION := ELEMENT_TRAIL_COLLAPSE_FRAMES / 60.0
-const MULTI_SHOT_STAGGER := 0.10
+const MULTI_SHOT_EARLY_GAP := 0.07
+const MULTI_SHOT_FINAL_GAP := 0.20
+# Kept as a source-compatible alias for older callers/tests. New code must use
+# the schedule helpers below so every multi-shot path shares one cadence.
+const MULTI_SHOT_STAGGER := MULTI_SHOT_EARLY_GAP
 const LIGHTNING_LINK_STAGGER := ChainBolt.FRAME_DURATION
 const CRYSTAL_RAIN_OFFSCREEN_MARGIN := 160.0
 const CRYSTAL_RAIN_FLIGHT_DURATION := 0.20
@@ -18,6 +22,32 @@ const CRYSTAL_BEAM_TEXTURE_PATH := "res://assets/runtime/fx/crystal_tower/attack
 var parent_layer: Control
 var _generation := 0
 var _crystal_beams: Array[MergeBolt] = []
+
+
+static func get_multi_shot_gap_before(shot_index: int, shot_count: int) -> float:
+	var count := maxi(1, shot_count)
+	if shot_index <= 0 or count <= 1:
+		return 0.0
+	if shot_index >= count:
+		return 0.0
+	return MULTI_SHOT_FINAL_GAP if shot_index == count - 1 else MULTI_SHOT_EARLY_GAP
+
+
+static func get_multi_shot_launch_offset(shot_index: int, shot_count: int) -> float:
+	var count := maxi(1, shot_count)
+	var index := clampi(shot_index, 0, count - 1)
+	if index <= 0:
+		return 0.0
+	if index == count - 1 and count >= 2:
+		return float(count - 2) * MULTI_SHOT_EARLY_GAP + MULTI_SHOT_FINAL_GAP
+	return float(index) * MULTI_SHOT_EARLY_GAP
+
+
+static func get_multi_shot_post_hit_gap(completed_shot_index: int, shot_count: int) -> float:
+	var count := maxi(1, shot_count)
+	if completed_shot_index < 0 or completed_shot_index >= count - 1:
+		return 0.0
+	return MULTI_SHOT_FINAL_GAP if completed_shot_index == count - 2 else MULTI_SHOT_EARLY_GAP
 
 
 func setup(layer: Control) -> void:
@@ -50,14 +80,14 @@ func play_merge_attack(event: MergeAttackEvent, targets: Array = []) -> void:
 			continue
 		if event.element != GameConfig.AttackElement.FREEZE and event.element != GameConfig.AttackElement.POISON and event.element != GameConfig.AttackElement.CRITICAL and event.element != GameConfig.AttackElement.FIRE:
 			continue
-		var shot_delay := float(i) * MULTI_SHOT_STAGGER
+		var shot_delay := get_multi_shot_launch_offset(i, targets.size())
 		if shot_delay <= 0.0:
-			_spawn_element_bolt(event, target)
+			_spawn_element_bolt(event, target, Callable(), i, targets.size())
 		else:
-			_schedule_element_bolt(event, target, shot_delay, generation)
+			_schedule_element_bolt(event, target, shot_delay, generation, i, targets.size())
 
 
-func play_merge_shot(event: MergeAttackEvent, target: Control, target_provider: Callable = Callable()) -> bool:
+func play_merge_shot(event: MergeAttackEvent, target: Control, target_provider: Callable = Callable(), shot_index: int = 0, shot_count: int = 1) -> bool:
 	if event == null or not ["poison", "ice", "lightning", "critical", "fire"].has(event.element_key):
 		return false
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
@@ -66,18 +96,18 @@ func play_merge_shot(event: MergeAttackEvent, target: Control, target_provider: 
 		var target_center := target.global_position + target.size * 0.5
 		play_lightning_link(event.origin_position, target_center, event, null, target)
 		return true
-	_spawn_element_bolt(event, target, target_provider)
+	_spawn_element_bolt(event, target, target_provider, shot_index, shot_count)
 	return true
 
 
-func _schedule_element_bolt(event: MergeAttackEvent, target: Control, delay: float, generation: int) -> void:
-	await get_tree().create_timer(delay).timeout
+func _schedule_element_bolt(event: MergeAttackEvent, target: Control, delay: float, generation: int, shot_index: int = 0, shot_count: int = 1) -> void:
+	await get_tree().create_timer(delay, false).timeout
 	if generation != _generation or not is_instance_valid(target) or target.is_queued_for_deletion():
 		return
-	_spawn_element_bolt(event, target)
+	_spawn_element_bolt(event, target, Callable(), shot_index, shot_count)
 
 
-func _spawn_element_bolt(event: MergeAttackEvent, target, target_provider: Callable = Callable()) -> void:
+func _spawn_element_bolt(event: MergeAttackEvent, target, target_provider: Callable = Callable(), shot_index: int = 0, shot_count: int = 1) -> void:
 	if parent_layer == null or not is_instance_valid(parent_layer):
 		return
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
@@ -91,6 +121,7 @@ func _spawn_element_bolt(event: MergeAttackEvent, target, target_provider: Calla
 		bolt = MergeBolt.new()
 	bolt.name = "%sBolt" % event.element_key.capitalize()
 	bolt.apply_event(event)
+	bolt.configure_sequence_presentation(shot_index, shot_count)
 	bolt.configure_trail_history(MERGE_BOLT_DURATION, ELEMENT_TRAIL_HISTORY_DURATION)
 	# All staggered shots retain the merge block center as their fixed origin.
 	bolt.start_pos = _global_to_layer_local(event.origin_position)
@@ -101,6 +132,7 @@ func _spawn_element_bolt(event: MergeAttackEvent, target, target_provider: Calla
 	parent_layer.move_child(bolt, parent_layer.get_child_count() - 1)
 	var particles = ElementTrailParticlesScript.new()
 	particles.name = "%sTrailParticles" % event.element_key.capitalize()
+	particles.configure_sequence_presentation(shot_index, shot_count)
 	parent_layer.add_child(particles)
 	# Keep the moving orb and shader ribbon above the dispersed element particles.
 	parent_layer.move_child(particles, bolt.get_index())
@@ -120,7 +152,7 @@ func play_crystal_bolt(from_global: Vector2, to_global: Vector2, delay: float = 
 
 
 func _schedule_crystal_bolt(from_global: Vector2, to_global: Vector2, delay: float, generation: int) -> void:
-	await get_tree().create_timer(delay).timeout
+	await get_tree().create_timer(delay, false).timeout
 	if generation != _generation:
 		return
 	_spawn_crystal_bolt(from_global, to_global)
@@ -193,7 +225,7 @@ func play_vertical_crystal_drop(target, fallback_global: Vector2, delay: float =
 
 
 func _schedule_vertical_crystal_drop(target, fallback_global: Vector2, delay: float, impact_callback: Callable, generation: int) -> void:
-	await get_tree().create_timer(delay).timeout
+	await get_tree().create_timer(delay, false).timeout
 	if generation != _generation:
 		return
 	_spawn_vertical_crystal_drop(target, fallback_global, impact_callback, generation)

@@ -1,0 +1,26 @@
+{
+  "interface": "piggy_bank",
+  "version": "v01",
+  "runtime_integrated": true,
+  "design_size": [539, 583],
+  "source": "F:/卖肉/godotT10/审核资源/小猪存钱罐",
+  "production": "F:/卖肉/godotT10/art/production/piggy_bank/2026-08-26_piggy_bank_ui_rebuild_v01",
+  "dynamic_text_baked": false,
+  "source_exact_assets": [
+    "backplates/piggy_bank_progress_fill_v01.png",
+    "backplates/piggy_bank_progress_track_v01.png"
+  ],
+  "assets": [
+    {"file": "backplates/piggy_bank_panel_v01.png", "size": [539, 583], "role": "panel"},
+    {"file": "backplates/piggy_bank_title_ribbon_v01.png", "size": [460, 85], "role": "title_ribbon"},
+    {"file": "backplates/piggy_bank_stage_card_default_v01.png", "size": [115, 143], "role": "stage_card"},
+    {"file": "backplates/piggy_bank_progress_track_v01.png", "size": [407, 40], "role": "progress_track"},
+    {"file": "backplates/piggy_bank_progress_fill_v01.png", "size": [394, 36], "role": "progress_fill"},
+    {"file": "backplates/piggy_bank_info_panel_v01.png", "size": [422, 53], "role": "description_panel"},
+    {"file": "backplates/piggy_bank_purchase_button_default_v01.png", "size": [341, 101], "role": "purchase_button"},
+    {"file": "icons/piggy_bank_stage_empty_v01.png", "size": [107, 98], "role": "empty_stage"},
+    {"file": "icons/piggy_bank_stage_progress_v01.png", "size": [112, 96], "role": "progress_stage"},
+    {"file": "icons/piggy_bank_stage_full_v01.png", "size": [109, 99], "role": "full_stage"},
+    {"file": "icons/piggy_bank_stage_purchased_v01.png", "size": [112, 97], "role": "purchased_stage"}
+  ]
+}

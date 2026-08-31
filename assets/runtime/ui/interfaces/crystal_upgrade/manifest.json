@@ -1,0 +1,20 @@
+{
+  "id": "crystal_upgrade_runtime_v03",
+  "design_canvas": [941, 1672],
+  "source": "F:/卖肉/godotT10/新建文件夹 (3)/bb",
+  "directories": {
+    "backplates": "backplates/",
+    "buttons": "buttons/",
+    "icons": "icons/"
+  },
+  "rules": {
+    "text_baked": false,
+    "runtime_text": true,
+    "max_texture_size": 2048,
+    "old_v01_assets_removed": true,
+    "complete_backplates": true,
+    "direct_texture_display": true,
+    "unused_v02_assets_archived": true,
+    "active_png_count": 18
+  }
+}

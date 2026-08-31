@@ -1,6 +1,8 @@
 extends Control
 class_name SettlementView
 
+const CurrencyAssetsScript := preload("res://scripts/currency_assets.gd")
+
 signal retry_pressed
 signal revive_pressed
 signal home_pressed
@@ -18,8 +20,8 @@ const LOSE_TITLE := preload(DECORATION_DIR + "title_defeat.png")
 const RECORD_TEXTURE := preload(DECORATION_DIR + "badge_new_record.png")
 const REWARD_PANEL := preload(BACKPLATE_DIR + "reward_panel.png")
 const REWARD_CHEST := preload(ICON_DIR + "reward_chest.png")
-const REWARD_COIN := preload(ICON_DIR + "reward_coin.png")
-const REWARD_CRYSTAL := preload(ICON_DIR + "reward_crystal.png")
+const REWARD_COIN := CurrencyAssetsScript.COIN_TEXTURE
+const REWARD_CRYSTAL := CurrencyAssetsScript.DIAMOND_TEXTURE
 
 const TAB_STATS := preload(TAB_DIR + "tab_stats_active.png")
 const TAB_DECK := preload(TAB_DIR + "tab_deck_inactive.png")

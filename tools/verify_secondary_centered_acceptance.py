@@ -16,7 +16,7 @@ PAGES = {
     "hub/settings.png": ("interfaces/settings/backplates/ui_settings_shell_v03.png", (512, 717)),
     "hub/clear_confirm.png": ("shared/confirmation/backplates/ui_clear_data_confirm_shell_v03.png", (326, 189)),
     "hub/first_purchase.png": ("interfaces/first_purchase/backplates/ui_first_purchase_gift_shell_v03.png", (461, 454)),
-    "hub/piggy.png": ("interfaces/piggy_bank/backplates/ui_piggy_bank_shell_v03.png", (445, 493)),
+    "hub/piggy.png": ("interfaces/piggy_bank/backplates/piggy_bank_panel_v01.png", (539, 583)),
     "hub/shop.png": ("interfaces/shop/backplates/ui_shop_shell_v03.png", (465, 493)),
 }
 TASK_CAPTURE = "hub/daily_combined.png"
@@ -79,11 +79,11 @@ def main() -> None:
         errors.append("daily program-composition runtime manifest is missing")
     else:
         daily_manifest = json.loads(daily_manifest_path.read_text(encoding="utf-8"))
-        if daily_manifest.get("version") != "v02" or not daily_manifest.get("runtime_integrated"):
-            errors.append("daily runtime manifest must identify the integrated v02 export")
+        if daily_manifest.get("version") != "v03" or not daily_manifest.get("runtime_integrated"):
+            errors.append("daily runtime manifest must identify the integrated v03 export")
         daily_assets = daily_manifest.get("assets", [])
-        if len(daily_assets) != 26:
-            errors.append(f"daily runtime should contain 26 approved/derived assets, got {len(daily_assets)}")
+        if len(daily_assets) != 24:
+            errors.append(f"daily runtime should contain 24 active assets, got {len(daily_assets)}")
         for entry in daily_assets:
             asset_path = ROOT / entry["file"]
             if not asset_path.exists():
@@ -110,9 +110,9 @@ def main() -> None:
                         errors.append(f"daily progress scanline is fragmented: {entry['file']} y={row_y}")
                         break
         daily_names = {Path(entry["file"]).name for entry in daily_assets}
-        required = {"daily_icon_slot_selected_v01.png", "daily_return_button_v02.png", "daily_return_arrow_v02.png"}
+        required = {"daily_icon_slot_selected_v01.png", "daily_return_button_v03.png", "daily_signin_card_claimed_v02.png"}
         if not required.issubset(daily_names):
-            errors.append("daily runtime is missing selected-slot or formal return-button states")
+            errors.append("daily runtime is missing active selected-slot, return-button, or claimed-card states")
 
     if errors:
         raise SystemExit("SECONDARY_CENTERED_ACCEPTANCE_FAILED\n" + "\n".join(errors))

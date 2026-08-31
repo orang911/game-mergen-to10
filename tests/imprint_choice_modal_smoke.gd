@@ -15,6 +15,7 @@ func _init() -> void:
 
 func _run() -> void:
 	_test_random_offers()
+	await _test_all_imprint_copy_fits()
 	await _test_modal_states_and_commit()
 	if not _failed:
 		print("IMPRINT_CHOICE_MODAL_SMOKE_OK")
@@ -41,6 +42,39 @@ func _test_random_offers() -> void:
 	game.free()
 
 
+func _test_all_imprint_copy_fits() -> void:
+	var modal := ModalScene.instantiate() as ImprintChoiceModalV2
+	root.add_child(modal)
+	var batches: Array[Array] = [
+		["ascension_hammer", "unity_dial", "fate_shuffler"],
+		["twin_mold", "castle_cannon", "dragon_catapult"],
+	]
+	for batch in batches:
+		var ids: Array[String] = []
+		for card_id in batch:
+			ids.append(str(card_id))
+		modal.setup(ids, Vector2.ZERO, [1, 5, 5], [false, false, false], [false, false, false], false)
+		await process_frame
+		var slots_root := modal.get_node("ContentRoot/SlotsRoot")
+		for slot in slots_root.get_children():
+			var name_label := slot.get_node("Name") as Label
+			var icon_clip := slot.get_node("IconClip") as Control
+			var icon := icon_clip.get_node("Icon") as TextureRect
+			var description := slot.get_node("Description") as Label
+			var authored_lines := description.text.count("\n") + 1
+			_check(name_label.get_minimum_size().x <= name_label.size.x + 0.01, "%s title must remain inside the card header" % slot.name)
+			_check(icon_clip.clip_contents, "%s icon must be clipped to the card art safe area" % slot.name)
+			_check(icon_clip.position == ImprintChoiceModalV2.ICON_SAFE_RECT.position and icon_clip.size == ImprintChoiceModalV2.ICON_SAFE_RECT.size, "%s icon clip must use the shared safe rect" % slot.name)
+			_check(icon.position == Vector2.ZERO and icon.size == icon_clip.size, "%s icon must remain completely inside its clip container" % slot.name)
+			_check(description.get_line_count() == authored_lines, "%s description must not create an extra wrapped line" % slot.name)
+			_check(description.get_visible_line_count() >= authored_lines, "%s description must show every authored line" % slot.name)
+			_check(description.position.x >= 34.0 and description.position.x + description.size.x <= slot.size.x - 34.0, "%s description must retain equal horizontal insets" % slot.name)
+			_check(description.position.y + description.size.y <= slot.size.y - 80.0, "%s description must retain a bottom safe margin" % slot.name)
+	paused = false
+	modal.queue_free()
+	await process_frame
+
+
 func _test_modal_states_and_commit() -> void:
 	var modal := ModalScene.instantiate() as ImprintChoiceModalV2
 	root.add_child(modal)
@@ -60,7 +94,7 @@ func _test_modal_states_and_commit() -> void:
 	_check(not (slots_root.get_child(0).get_node("SelectionOutline") as Panel).visible, "unselected opening state should hide the outline")
 	_check(not slots_root.get_child(0).has_node("SelectedCheck"), "imprint cards must not create the removed selected-check overlay")
 	_check(not slots_root.get_child(2).has_node("Lock"), "ad placeholder must not cover the third reward with a lock")
-	_check((slots_root.get_child(2).get_node("Icon") as TextureRect).material == null, "ad placeholder must not grayscale the third reward")
+	_check((slots_root.get_child(2).get_node("IconClip/Icon") as TextureRect).material == null, "ad placeholder must not grayscale the third reward")
 	_check(slots_root.get_child(2).has_node("AdUnlockButton"), "third displayed slot should retain the ad placeholder")
 	var ad_button := slots_root.get_child(2).get_node("AdUnlockButton") as TextureButton
 	_check(ad_button.position.y >= slots_root.get_child(2).size.y, "ad placeholder should sit below, not inside, the third card")

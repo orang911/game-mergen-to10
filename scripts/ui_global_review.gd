@@ -475,7 +475,12 @@ func _add_hub(viewport: SubViewport, state: String = "continue") -> MainHubView:
 	var hub := HUB_SCENE.instantiate() as MainHubView
 	_review_base(viewport).add_child(hub)
 	hub.set_resource_values(1160, 31884)
-	hub.set_daily_activity(80)
+	hub.set_task_summary({
+		"title": "击败 30 个怪物",
+		"progress": 24,
+		"target": 30,
+		"reward": {"coins": 50},
+	})
 	if state == "new":
 		hub.set_stage_entry("开始游戏")
 	else:

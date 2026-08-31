@@ -28,6 +28,7 @@ var trail_color := Color(0.35, 0.75, 1.0, 0.55)
 
 var _trail_glow_rect: TextureRect
 var _trail_rect: TextureRect
+var _sequence_glow_rect: TextureRect
 var _core_rect: TextureRect
 var _core_size := Vector2(50.0, 50.0)
 var _trail_size := Vector2(110.0, 28.0)
@@ -37,6 +38,12 @@ var _rotation_offset := 0.0
 var _flight_duration := 0.0
 var _trail_history_duration := 0.0
 var _target_provider := Callable()
+var _sequence_core_scale := 1.0
+var _sequence_trail_length_scale := 1.0
+var _sequence_trail_width_scale := 1.0
+var _sequence_opacity_scale := 1.0
+var _sequence_final := false
+var _trail_shader_base_opacity := 0.92
 var _crystal_beam_visual := false
 var crystal_beam_width_scale := 1.0:
 	set(value):
@@ -94,6 +101,43 @@ func apply_element_key(key: String, tier_value: int = 1) -> void:
 	_sync_visuals()
 
 
+func configure_sequence_presentation(shot_index: int, shot_count: int) -> void:
+	_ensure_visual_nodes()
+	_sequence_core_scale = 1.0
+	_sequence_trail_length_scale = 1.0
+	_sequence_trail_width_scale = 1.0
+	_sequence_opacity_scale = 1.0
+	_sequence_final = false
+	var count := clampi(shot_count, 1, 6)
+	var index := clampi(shot_index, 0, count - 1)
+	var supported := element_key == "poison" or element_key == "ice" or element_key == "critical" or element_key == "fire"
+	if supported and count >= 2:
+		var n_factor := clampf(float(count - 1) / 5.0, 0.0, 1.0)
+		_sequence_core_scale = 1.0 + n_factor * 0.18
+		_sequence_trail_length_scale = 1.0 + n_factor * 0.18
+		_sequence_trail_width_scale = 1.0 + n_factor * 0.28
+		if index == count - 1:
+			_sequence_final = true
+			_sequence_core_scale *= 1.12
+			_sequence_trail_length_scale *= 1.12
+			_sequence_trail_width_scale *= 1.12
+			_sequence_opacity_scale = 1.18
+	if _sequence_glow_rect != null and is_instance_valid(_sequence_glow_rect):
+		_sequence_glow_rect.visible = _sequence_final and not _crystal_beam_visual
+	_update_sequence_shader_opacity()
+	_sync_visuals()
+
+
+func get_sequence_presentation_metrics() -> Dictionary:
+	return {
+		"core_scale": _sequence_core_scale,
+		"trail_length_scale": _sequence_trail_length_scale,
+		"trail_width_scale": _sequence_trail_width_scale,
+		"opacity_scale": _sequence_opacity_scale,
+		"final": _sequence_final,
+	}
+
+
 func configure_crystal_beam_visual(texture: Texture2D = null) -> void:
 	_ensure_visual_nodes()
 	# The reference effect is a narrow cyan energy line, rather than the generic
@@ -145,6 +189,18 @@ func _ensure_visual_nodes() -> void:
 		_trail_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(_trail_rect)
 
+	if _sequence_glow_rect == null or not is_instance_valid(_sequence_glow_rect):
+		_sequence_glow_rect = TextureRect.new()
+		_sequence_glow_rect.name = "SequenceFinalGlow"
+		_sequence_glow_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_sequence_glow_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_sequence_glow_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_sequence_glow_rect.visible = false
+		var additive := CanvasItemMaterial.new()
+		additive.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		_sequence_glow_rect.material = additive
+		add_child(_sequence_glow_rect)
+
 	if _core_rect == null or not is_instance_valid(_core_rect):
 		_core_rect = TextureRect.new()
 		_core_rect.name = "Core"
@@ -167,6 +223,7 @@ func _apply_element_visuals() -> void:
 	_core_rect.texture = _load_texture(str(fx.get("projectile", "")))
 	_core_rect.size = _core_size
 	_core_rect.pivot_offset = _core_size * 0.5
+	_sequence_glow_rect.texture = _core_rect.texture
 
 	_trail_rect.texture = _load_texture(str(fx.get("trail", "")))
 	_trail_rect.size = _trail_size
@@ -183,6 +240,7 @@ func _apply_element_visuals() -> void:
 	_trail_glow_rect.material = null
 
 	var trail_shader_path := str(fx.get("trail_shader", ""))
+	_trail_shader_base_opacity = float(fx.get("trail_opacity", 0.92))
 	if not trail_shader_path.is_empty():
 		var trail_shader := load(trail_shader_path) as Shader
 		if trail_shader:
@@ -191,7 +249,7 @@ func _apply_element_visuals() -> void:
 			trail_material.set_shader_parameter("tail_color", fx.get("trail_tail_color", Color(0.05, 0.22, 0.88, 1.0)))
 			trail_material.set_shader_parameter("middle_color", fx.get("trail_middle_color", Color(0.05, 0.78, 1.0, 1.0)))
 			trail_material.set_shader_parameter("head_color", fx.get("trail_head_color", Color(0.82, 0.97, 1.0, 1.0)))
-			trail_material.set_shader_parameter("opacity", float(fx.get("trail_opacity", 0.92)))
+			trail_material.set_shader_parameter("opacity", _trail_shader_base_opacity * _sequence_opacity_scale)
 			trail_material.set_shader_parameter("flow_speed", float(fx.get("trail_flow_speed", 2.8)))
 			trail_material.set_shader_parameter("distortion_strength", float(fx.get("trail_distortion", 0.038)))
 			trail_material.set_shader_parameter("use_texture_alpha", bool(fx.get("trail_use_texture_alpha", false)))
@@ -261,6 +319,7 @@ func _sync_visuals() -> void:
 	var visual_angle := angle + _rotation_offset
 	var display_trail_size := _trail_size
 	var display_trail_offset := _trail_offset
+	var base_head_overlap := _trail_offset.x + _trail_size.x * 0.5
 	if _flight_duration > 0.0 and _trail_history_duration > 0.0 and velocity.length_squared() > 0.001:
 		# Convert the requested history time into world distance. During the first
 		# part of the flight the trail grows with distance travelled; afterwards it
@@ -268,10 +327,16 @@ func _sync_visuals() -> void:
 		# preserved so the ribbon remains visually joined to the moving orb.
 		var history_progress := minf(clampf(progress, 0.0, 1.0), _trail_history_duration / _flight_duration)
 		var history_length := velocity.length() * history_progress
-		var head_overlap := _trail_offset.x + _trail_size.x * 0.5
-		var full_trail_length := maxf(_trail_size.y * 0.70, history_length + maxf(0.0, head_overlap))
-		display_trail_size.x = maxf(1.0, full_trail_length * trail_collapse_ratio)
-		display_trail_offset.x = head_overlap * trail_collapse_ratio - display_trail_size.x * 0.5
+		var full_trail_length := maxf(_trail_size.y * 0.70, history_length + maxf(0.0, base_head_overlap))
+		display_trail_size.x = full_trail_length
+
+	# Apply sequence scaling after the distance-history calculation so the
+	# authored N-dependent length is visible even when the history window is
+	# shorter than the base trail texture.
+	display_trail_size.x = maxf(1.0, display_trail_size.x * _sequence_trail_length_scale * trail_collapse_ratio)
+	display_trail_size.y = maxf(1.0, display_trail_size.y * _sequence_trail_width_scale)
+	display_trail_offset.x = base_head_overlap * _sequence_trail_length_scale * trail_collapse_ratio - display_trail_size.x * 0.5
+	display_trail_offset.y = _trail_offset.y * _sequence_trail_width_scale
 	var trail_center := head + display_trail_offset.rotated(angle)
 
 	var glow_size := display_trail_size * 1.15
@@ -285,10 +350,26 @@ func _sync_visuals() -> void:
 	_trail_rect.position = trail_center - display_trail_size * 0.5
 	_trail_rect.rotation = angle if _rotate_to_velocity else 0.0
 
-	_core_rect.size = _core_size
-	_core_rect.pivot_offset = _core_size * 0.5
-	_core_rect.position = head - _core_size * 0.5
+	var display_core_size := _core_size * _sequence_core_scale
+	_core_rect.size = display_core_size
+	_core_rect.pivot_offset = display_core_size * 0.5
+	_core_rect.position = head - display_core_size * 0.5
 	_core_rect.rotation = visual_angle if _rotate_to_velocity else _rotation_offset
+	if _sequence_glow_rect != null and is_instance_valid(_sequence_glow_rect):
+		var core_glow_size := display_core_size * 1.24
+		_sequence_glow_rect.size = core_glow_size
+		_sequence_glow_rect.pivot_offset = core_glow_size * 0.5
+		_sequence_glow_rect.position = head - core_glow_size * 0.5
+		_sequence_glow_rect.rotation = visual_angle if _rotate_to_velocity else _rotation_offset
+		_sequence_glow_rect.modulate = Color(1.0, 1.0, 1.0, 0.24 * _sequence_opacity_scale)
+
+
+func _update_sequence_shader_opacity() -> void:
+	if _trail_rect == null or not is_instance_valid(_trail_rect):
+		return
+	var material := _trail_rect.material as ShaderMaterial
+	if material:
+		material.set_shader_parameter("opacity", _trail_shader_base_opacity * _sequence_opacity_scale)
 
 
 func _draw() -> void:

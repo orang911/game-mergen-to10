@@ -29,6 +29,8 @@ var _particle_tint_max := Color(0.90, 1.0, 1.0, 1.0)
 var _particle_scale_multiplier := 1.0
 var _particle_spacing_multiplier := 1.0
 var _particle_lifetime_multiplier := 1.0
+var _sequence_particle_scale := 1.0
+var _sequence_spacing_scale := 1.0
 
 
 func _ready() -> void:
@@ -49,6 +51,16 @@ func follow(target: MergeBolt, element_key: String) -> void:
 	_has_position = false
 	set_process(true)
 	_capture_current_position()
+
+
+func configure_sequence_presentation(shot_index: int, shot_count: int) -> void:
+	var count := clampi(shot_count, 1, 6)
+	var index := clampi(shot_index, 0, count - 1)
+	var n_factor := clampf(float(count - 1) / 5.0, 0.0, 1.0)
+	_sequence_particle_scale = 1.0 + n_factor * 0.12
+	if count >= 2 and index == count - 1:
+		_sequence_particle_scale *= 1.10
+	_sequence_spacing_scale = 1.0 + n_factor * 0.08
 
 
 func stop_emitting() -> void:
@@ -100,9 +112,9 @@ func _emit_over_distance(from_position: Vector2, to_position: Vector2) -> void:
 
 
 func _next_emission_distance() -> float:
-	var spacing := randf_range(EMISSION_DISTANCE_MIN, EMISSION_DISTANCE_MAX) * _particle_spacing_multiplier
+	var spacing := randf_range(EMISSION_DISTANCE_MIN, EMISSION_DISTANCE_MAX) * _particle_spacing_multiplier / _sequence_spacing_scale
 	if randf() < EMISSION_GAP_CHANCE:
-		spacing += randf_range(EMISSION_GAP_EXTRA_MIN, EMISSION_GAP_EXTRA_MAX) * _particle_spacing_multiplier
+		spacing += randf_range(EMISSION_GAP_EXTRA_MIN, EMISSION_GAP_EXTRA_MAX) * _particle_spacing_multiplier / _sequence_spacing_scale
 	return spacing
 
 
@@ -122,7 +134,7 @@ func _spawn_particle(spawn_position: Vector2, travel_direction: Vector2) -> void
 		start_scale = randf_range(0.085, 0.130)
 	else:
 		start_scale = randf_range(0.145, 0.205)
-	start_scale *= _particle_scale_multiplier
+	start_scale *= _particle_scale_multiplier * _sequence_particle_scale
 	particle.scale = Vector2.ONE * start_scale
 	particle.material = _additive_material if _use_additive_next else _normal_material
 	var start_alpha := randf_range(0.46, 0.72) if _use_additive_next else randf_range(0.68, 0.94)

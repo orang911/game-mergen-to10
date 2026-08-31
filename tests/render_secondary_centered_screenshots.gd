@@ -40,6 +40,7 @@ func _run() -> void:
 		["pause", "tasks"], ["exit_confirm", "tasks"], ["settings", "tasks"],
 		["clear_confirm", "tasks"], ["daily", "tasks"], ["daily", "signin"],
 		["benefits", "tasks"], ["first_purchase", "tasks"], ["piggy", "tasks"], ["shop", "tasks"],
+		["crystal_upgrade", "tasks"],
 	]:
 		ui._daily_tab = spec[1]
 		ui.open(spec[0], "hub")

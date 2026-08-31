@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://c1mmtwqksfkdr" path="res://assets/runtime/ui/interfaces/battle/top_hud/backplates/battle_timer_panel.png" id="51_top_v3_timer"]
 [ext_resource type="Texture2D" uid="uid://wufy3bk4buaq" path="res://assets/runtime/ui/interfaces/battle/top_hud/icons/battle_timer_clock_icon.png" id="52_top_v3_clock"]
 [ext_resource type="Texture2D" uid="uid://hhlm4p0b52yj" path="res://assets/runtime/ui/interfaces/battle/top_hud/backplates/battle_currency_panel.png" id="53_top_v3_currency"]
-[ext_resource type="Texture2D" uid="uid://rrdpp0l0nl8o" path="res://assets/runtime/ui/interfaces/battle/top_hud/icons/battle_currency_icon.png" id="54_top_v3_currency_icon"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/shared/currency/icons/currency_coin_v01.png" id="54_top_v3_currency_icon"]
 
 [sub_resource type="SystemFont" id="SystemFont_top_cn"]
 font_names = PackedStringArray("Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Arial")
@@ -119,9 +119,9 @@ mouse_filter = 2
 [node name="WaveBanner" type="Control" parent="DesignRoot/HudLayer" unique_id=1684430199]
 anchors_preset = 0
 offset_left = 216.0
-offset_top = 7.0
+offset_top = 15.0
 offset_right = 484.0
-offset_bottom = 91.0
+offset_bottom = 99.0
 pivot_offset = Vector2(134, 42)
 mouse_filter = 2
 
@@ -139,9 +139,9 @@ patch_margin_bottom = 70
 [node name="TimeBanner" type="Control" parent="DesignRoot/HudLayer" unique_id=678830137]
 anchors_preset = 0
 offset_left = 506.0
-offset_top = 7.0
+offset_top = 15.0
 offset_right = 684.0
-offset_bottom = 91.0
+offset_bottom = 99.0
 pivot_offset = Vector2(89, 42)
 mouse_filter = 2
 
@@ -179,9 +179,9 @@ patch_margin_bottom = 65
 [node name="TimerStatusIcon" type="TextureRect" parent="DesignRoot/HudLayer" unique_id=550650852]
 layout_mode = 0
 offset_left = 519.0
-offset_top = 30.0
+offset_top = 39.0
 offset_right = 556.0
-offset_bottom = 67.0
+offset_bottom = 76.0
 pivot_offset = Vector2(18.5, 18.5)
 mouse_filter = 2
 texture = ExtResource("52_top_v3_clock")
@@ -203,9 +203,9 @@ stretch_mode = 5
 [node name="WaveLabel" type="Label" parent="DesignRoot/HudLayer" unique_id=1087736179]
 layout_mode = 0
 offset_left = 231.0
-offset_top = 11.0
+offset_top = 20.0
 offset_right = 374.0
-offset_bottom = 85.0
+offset_bottom = 94.0
 pivot_offset = Vector2(71.5, 37)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0.06, 0.07, 0.13, 0.75)
@@ -222,9 +222,9 @@ vertical_alignment = 1
 [node name="WaveCountLabel" type="Label" parent="DesignRoot/HudLayer" unique_id=1858180525]
 layout_mode = 0
 offset_left = 374.0
-offset_top = 11.0
+offset_top = 20.0
 offset_right = 478.0
-offset_bottom = 85.0
+offset_bottom = 94.0
 pivot_offset = Vector2(52, 37)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0.06, 0.07, 0.13, 0.75)
@@ -241,9 +241,9 @@ vertical_alignment = 1
 [node name="TimeLabel" type="Label" parent="DesignRoot/HudLayer" unique_id=2004237009]
 layout_mode = 0
 offset_left = 553.0
-offset_top = 11.0
+offset_top = 20.0
 offset_right = 676.0
-offset_bottom = 85.0
+offset_bottom = 94.0
 pivot_offset = Vector2(61.5, 37)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0.06, 0.07, 0.13, 0.8)
@@ -280,9 +280,9 @@ vertical_alignment = 1
 process_mode = 3
 layout_mode = 0
 offset_left = 30.0
-offset_top = 14.0
+offset_top = 11.0
 offset_right = 114.0
-offset_bottom = 102.0
+offset_bottom = 99.0
 pivot_offset = Vector2(42, 44)
 focus_mode = 0
 texture_normal = ExtResource("49_top_v3_pause")

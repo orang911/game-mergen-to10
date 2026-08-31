@@ -66,7 +66,7 @@ func _render_hub_pages() -> void:
 	for spec in [
 		["settings", "tasks"], ["clear_confirm", "tasks"],
 		["daily", "combined"],
-		["benefits", "tasks"], ["first_purchase", "tasks"],
+		["benefits", "tasks"],
 		["piggy", "tasks"], ["shop", "tasks"],
 	]:
 		ui._daily_tab = spec[1]
@@ -97,6 +97,16 @@ func _render_hub_pages() -> void:
 			game.meta_progress.signin_streak = 3
 			game.meta_progress.changed.emit()
 			await _settle_frames()
+	ui._pending_product_id = "benefits_bundle"
+	ui._purchase_return_page = "benefits"
+	ui.open("purchase_confirm", "hub")
+	await _settle_frames()
+	await _save(viewport, OUT + "hub/purchase_confirm_benefits.png")
+	ui._pending_product_id = "coins_10000"
+	ui._purchase_return_page = "shop"
+	ui.open("purchase_confirm", "hub")
+	await _settle_frames()
+	await _save(viewport, OUT + "hub/purchase_confirm_generic.png")
 	game.queue_free()
 	viewport.queue_free()
 	await process_frame

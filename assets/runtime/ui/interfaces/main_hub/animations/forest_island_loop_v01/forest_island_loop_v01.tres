@@ -1,0 +1,282 @@
+[gd_resource type="SpriteFrames" load_steps=69 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_001.png" id="1_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_002.png" id="2_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_003.png" id="3_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_004.png" id="4_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_005.png" id="5_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_006.png" id="6_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_007.png" id="7_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_008.png" id="8_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_009.png" id="9_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_010.png" id="10_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_011.png" id="11_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_012.png" id="12_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_013.png" id="13_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_014.png" id="14_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_015.png" id="15_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_016.png" id="16_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_017.png" id="17_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_018.png" id="18_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_019.png" id="19_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_020.png" id="20_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_021.png" id="21_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_022.png" id="22_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_023.png" id="23_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_024.png" id="24_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_025.png" id="25_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_026.png" id="26_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_027.png" id="27_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_028.png" id="28_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_029.png" id="29_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_030.png" id="30_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_031.png" id="31_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_032.png" id="32_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_033.png" id="33_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_034.png" id="34_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_035.png" id="35_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_036.png" id="36_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_037.png" id="37_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_038.png" id="38_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_039.png" id="39_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_040.png" id="40_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_041.png" id="41_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_042.png" id="42_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_043.png" id="43_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_044.png" id="44_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_045.png" id="45_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_046.png" id="46_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_047.png" id="47_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_048.png" id="48_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_049.png" id="49_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_050.png" id="50_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_051.png" id="51_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_052.png" id="52_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_053.png" id="53_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_054.png" id="54_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_055.png" id="55_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_056.png" id="56_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_057.png" id="57_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_058.png" id="58_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_059.png" id="59_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_060.png" id="60_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_061.png" id="61_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_062.png" id="62_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_063.png" id="63_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_064.png" id="64_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_065.png" id="65_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_066.png" id="66_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_067.png" id="67_frame"]
+[ext_resource type="Texture2D" path="res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01_068.png" id="68_frame"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("39_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("42_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("43_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("44_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("45_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("46_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("47_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("52_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("53_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("54_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("55_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("56_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("57_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("58_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("59_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("60_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("61_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("62_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("63_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("64_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("65_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("66_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("67_frame")
+}, {
+"duration": 1.0,
+"texture": ExtResource("68_frame")
+}],
+"loop": false,
+"name": &"default",
+"speed": 24.0
+}]

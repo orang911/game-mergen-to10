@@ -23,6 +23,7 @@ const TUTORIAL_CRYSTAL_FOREGROUND_Z := 17
 @onready var _wave_banner := get_node_or_null("DesignRoot/HudLayer/WaveBanner") as Control
 @onready var _time_banner := get_node_or_null("DesignRoot/HudLayer/TimeBanner") as Control
 @onready var _currency_banner := get_node_or_null("DesignRoot/HudLayer/CurrencyBanner") as Control
+@onready var _currency_frame := get_node_or_null("DesignRoot/HudLayer/CurrencyBanner/Frame") as NinePatchRect
 @onready var _wave_status_icon := get_node_or_null("DesignRoot/HudLayer/WaveStatusIcon") as TextureRect
 @onready var _timer_status_icon := get_node_or_null("DesignRoot/HudLayer/TimerStatusIcon") as TextureRect
 @onready var _currency_icon := get_node_or_null("DesignRoot/HudLayer/CurrencyIcon") as TextureRect
@@ -413,31 +414,39 @@ func _set_canvas_z(node: CanvasItem, z: int) -> void:
 
 
 func _layout_hud(viewport_size: Vector2) -> void:
+	# The blue panels use the newer shared baseline.  Keep the currency group at
+	# its approved legacy position from the supplied battle reference instead of
+	# forcing it onto that baseline.
 	if _wave_banner:
-		_set_rect(_wave_banner, Vector2(216.0, 7.0), Vector2(268, 84))
+		_set_rect(_wave_banner, Vector2(216.0, 15.0), Vector2(268, 84))
 	if _time_banner:
-		_set_rect(_time_banner, Vector2(506.0, 7.0), Vector2(178, 84))
+		_set_rect(_time_banner, Vector2(506.0, 15.0), Vector2(178, 84))
 	if _currency_banner:
-		# The supplied currency plate has transparent vertical padding. Give
-		# its nine-patch the full HUD height so the visible pill is not
-		# compressed into a thin line behind the number.
 		_set_rect(_currency_banner, Vector2(772.0, 15.0), Vector2(153, 84))
+	if _currency_frame:
+		# Frame is authored at 0.44 scale.  _set_rect() assigns a centred pivot,
+		# which would shift the scaled visual about 97 px right and 66 px down and
+		# push its rounded end outside the viewport.  Keep the scaling origin at
+		# the banner's top-left so its painted bounds remain inside CurrencyBanner.
+		_currency_frame.position = Vector2.ZERO
+		_currency_frame.size = Vector2(153.0 / 0.44, 84.0 / 0.44)
+		_currency_frame.pivot_offset = Vector2.ZERO
 	if _wave_status_icon:
 		_wave_status_icon.visible = false
 	if _timer_status_icon:
-		_set_rect(_timer_status_icon, Vector2(519.0, 30.0), Vector2(37, 37))
+		_set_rect(_timer_status_icon, Vector2(519.0, 39.0), Vector2(37, 37))
 	if _currency_icon:
 		_set_rect(_currency_icon, Vector2(713.0, 14.0), Vector2(82, 86))
 	if _wave_label:
-		_set_rect(_wave_label, Vector2(231.0, 11.0), Vector2(143, 74))
+		_set_rect(_wave_label, Vector2(231.0, 20.0), Vector2(143, 74))
 	if _wave_count_label:
-		_set_rect(_wave_count_label, Vector2(374.0, 11.0), Vector2(104, 74))
+		_set_rect(_wave_count_label, Vector2(374.0, 20.0), Vector2(104, 74))
 	if _time_label:
-		_set_rect(_time_label, Vector2(553.0, 11.0), Vector2(123, 74))
+		_set_rect(_time_label, Vector2(553.0, 20.0), Vector2(123, 74))
 	if _currency_label:
 		_set_rect(_currency_label, Vector2(795.0, 19.0), Vector2(127, 75))
 	if _back_button:
-		_set_rect(_back_button, Vector2(30.0, 14.0), Vector2(84, 88))
+		_set_rect(_back_button, Vector2(30.0, 11.0), Vector2(84, 88))
 	if _music_button:
 		_music_button.visible = false
 	if _home_button:

@@ -44,5 +44,15 @@ func _run() -> void:
 		push_error("MAIN_HUB_CONTINUE_SAVE_FAILED: %s" % error_string(error))
 		quit(1)
 		return
+	hub._show_locked_notice()
+	for index in range(10):
+		await process_frame
+	image = viewport.get_texture().get_image()
+	output = ProjectSettings.globalize_path(OUT + "runtime_locked_notice_941x1672.png")
+	error = image.save_png(output)
+	if error != OK:
+		push_error("MAIN_HUB_LOCKED_NOTICE_SAVE_FAILED: %s" % error_string(error))
+		quit(1)
+		return
 	print("MAIN_HUB_ACCEPTANCE_RENDER_OK: %s" % output)
 	quit(0)

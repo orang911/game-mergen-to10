@@ -11,6 +11,13 @@ func _init() -> void:
 	system.skill_choice_requested.connect(func(): _choice_count += 1)
 	system.pending_skill_changed.connect(func(skill_id: String, _quality: int): _pending_id = skill_id)
 	_check(GameConfig.SKILL_IMPRINT_IDS.size() == 6, "runtime imprint pool should contain the six active imprints")
+	for card_id in GameConfig.SKILL_IMPRINT_IDS:
+		var runtime_path := str(GameConfig.SKILL_IMPRINT_TEXTURES.get(card_id, ""))
+		var catalog_path := str(CardCatalog.get_definition(card_id).get("icon", ""))
+		var texture := load(runtime_path) as Texture2D
+		_check(runtime_path.ends_with("/imprints/imprint_%s_v01.png" % card_id), "imprint should use its semantic standalone replacement: %s" % card_id)
+		_check(catalog_path == runtime_path, "catalog and combat HUD should share the same imprint replacement: %s" % card_id)
+		_check(texture != null and not texture is AtlasTexture and texture.get_width() >= 360 and texture.get_height() >= 370, "replacement imprint should load as a valid high-resolution standalone texture: %s" % card_id)
 	_check(not GameConfig.SKILL_IMPRINT_IDS.has("frost_bell"), "frost imprint must stay out of the runtime pool")
 	_check(not GameConfig.SKILL_IMPRINT_IDS.has("thunder_ballista"), "lightning imprint must stay out of the runtime pool")
 

@@ -9,6 +9,8 @@ signal wallet_changed
 signal first_purchase_completed
 
 const UiTypographyScript := preload("res://scripts/ui_typography.gd")
+const CurrencyAssetsScript := preload("res://scripts/currency_assets.gd")
+const CLAIMED_GRAYSCALE_SHADER := preload("res://shaders/ui_claimed_grayscale.gdshader")
 const ROOT := "res://assets/runtime/ui/secondary_centered_v04/"
 const APPROVED_EFFECT_SHELLS := false
 const FRAMES := ROOT + "frames/"
@@ -24,8 +26,11 @@ const PAUSE_BACKPLATES := "res://assets/runtime/ui/interfaces/battle_pause/backp
 const EXIT_CONFIRM_BACKPLATES := "res://assets/runtime/ui/interfaces/exit_confirm/backplates/"
 const SETTINGS_BACKPLATES := "res://assets/runtime/ui/interfaces/settings/backplates/"
 const SETTINGS_CONTROLS := "res://assets/runtime/ui/interfaces/settings/controls/"
+const SETTINGS_ICONS_V04 := "res://assets/runtime/ui/interfaces/settings/icons/"
+const SETTINGS_DECORATIONS := "res://assets/runtime/ui/interfaces/settings/decorations/"
 const FIRST_PURCHASE_ROOT := "res://assets/runtime/ui/interfaces/first_purchase/"
 const PIGGY_BANK_BACKPLATES := "res://assets/runtime/ui/interfaces/piggy_bank/backplates/"
+const PIGGY_BANK_ICONS := "res://assets/runtime/ui/interfaces/piggy_bank/icons/"
 const SHOP_ROOT := "res://assets/runtime/ui/interfaces/shop/"
 const DAILY_PROGRAM := "res://assets/runtime/ui/interfaces/daily_program/"
 const DAILY_PROGRAM_BACKPLATES := DAILY_PROGRAM + "backplates/"
@@ -36,14 +41,20 @@ const BENEFITS_PROGRAM_ICONS := BENEFITS_PROGRAM + "icons/"
 const PURCHASE_CONFIRM_ROOT := "res://assets/runtime/ui/interfaces/purchase_confirmation/"
 const PURCHASE_CONFIRM_BACKPLATES := PURCHASE_CONFIRM_ROOT + "backplates/"
 const PURCHASE_CONFIRM_ICONS := PURCHASE_CONFIRM_ROOT + "icons/"
+const CRYSTAL_UPGRADE_ROOT := "res://assets/runtime/ui/interfaces/crystal_upgrade/"
+const CRYSTAL_UPGRADE_BUTTONS := CRYSTAL_UPGRADE_ROOT + "buttons/"
+const CRYSTAL_UPGRADE_ICONS := CRYSTAL_UPGRADE_ROOT + "icons/"
+const CRYSTAL_UPGRADE_BACKPLATES := CRYSTAL_UPGRADE_ROOT + "backplates/"
+const MAIN_HUB_META_ICONS := "res://assets/runtime/ui/shared/meta_icons/atlas_regions/"
 # Exact visible bounds measured from the approved 941 x 1672 effect sheets.
 # Each page keeps this proportion when opened independently at screen center.
 const PAGE_SIZES := {
 	"pause": Vector2(384, 282), "exit_confirm": Vector2(299, 176),
-	"settings": Vector2(512, 717), "clear_confirm": Vector2(326, 189),
+	"settings": Vector2(514, 716), "clear_confirm": Vector2(326, 226),
 	"daily": Vector2(915, 1513), "benefits": Vector2(700, 714),
-	"first_purchase": Vector2(461, 454), "piggy": Vector2(445, 493), "shop": Vector2(465, 493),
-	"purchase_confirm": Vector2(518, 552),
+	"first_purchase": Vector2(461, 454), "piggy": Vector2(700, 714), "shop": Vector2(465, 493),
+	"purchase_confirm": Vector2(700, 714),
+	"crystal_upgrade": Vector2(941, 1672),
 }
 
 # V03 shells and their programmatic overlays were authored in these logical
@@ -51,22 +62,24 @@ const PAGE_SIZES := {
 # frame art, labels, controls and hit targets cannot drift independently.
 const AUTHORING_SIZES := {
 	"pause": Vector2(660, 485), "exit_confirm": Vector2(660, 388),
-	"settings": Vector2(650, 910), "clear_confirm": Vector2(660, 383),
+	"settings": Vector2(514, 716), "clear_confirm": Vector2(326, 226),
 	"daily_combined": Vector2(915, 1513),
 	"benefits": Vector2(760, 775), "first_purchase": Vector2(760, 748),
-	"piggy": Vector2(760, 842), "shop": Vector2(850, 901),
+	"piggy": Vector2(539, 583), "shop": Vector2(850, 901),
 	"purchase_confirm": Vector2(518, 552),
+	"crystal_upgrade": Vector2(941, 1672),
 }
 
 # Coordinates measured on the three approved 941 x 1672 effect sheets. Content
 # is authored in this space, then uniformly mapped into the full-size frame.
 const EFFECT_COORD_SIZES := {
 	"pause": Vector2(384, 282), "exit_confirm": Vector2(299, 176),
-	"settings": Vector2(512, 717), "clear_confirm": Vector2(326, 189),
+	"settings": Vector2(514, 716), "clear_confirm": Vector2(326, 226),
 	"daily_combined": Vector2(915, 1513),
 	"benefits": Vector2(445, 454), "first_purchase": Vector2(461, 454),
-	"piggy": Vector2(445, 493), "shop": Vector2(465, 493),
+	"piggy": Vector2(539, 583), "shop": Vector2(465, 493),
 	"purchase_confirm": Vector2(518, 552),
+	"crystal_upgrade": Vector2(941, 1672),
 }
 
 # Benefits was originally laid out in a compact 445 × 454 review canvas and
@@ -89,6 +102,7 @@ var _daily_tab := "tasks"
 var _shop_category := "recommended"
 var _shop_page := 0
 var _benefits_purchase_button: TextureButton
+var _piggy_show_purchased_state := false
 var _locked := false
 var _pending_product_id := ""
 var _purchase_return_page := "shop"
@@ -160,8 +174,15 @@ func setup(progress_service: MetaProgressService) -> void:
 
 
 func open(requested_page: String, requested_source: String = "hub") -> void:
+	# The first-purchase feature is intentionally dormant for the current
+	# release. Keep its implementation and assets for a later feature flag, but
+	# reject every legacy route so the removed lobby entry cannot be bypassed.
+	if requested_page == "first_purchase":
+		return
 	if service == null or not PAGE_SIZES.has(requested_page):
 		return
+	if requested_page == "piggy" and page_id != "purchase_confirm":
+		_piggy_show_purchased_state = false
 	page_id = requested_page
 	source = requested_source
 	_locked = false
@@ -197,6 +218,8 @@ func _layout() -> void:
 		return
 	var desired := _current_page_size()
 	var available := size - Vector2(40, 100)
+	if page_id == "crystal_upgrade":
+		available = size
 	if page_id == "daily":
 		available = size - Vector2(16, 80)
 	var scale_factor := minf(1.0, minf(available.x / desired.x, available.y / desired.y))
@@ -213,6 +236,8 @@ func _layout() -> void:
 		# viewports; otherwise the visible top is pushed hundreds of pixels down.
 		var visible_top := 78.0 * scale_factor
 		centered.y = visible_top - desired.y * 0.5 * (1.0 - scale_factor)
+	elif page_id == "crystal_upgrade":
+		centered = (size - desired) * 0.5
 	elif page_id == "benefits" and is_equal_approx(scale_factor, 1.0):
 		# The approved lobby composition sits just below the chapter title rather
 		# than touching it at the mathematical center.
@@ -235,17 +260,18 @@ func _shell_path() -> String:
 	match page_id:
 		"pause": return PAUSE_BACKPLATES + "ui_battle_pause_shell_v03.png"
 		"exit_confirm": return EXIT_CONFIRM_BACKPLATES + "ui_exit_confirm_shell_v03.png"
-		"settings": return SETTINGS_BACKPLATES + "ui_settings_shell_v03.png"
-		"clear_confirm": return CONFIRMATION_BACKPLATES + "ui_clear_data_confirm_shell_v03.png"
+		"settings": return SETTINGS_BACKPLATES + "settings_panel_v04.png"
+		"clear_confirm": return PIGGY_BANK_BACKPLATES + "piggy_bank_panel_v01.png"
 		"daily": return ""
 		# The benefits view is assembled from the dedicated v01 cutouts.  Do not
 		# fall back to the old, baked v03 sheet: it contains its own obsolete
 		# ribbon, cards and icons and would show through the new live layers.
-		"benefits": return BENEFITS_PROGRAM_BACKPLATES + "benefits_popup_shell_fixed_v01.png"
+		"benefits": return PIGGY_BANK_BACKPLATES + "piggy_bank_panel_v01.png"
 		"first_purchase": return FIRST_PURCHASE_ROOT + "backplates/ui_first_purchase_gift_shell_v03.png"
-		"piggy": return PIGGY_BANK_BACKPLATES + "ui_piggy_bank_shell_v03.png"
+		"piggy": return PIGGY_BANK_BACKPLATES + "piggy_bank_panel_v01.png"
 		"shop": return SHOP_ROOT + "backplates/ui_shop_shell_v03.png"
-		"purchase_confirm": return PURCHASE_CONFIRM_BACKPLATES + "purchase_popup_shell_fixed_v01.png"
+		"purchase_confirm": return PIGGY_BANK_BACKPLATES + "piggy_bank_panel_v01.png"
+		"crystal_upgrade": return ""
 		_: return CONFIRMATION_BACKPLATES + "ui_clear_data_confirm_shell_v03.png"
 
 
@@ -253,6 +279,11 @@ func _layout_v03_shell() -> void:
 	if _content == null or _panel == null:
 		return
 	if page_id == "benefits":
+		_content.size = _panel.size
+		_content.scale = Vector2.ONE
+		_content.position = Vector2.ZERO
+		return
+	if page_id == "crystal_upgrade":
 		_content.size = _panel.size
 		_content.scale = Vector2.ONE
 		_content.position = Vector2.ZERO
@@ -277,12 +308,27 @@ func _refresh() -> void:
 	# Only battle pause uses the specified 65–70% blackout. Hub popups retain
 	# the lobby context from the approved effect images with a light veil.
 	_shade.color = Color(0.015, 0.04, 0.10, 0.68 if source == "battle" or source == "pause" else 0.45)
+	if page_id == "crystal_upgrade":
+		# This is a full-screen lobby page, not a darkened modal. The page's
+		# authored blue background is built below and fully covers the hub.
+		_shade.color = Color(0.02, 0.08, 0.20, 0.0)
 	var shell_path := _shell_path()
 	_panel.texture = load(shell_path) if not shell_path.is_empty() else null
 	_panel.patch_margin_left = 0
 	_panel.patch_margin_top = 0
 	_panel.patch_margin_right = 0
 	_panel.patch_margin_bottom = 0
+	# Piggy and generic purchase now share the benefits window's outer size.
+	# Preserve each shell's rounded corners while the live content is scaled
+	# uniformly into the common 700 x 714 frame.
+	var shell_patch := 0
+	match page_id:
+		"clear_confirm", "benefits", "piggy", "purchase_confirm": shell_patch = 28
+	if shell_patch > 0:
+		_panel.patch_margin_left = shell_patch
+		_panel.patch_margin_top = shell_patch
+		_panel.patch_margin_right = shell_patch
+		_panel.patch_margin_bottom = shell_patch
 	_title.add_theme_color_override("font_color", Color("17345d"))
 	_title.add_theme_color_override("font_outline_color", Color(0.04, 0.10, 0.24, 0.88))
 	_title.add_theme_constant_override("outline_size", 3)
@@ -302,6 +348,7 @@ func _refresh() -> void:
 		"piggy": _build_piggy()
 		"shop": _build_shop()
 		"purchase_confirm": _build_purchase_confirm()
+		"crystal_upgrade": _build_crystal_upgrade_v03()
 
 
 func _build_pause() -> void:
@@ -328,111 +375,168 @@ func _build_confirm(copy: String, left: String, right: String, left_call: Callab
 		_add_invisible_button(left_hit, left_call)
 		_add_invisible_button(right_hit, right_call)
 		return
-	var display_copy := copy if is_exit else "将删除章节、新手\n及局内进度"
-	var message := _label(display_copy, 20 if is_exit else 12, Color.WHITE if is_exit else Color("17345d"))
-	message.position = Vector2(20, 8) if is_exit else Vector2(25, 25)
-	message.size = Vector2(259, 54) if is_exit else Vector2(_panel.size.x - 50, 63)
+	var display_copy := copy if is_exit else "将删除章节、新手及局内进度"
+	var message := _label(display_copy, 20 if is_exit else 18, Color.WHITE if is_exit else Color("17345d"))
+	message.name = "ConfirmMessage"
+	message.position = Vector2(20, 8) if is_exit else Vector2(23, 54)
+	message.size = Vector2(259, 54) if is_exit else Vector2(280, 54)
 	_content.add_child(message)
-	var left_rect := Rect2(14, 89, 127, 63) if is_exit else Rect2(27, 105, 124, 59)
-	var right_rect := Rect2(155, 89, 128, 63) if is_exit else Rect2(175, 105, 124, 59)
+	if not is_exit:
+		_settings_texture(
+			_content,
+			SETTINGS_DECORATIONS + "settings_divider_v01.png",
+			Rect2(29, 16, 268, 13),
+			"ClearDataHeaderDivider"
+		)
+		_add_atlas_piece(
+			_content,
+			CONFIRMATION_BACKPLATES + "ui_clear_data_confirm_shell_v03.png",
+			Rect2(28, 137, 134, 42),
+			Rect2(27, 140, 135, 65),
+			"ClearDataBlueButtonArt"
+		)
+		_add_atlas_piece(
+			_content,
+			CONFIRMATION_BACKPLATES + "ui_clear_data_confirm_shell_v03.png",
+			Rect2(165, 137, 133, 42),
+			Rect2(165, 140, 133, 65),
+			"ClearDataRedButtonArt"
+		)
+	var left_rect := Rect2(14, 89, 127, 63) if is_exit else Rect2(30, 145, 129, 55)
+	var right_rect := Rect2(155, 89, 128, 63) if is_exit else Rect2(168, 145, 127, 55)
 	if is_exit:
 		_add_hit_label_button(left, left_rect, Rect2(left_rect.position - Vector2(0, 3), left_rect.size), left_call, 23, Color.WHITE, 900)
 		_add_hit_label_button(right, right_rect, Rect2(right_rect.position - Vector2(3, 3), right_rect.size), right_call, 23, Color.WHITE, 900)
 	else:
-		_add_shell_button(left, left_rect, left_call, Color.WHITE, 15)
-		_add_shell_button(right, right_rect, right_call, Color.WHITE, 15)
+		var cancel_button := _add_shell_button(left, left_rect, left_call, Color.WHITE, 20)
+		cancel_button.name = "ClearDataCancelButton"
+		var confirm_button := _add_shell_button(right, right_rect, right_call, Color.WHITE, 20)
+		confirm_button.name = "ClearDataConfirmButton"
 
 
 func _build_settings() -> void:
 	_title_bar.visible = false
-	if APPROVED_EFFECT_SHELLS:
-		_title.text = ""
-		_add_invisible_button(Rect2(22, 18, 72, 72), close)
-		for index in range(3):
-			var ids := ["music", "sound", "vibration"]
-			var id: String = ids[index]
-			_add_invisible_button(Rect2(350, 128 + index * 95, 110, 60), func():
-				match id:
-					"music": service.music_enabled = not service.music_enabled
-					"sound": service.sound_enabled = not service.sound_enabled
-					"vibration": service.vibration_enabled = not service.vibration_enabled
-				setting_changed.emit(id, true)
-				service.changed.emit()
-			)
-		_add_invisible_button(Rect2(90, 410, 390, 82), func(): _show_notice("帮助与反馈功能已预留"))
-		_add_invisible_button(Rect2(90, 503, 390, 82), func(): _show_notice("隐私与用户协议为本地测试占位"))
-		_add_invisible_button(Rect2(108, 615, 296, 70), func(): open("clear_confirm", source))
-		return
-	_title.text = "设置"
-	UiTypographyScript.clear_shadow(_title)
-	_title.add_theme_constant_override("outline_size", 0)
-	_place_title(Rect2(155, 12, 202, 62), 28)
-	_add_invisible_button(Rect2(22, 18, 72, 72), close)
-	var settings := [
-		["音乐", "music", service.music_enabled, "music.png"], ["音效", "sound", service.sound_enabled, "sound.png"], ["震动", "vibration", service.vibration_enabled, "vibration.png"],
-	]
-	for index in range(settings.size()):
-		var row: Array = settings[index]
-		_add_setting_toggle(str(row[0]), str(row[1]), bool(row[2]), 113 + index * 95, str(row[3]))
-	_add_row_action("帮助与反馈", 408, "help.png", func(): _show_notice("帮助与反馈功能已预留"))
-	_add_row_action("隐私 / 用户协议", 503, "privacy_shield.png", func(): _show_notice("隐私与用户协议为本地测试占位"))
-	_add_hit_label_button("清空本地数据", Rect2(108, 625, 296, 58), Rect2(108, 625, 296, 58), func(): open("clear_confirm", source), 18, Color("d8443f"))
+	_build_settings_v04()
 
 
-func _add_setting_toggle(text: String, id: String, enabled: bool, y: float, icon_file: String) -> void:
-	var row := Control.new()
-	row.position = Vector2(58, y)
-	row.size = Vector2(410, 82)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content.add_child(row)
-	var name_label := _label(text, 30, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
-	name_label.position = Vector2(62, 0)
-	name_label.size = Vector2(210, 82)
-	name_label.add_theme_font_size_override("font_size", 22)
-	row.add_child(name_label)
-	# Cover the master's layout placeholder with the real current state so the
-	# switch changes visually instead of remaining frozen at the concept value.
-	var switch_art := TextureRect.new()
-	switch_art.name = "Switch_%s" % id
-	switch_art.texture = load(SETTINGS_CONTROLS + ("switch_on.png" if enabled else "switch_off.png"))
-	switch_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	switch_art.stretch_mode = TextureRect.STRETCH_SCALE
-	switch_art.position = Vector2(297, 24)
-	switch_art.size = Vector2(102, 48)
-	switch_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(switch_art)
-	var button := Button.new()
-	button.flat = true
-	button.position = Vector2(292, 18)
-	button.size = Vector2(112, 60)
-	button.pressed.connect(func():
+func _build_settings_v04() -> void:
+	_title.text = ""
+	var title := _label("设置", 31, Color("17345d"))
+	title.position = Vector2(150, 18)
+	title.size = Vector2(214, 58)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content.add_child(title)
+	_settings_texture(_content, SETTINGS_DECORATIONS + "settings_divider_v01.png", Rect2(67, 80, 380, 18), "SettingsHeaderDivider")
+
+	_add_settings_toggle_v04("音乐", "music", service.music_enabled, 113.0, "settings_music_v01.png", Rect2(26, 18, 39, 45))
+	_add_settings_toggle_v04("音效", "sound", service.sound_enabled, 205.0, "settings_sound_v01.png", Rect2(23, 22, 45, 38))
+	_add_settings_toggle_v04("震动", "vibration", service.vibration_enabled, 297.0, "settings_vibration_v01.png", Rect2(22, 18, 47, 46))
+	_add_settings_action_v04("帮助与反馈", "help", 411.0, "settings_help_v01.png", Rect2(23, 18, 45, 46), func(): _show_notice("帮助与反馈功能已预留"))
+	_add_settings_action_v04("隐私 / 用户协议", "privacy", 502.0, "settings_privacy_v01.png", Rect2(25, 18, 42, 47), func(): _show_notice("隐私与用户协议为本地测试占位"))
+
+	_settings_texture(_content, SETTINGS_DECORATIONS + "settings_divider_v01.png", Rect2(67, 600, 380, 18), "SettingsFooterDivider")
+	var clear_label := _label("清空本地数据", 24, Color("d8443f"))
+	clear_label.position = Vector2(105, 624)
+	clear_label.size = Vector2(304, 60)
+	clear_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content.add_child(clear_label)
+	var clear_button := _add_invisible_button(Rect2(105, 624, 304, 60), func(): open("clear_confirm", source))
+	clear_button.name = "SettingsClearDataButton"
+
+
+func _add_settings_toggle_v04(text: String, id: String, enabled: bool, y: float, icon_file: String, icon_rect: Rect2) -> void:
+	var row := _add_settings_row_v04(y, "SettingsToggle_%s" % id)
+	_settings_row_patch(row, Rect2(104, 14, 62, 54), Rect2(16, 13, 64, 56))
+	_settings_row_patch(row, Rect2(184, 12, 132, 58), Rect2(320, 11, 120, 60))
+	_settings_texture(row, SETTINGS_ICONS_V04 + icon_file, icon_rect, "Icon_%s" % id)
+	var label := _label(text, 28, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+	label.position = Vector2(88, 0)
+	label.size = Vector2(220, 82)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(label)
+	var switch_file := "settings_switch_on_v01.png" if enabled else "settings_switch_off_v01.png"
+	_settings_texture(row, SETTINGS_CONTROLS + switch_file, Rect2(336, 16, 96, 51), "Switch_%s" % id)
+	var toggle_button := _add_invisible_button_to(row, Rect2(326, 9, 116, 66), func():
 		match id:
 			"music": service.music_enabled = not service.music_enabled
 			"sound": service.sound_enabled = not service.sound_enabled
 			"vibration": service.vibration_enabled = not service.vibration_enabled
 		setting_changed.emit(id, not enabled)
 		service.changed.emit()
-	)
-	row.add_child(button)
+	, true)
+	toggle_button.name = "SettingsToggleButton_%s" % id
 
 
-func _add_row_action(text: String, y: float, icon_file: String, callback: Callable) -> void:
+func _add_settings_action_v04(text: String, action_id: String, y: float, icon_file: String, icon_rect: Rect2, callback: Callable) -> void:
+	var row := _add_settings_row_v04(y, "SettingsAction_%s" % action_id)
+	_settings_row_patch(row, Rect2(104, 14, 62, 54), Rect2(16, 13, 64, 56))
+	_settings_row_patch(row, Rect2(184, 12, 132, 58), Rect2(320, 11, 120, 60))
+	_settings_texture(row, SETTINGS_ICONS_V04 + icon_file, icon_rect, "SettingsActionIcon")
+	_settings_texture(row, SETTINGS_ICONS_V04 + "settings_arrow_right_v01.png", Rect2(410, 27, 18, 29), "SettingsActionArrow")
+	var label := _label(text, 25, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+	label.position = Vector2(88, 0)
+	label.size = Vector2(300, 82)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(label)
+	var action_button := _add_invisible_button_to(row, Rect2(0, 0, 452, 82), callback, true)
+	action_button.name = "SettingsActionButton_%s" % action_id
+
+
+func _add_settings_row_v04(y: float, node_name: String) -> Control:
 	var row := Control.new()
-	row.position = Vector2(58, y)
-	row.size = Vector2(410, 82)
+	row.name = node_name
+	row.position = Vector2(31, y)
+	row.size = Vector2(452, 82)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_content.add_child(row)
-	var button := Button.new()
-	button.flat = true
-	button.text = text
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.position = Vector2(62, 0)
-	button.size = Vector2(300, 82)
-	button.add_theme_font_size_override("font_size", 22)
-	button.add_theme_color_override("font_color", Color("17345d"))
-	button.add_theme_color_override("font_hover_color", Color("17345d"))
-	button.pressed.connect(callback)
-	row.add_child(button)
+	_settings_texture(row, SETTINGS_BACKPLATES + "settings_option_row_music_on_v01.png", Rect2(0, 0, 452, 82), "SettingsRowArt")
+	return row
+
+
+func _settings_row_patch(parent: Control, source_region: Rect2, destination: Rect2) -> void:
+	var row_texture := load(SETTINGS_BACKPLATES + "settings_option_row_music_on_v01.png") as Texture2D
+	var atlas := AtlasTexture.new()
+	atlas.atlas = row_texture
+	atlas.region = source_region
+	var patch := TextureRect.new()
+	patch.texture = atlas
+	patch.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	patch.stretch_mode = TextureRect.STRETCH_SCALE
+	patch.position = destination.position
+	patch.size = destination.size
+	patch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(patch)
+
+
+func _settings_texture(parent: Control, texture_path: String, rect: Rect2, node_name: String) -> TextureRect:
+	var art := TextureRect.new()
+	art.name = node_name
+	art.texture = load(texture_path)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_SCALE
+	art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	art.position = rect.position
+	art.size = rect.size
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(art)
+	return art
+
+
+func _add_atlas_piece(parent: Control, texture_path: String, source_region: Rect2, rect: Rect2, node_name: String) -> TextureRect:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = load(texture_path) as Texture2D
+	atlas.region = source_region
+	var piece := TextureRect.new()
+	piece.name = node_name
+	piece.texture = atlas
+	piece.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	piece.stretch_mode = TextureRect.STRETCH_SCALE
+	piece.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	piece.position = rect.position
+	piece.size = rect.size
+	piece.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(piece)
+	return piece
 
 
 func _build_daily() -> void:
@@ -462,51 +566,22 @@ func _build_daily() -> void:
 
 
 func _add_combined_task_shell(parent: Control) -> void:
-	# The new production pack supplies one continuous fixed shell.  Keeping it
-	# as a single layer removes the seams and doubled borders from the old V03
-	# top/middle/bottom composition.
+	# The v02 shell already includes the title tab and the complete body frame.
 	_add_stretched_texture(
 		parent,
-		load(DAILY_PROGRAM_BACKPLATES + "daily_task_panel_shell_fixed_v01.png"),
-		Rect2(-12, 90, 942, 970),
+		load(DAILY_PROGRAM_BACKPLATES + "daily_task_panel_shell_complete_v03.png"),
+		Rect2(-6, 0, 927, 1041),
 		"TaskPanelShell"
-	)
-	_add_daily_program_nine_patch(
-		parent,
-		"daily_title_tab_v01.png",
-		Rect2(31, 5, 400, 125),
-		Vector4(42, 28, 42, 50),
-		"TaskTab"
 	)
 
 
 func _add_combined_signin_shell(parent: Control) -> void:
 	_add_stretched_texture(
 		parent,
-		load(DAILY_PROGRAM_BACKPLATES + "daily_signin_panel_shell_fixed_v01.png"),
-		Rect2(-9, 75, 938, 374),
+		load(DAILY_PROGRAM_BACKPLATES + "daily_signin_panel_shell_complete_v03.png"),
+		Rect2(-6, 0, 928, 434),
 		"SigninShell"
 	)
-	_add_daily_program_nine_patch(
-		parent,
-		"daily_title_tab_v01.png",
-		Rect2(31, 2, 308, 112),
-		Vector4(42, 28, 42, 50),
-		"SigninTab"
-	)
-	var inner := Panel.new()
-	inner.name = "SigninCardField"
-	inner.position = Vector2(25, 130)
-	inner.size = Vector2(870, 281)
-	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("18589f")
-	style.border_color = Color("78bdf4")
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(22)
-	inner.add_theme_stylebox_override("panel", style)
-	parent.add_child(inner)
-	parent.move_child(inner, 1)
 
 
 func _add_stretched_texture(parent: Control, texture: Texture2D, rect: Rect2, node_name: String) -> TextureRect:
@@ -524,52 +599,42 @@ func _add_stretched_texture(parent: Control, texture: Texture2D, rect: Rect2, no
 
 
 func _build_combined_task_text(parent: Control) -> void:
-	_add_daily_text(parent, "任务", Rect2(31, 16, 400, 84), 48, Color.WHITE)
+	# Center against the rectangular tab body (x=43..431, y=0..90), not the
+	# lower pointer. Including the pointer made the glyphs look low and left.
+	var task_title := _add_daily_text(parent, "任务", Rect2(43, 0, 388, 90), 48, Color.WHITE)
+	task_title.name = "DailyTaskTitle"
 	var activity := service.get_activity()
-	_add_daily_program_nine_patch(
-		parent,
-		# The activity summary uses the warm highlighted backplate from the
-		# approved daily composition. Task rows below keep their own default /
-		# claimable state backgrounds.
-		"daily_task_row_selected_v01.png",
-		# This source has a 13 px transparent left edge and a 14 px transparent
-		# right edge, while normal task rows only reserve 7 px per side. Expand
-		# the placement by that delta so the painted bounds share one grid.
-		# 872 × 179 leaves a painted 845 × 145 plate after the source's
-		# transparent gutter is accounted for. This matches the supplied long
-		# activity backplate ratio without colliding with the first task row.
-		Rect2(24, 126, 872, 179),
-		Vector4(28, 24, 28, 24),
-		"ActivityRow"
-	)
-	_add_icon(parent, DAILY_PROGRAM_ICONS + "daily_icon_activity_star_v01.png", Rect2(38, 126, 178, 178))
-	_add_daily_text(parent, "今日活跃度", Rect2(201, 167, 330, 48), 30, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
-	_add_daily_program_progress(parent, Rect2(199, 216, 426, 40), float(activity) / 100.0)
-	_add_daily_text(parent, "%d/100" % activity, Rect2(199, 216, 426, 40), 22, Color.WHITE)
-	_add_daily_activity_dots(parent)
+	# The v03 task shell already paints the activity area blue. Do not stack a
+	# separate gold task-row plate over this baked state.
+	var activity_icon := _add_icon(parent, DAILY_PROGRAM_ICONS + "daily_icon_activity_star_v01.png", Rect2(64, 130, 150, 150))
+	activity_icon.name = "DailyActivityIcon"
+	var activity_title := _add_daily_text(parent, "今日活跃度", Rect2(195, 164, 330, 50), 32, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+	activity_title.name = "DailyActivityTitle"
+	var activity_progress_rect := Rect2(199, 216, 526, 40)
+	_add_daily_program_progress(parent, activity_progress_rect, float(activity) / 100.0)
+	var activity_progress_text := _add_daily_text(parent, "%d/100" % activity, activity_progress_rect, 22, Color.WHITE)
+	activity_progress_text.name = "DailyActivityProgressText"
 	# The approved reward art is tightly cropped. These frames preserve the
 	# former on-screen silhouette without scaling the icon into nearby text.
-	var chest := _add_icon(parent, DAILY_PROGRAM_ICONS + "daily_icon_chest_v01.png", Rect2(728, 156, 114, 108))
+	var chest := _add_icon(parent, DAILY_PROGRAM_ICONS + "daily_icon_chest_v01.png", Rect2(741, 161, 96, 88))
+	chest.name = "DailyActivityChest"
 	if service.activity_claimed:
 		chest.modulate = Color(0.62, 0.68, 0.76, 0.88)
-	_add_daily_text(parent, "100", Rect2(735, 241, 112, 34), 22, Color.WHITE)
+	var chest_reward := _add_daily_text(parent, "100", Rect2(733, 238, 112, 34), 20, Color.WHITE)
+	chest_reward.name = "DailyActivityChestReward"
 	var activity_ready := activity >= 100 and not service.activity_claimed
-	var activity_hit := _add_invisible_button_to(parent, Rect2(710, 135, 170, 150), _claim_activity, activity_ready)
+	var activity_hit := _add_invisible_button_to(parent, Rect2(720, 142, 145, 132), _claim_activity, activity_ready)
 	activity_hit.name = "ActivityChestButton"
 
-	var names := {"settle_once": "完成 1 次挑战", "merge_20": "合成 20 次", "kill_30": "击败 30 个怪物", "login": "今日登录"}
-	var rewards := {"settle_once": "×10", "merge_20": "×30", "kill_30": "×50", "login": "×20"}
 	var task_icons := {
-		"settle_once": DAILY_PROGRAM_ICONS + "daily_icon_challenge_v01.png",
-		"merge_20": DAILY_PROGRAM_ICONS + "daily_icon_merge_v01.png",
-		"kill_30": DAILY_PROGRAM_ICONS + "daily_icon_monster_v01.png",
+		"challenge": DAILY_PROGRAM_ICONS + "daily_icon_challenge_v01.png",
+		"merge": DAILY_PROGRAM_ICONS + "daily_icon_merge_v01.png",
+		"monster": DAILY_PROGRAM_ICONS + "daily_icon_monster_v01.png",
 		"login": DAILY_PROGRAM_ICONS + "daily_icon_login_v01.png",
 	}
 	var reward_icons := {
-		"settle_once": DAILY_PROGRAM_ICONS + "daily_icon_gem_v01.png",
-		"merge_20": DAILY_PROGRAM_ICONS + "daily_icon_coin_v01.png",
-		"kill_30": DAILY_PROGRAM_ICONS + "daily_icon_coin_v01.png",
-		"login": DAILY_PROGRAM_ICONS + "daily_icon_gem_v01.png",
+		"crystals": CurrencyAssetsScript.DIAMOND_PATH,
+		"coins": CurrencyAssetsScript.COIN_PATH,
 	}
 	var task_icon_rects := {
 		"settle_once": Rect2(4, 3, 180, 180),
@@ -583,15 +648,10 @@ func _build_combined_task_text(parent: Control) -> void:
 		"kill_30": Rect2(511, 48, 74, 74),
 		"login": Rect2(506, 42, 80, 84),
 	}
-	var task_ids := ["settle_once", "merge_20", "kill_30", "login"]
+	var task_ids := service.get_ordered_task_ids()
 	var row_y := [288.0, 473.0, 658.0, 843.0]
 	var row_heights := [183.0, 184.0, 207.0, 180.0]
-	var row_shell_rects := [
-		Rect2(30, 284, 860, 190),
-		Rect2(30, 469, 860, 191),
-		Rect2(30, 654, 860, 191),
-		Rect2(30, 839, 860, 186),
-	]
+	var row_shell_y := [284.0, 469.0, 654.0, 839.0]
 	var progress_rects := [
 		Rect2(172, 102, 255, 38),
 		Rect2(171, 102, 255, 38),
@@ -601,25 +661,23 @@ func _build_combined_task_text(parent: Control) -> void:
 	var slot_y := [23.0, 23.0, 23.0, 20.0]
 	for index in range(task_ids.size()):
 		var task_id: String = task_ids[index]
-		var definition := MetaProgressService.TASKS[task_id] as Dictionary
-		var progress := int(service.task_progress.get(task_id, 0))
-		var target := int(definition["target"])
-		var claimed := bool(service.task_claimed.get(task_id, false))
-		var can_claim := progress >= target and not claimed
+		var task_state := service.get_task_state(task_id)
+		var progress := int(task_state["progress"])
+		var target := int(task_state["target"])
+		var claimed := bool(task_state["claimed"])
+		var can_claim := bool(task_state["claimable"])
+		var reward := task_state["reward"] as Dictionary
+		var reward_kind := "crystals" if reward.has("crystals") else "coins"
 		var y: float = row_y[index]
 		var row_rect := Rect2(33, y, 856, float(row_heights[index]))
 		var content_offset := Vector2(3, 2)
-		var row_shell_rect: Rect2 = row_shell_rects[index] as Rect2
-		if can_claim:
-			# Selection expands only the painted backdrop. The content container
-			# stays on the same absolute grid, so task state changes never move an
-			# icon, label, progress bar or hit target.
-			row_shell_rect = Rect2(20, y - 15.0, 884, 215)
-		_add_daily_program_nine_patch(
+		# These complete row cutouts are already authored at the final ratio.
+		# Claimable rows change to gold without changing the content grid.
+		var row_shell_rect := Rect2(38, row_shell_y[index] + 1.0, 839, 176) if can_claim else Rect2(36, row_shell_y[index], 843, 178)
+		_add_stretched_texture(
 			parent,
-			"daily_task_row_selected_v01.png" if can_claim else "daily_task_row_default_v01.png",
+			load(DAILY_PROGRAM_BACKPLATES + ("daily_task_row_claimable_v02.png" if can_claim else "daily_task_row_default_v02.png")),
 			row_shell_rect,
-			Vector4(28, 24, 28, 24),
 			"TaskRowBackdrop_%s" % task_id
 		)
 		var row := Control.new()
@@ -630,13 +688,17 @@ func _build_combined_task_text(parent: Control) -> void:
 		parent.add_child(row)
 		var slot_file := "daily_icon_slot_selected_v01.png" if can_claim else "daily_icon_slot_v01.png"
 		_add_stretched_texture(row, load(DAILY_PROGRAM_BACKPLATES + slot_file), Rect2(Vector2(25, slot_y[index]) + content_offset, Vector2(128, 132)), "TaskIconSlot_%s" % task_id)
-		_add_icon(row, str(task_icons[task_id]), task_icon_rects[task_id] as Rect2)
-		_add_daily_text(row, str(names[task_id]), Rect2(Vector2(177, 32) + content_offset, Vector2(340, 52)), 30, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+		_add_icon(row, str(task_icons[task_state["icon_key"]]), task_icon_rects[task_id] as Rect2)
+		var task_name := _add_daily_text(row, str(task_state["title"]), Rect2(Vector2(177, 32) + content_offset, Vector2(340, 52)), 30, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+		task_name.name = "TaskName_%s" % task_id
 		var progress_rect: Rect2 = progress_rects[index] as Rect2
 		_add_daily_program_progress(row, Rect2(progress_rect.position + content_offset, progress_rect.size), float(progress) / float(target))
-		_add_daily_text(row, "%d/%d" % [progress, target], Rect2(progress_rect.position + content_offset, progress_rect.size), 22, Color.WHITE)
-		_add_icon(row, str(reward_icons[task_id]), reward_icon_rects[task_id] as Rect2)
-		_add_daily_text(row, str(rewards[task_id]), Rect2(Vector2(493, 121) + content_offset, Vector2(100, 37)), 24, Color("17345d"))
+		var task_progress_label := _add_daily_text(row, "%d/%d" % [progress, target], Rect2(progress_rect.position + content_offset, progress_rect.size), 22, Color.WHITE)
+		task_progress_label.name = "TaskProgress_%s" % task_id
+		var task_reward_icon := _add_icon(row, str(reward_icons[reward_kind]), reward_icon_rects[task_id] as Rect2)
+		task_reward_icon.name = "TaskRewardIcon_%s" % task_id
+		var task_reward_label := _add_daily_text(row, "×%d" % int(reward.get(reward_kind, 0)), Rect2(Vector2(493, 121) + content_offset, Vector2(100, 37)), 24, Color("17345d"))
+		task_reward_label.name = "TaskReward_%s" % task_id
 		var button_text := "已领取" if claimed else "领取" if can_claim else "未完成"
 		var callback := Callable() if claimed or not can_claim else func(): _claim_task(task_id)
 		var state := "claimed" if claimed else "claim" if can_claim else "disabled"
@@ -674,32 +736,36 @@ func _daily_signin_display_day() -> int:
 
 func _daily_signin_card_rects() -> Array[Rect2]:
 	var current_index := _daily_signin_display_day() - 1
-	# These are the compact-card anchors measured from the approved 941 px
-	# composition. A selected card adds 70 px of occupied width, so only cards
-	# after it move; the two panel edges therefore remain visually locked.
-	var reference_x := [35.0, 142.0, 250.0, 352.0, 463.0, 570.0, 675.0]
-	var rects: Array[Rect2] = []
+	# The new cutouts use 107 px blue cards and one 138 px yellow selected card.
+	# Distribute the exact native widths across the fixed sign-in field so any
+	# current day can turn yellow without overlap or texture stretching.
+	var widths: Array[float] = []
+	var total_width := 0.0
 	for index in range(7):
-		var selected_expansion := 70.0 if current_index < 6 and index > current_index else 0.0
-		var x: float = reference_x[index] + selected_expansion
-		if current_index == 6:
-			x += 10.0
-		if index == current_index:
-			rects.append(Rect2(x, 133, 178, 280))
-		elif index == 6:
-			rects.append(Rect2(x, 148, 140, 251))
-		else:
-			rects.append(Rect2(x, 148, 105, 251))
+		var width := 138.0 if index == current_index or index == 6 else 107.0
+		widths.append(width)
+		total_width += width
+	var field_left := 36.0
+	var field_right := 890.0
+	var gap := (field_right - field_left - total_width) / 6.0
+	var rects: Array[Rect2] = []
+	var x := field_left
+	for index in range(7):
+		var width: float = widths[index]
+		rects.append(Rect2(x, 148, width, 239))
+		x += width + gap
 	return rects
 
 
 func _build_combined_signin_text(parent: Control) -> void:
-	_add_daily_text(parent, "签到", Rect2(31, 8, 308, 77), 41, Color.WHITE)
+	# Center against the sign-in tab's rectangular body and exclude its pointer.
+	var signin_title := _add_daily_text(parent, "签到", Rect2(31, 0, 292, 78), 41, Color.WHITE)
+	signin_title.name = "DailySigninTitle"
 	var reward_labels := ["×20", "×30", "×20", "×50", "×20", "×30", "×100"]
 	var reward_art := [
-		"daily_icon_gem_v01.png", "daily_icon_coin_v01.png", "daily_icon_gem_v01.png",
-		"daily_icon_coin_v01.png", "daily_icon_gem_v01.png", "daily_icon_coin_v01.png",
-		"daily_icon_chest_v01.png",
+		CurrencyAssetsScript.DIAMOND_PATH, CurrencyAssetsScript.COIN_PATH, CurrencyAssetsScript.DIAMOND_PATH,
+		CurrencyAssetsScript.COIN_PATH, CurrencyAssetsScript.DIAMOND_PATH, CurrencyAssetsScript.COIN_PATH,
+		DAILY_PROGRAM_ICONS + "daily_icon_chest_v01.png",
 	]
 	var claimed_days := service.get_signin_claimed_days()
 	var available := service.is_signin_available()
@@ -709,42 +775,63 @@ func _build_combined_signin_text(parent: Control) -> void:
 	for index in range(7):
 		var is_current := index == current_index
 		var is_premium := index == 6
+		var is_claimed := index < claimed_days and not (is_tomorrow_preview and is_current)
 		var card_rect: Rect2 = card_rects[index]
-		var card_file := "daily_signin_card_premium_v01.png" if is_premium else "daily_signin_card_default_v01.png"
-		if is_current and not is_premium:
-			card_file = "daily_signin_card_selected_v01.png"
+		var card_file := "daily_signin_card_selected_v02.png" if is_current or is_premium else "daily_signin_card_claimed_v02.png" if is_claimed else "daily_signin_card_default_v02.png"
+		var claimed_material: ShaderMaterial = null
+		if is_claimed:
+			claimed_material = ShaderMaterial.new()
+			claimed_material.shader = CLAIMED_GRAYSCALE_SHADER
 		var layer_z := 10 if is_current else 2
 		var card_back := _add_stretched_texture(parent, load(DAILY_PROGRAM_BACKPLATES + card_file), card_rect, "SigninCard_%d" % (index + 1))
+		if claimed_material != null:
+			card_back.material = claimed_material
 		card_back.z_index = layer_z
-		# Keep day numbers optically centered in the dark header rather than
-		# touching its top edge. The selected card is taller, so it needs a
-		# slightly larger offset to retain the same visual center.
-		var day_label_offset_y := 30.0 if is_current else 26.0
-		var day_label := _add_daily_text(parent, "第%d天" % (index + 1), Rect2(card_rect.position.x, card_rect.position.y + day_label_offset_y, card_rect.size.x, 36), 24, Color.WHITE)
+		# All cards share one title baseline. The wider yellow card changes only
+		# horizontal emphasis; its internal text and icons stay on the same grid.
+		var day_label := _add_daily_text(parent, "第%d天" % (index + 1), Rect2(card_rect.position.x, card_rect.position.y + 20, card_rect.size.x, 39), 26, Color.WHITE)
+		day_label.name = "SigninDayLabel_%d" % (index + 1)
+		if claimed_material != null:
+			day_label.material = claimed_material
+		day_label.add_theme_constant_override("outline_size", 3)
 		day_label.z_index = layer_z + 1
-		var icon_size := Vector2(78, 86) if is_current else Vector2(74, 82)
-		var icon_offset_y := 68.0 if is_current else 70.0
+		var icon_size := Vector2(84, 94) if is_current else Vector2(80, 90)
+		var icon_offset_y := 58.0 if is_current else 61.0
 		if index == 1 or index == 3 or index == 5:
-			icon_size = Vector2(80, 80) if is_current else Vector2(74, 74)
-			icon_offset_y = 78.0 if is_current else 71.0
+			icon_size = Vector2(86, 86) if is_current else Vector2(80, 80)
+			icon_offset_y = 66.0 if is_current else 67.0
 		elif is_premium:
-			icon_size = Vector2(120, 108)
-			icon_offset_y = 58.0
-		var reward_icon := _add_icon(parent, DAILY_PROGRAM_ICONS + str(reward_art[index]), Rect2(card_rect.position.x + (card_rect.size.x - icon_size.x) * 0.5, card_rect.position.y + icon_offset_y, icon_size.x, icon_size.y))
+			icon_size = Vector2(116, 104)
+			icon_offset_y = 53.0
+		var reward_icon := _add_icon(parent, str(reward_art[index]), Rect2(card_rect.position.x + (card_rect.size.x - icon_size.x) * 0.5, card_rect.position.y + icon_offset_y, icon_size.x, icon_size.y))
 		reward_icon.name = "SigninReward_%d" % (index + 1)
+		if claimed_material != null:
+			reward_icon.material = claimed_material
 		reward_icon.z_index = layer_z + 1
-		var reward_y := card_rect.position.y + (177.0 if is_premium else 145.0)
-		var reward_label := _add_daily_text(parent, str(reward_labels[index]), Rect2(card_rect.position.x, reward_y, card_rect.size.x, 36), 24, Color.WHITE)
+		var reward_y := card_rect.position.y + (158.0 if is_premium else 146.0)
+		var reward_label := _add_daily_text(parent, str(reward_labels[index]), Rect2(card_rect.position.x, reward_y, card_rect.size.x, 38), 27, Color.WHITE)
+		reward_label.name = "SigninRewardLabel_%d" % (index + 1)
+		if claimed_material != null:
+			reward_label.material = claimed_material
+		reward_label.add_theme_constant_override("outline_size", 3)
 		reward_label.z_index = layer_z + 1
-		if index < claimed_days and not (is_tomorrow_preview and is_current):
-			var claimed_check := _add_icon(parent, DAILY_PROGRAM_ICONS + "daily_icon_claimed_check_v01.png", Rect2(card_rect.position.x + (card_rect.size.x - 116) * 0.5, card_rect.position.y + 158, 116, 94))
+		if is_claimed:
+			var claimed_check := _add_icon(parent, DAILY_PROGRAM_ICONS + "daily_icon_claimed_check_v01.png", Rect2(card_rect.position.x + (card_rect.size.x - 44) * 0.5, card_rect.position.y + 174, 44, 36))
+			claimed_check.name = "SigninClaimedCheck_%d" % (index + 1)
+			claimed_check.material = claimed_material
 			claimed_check.z_index = layer_z + 2
+			var claimed_label := _add_daily_text(parent, "已领取", Rect2(card_rect.position.x, card_rect.position.y + 204, card_rect.size.x, 31), 20, Color.WHITE)
+			claimed_label.name = "SigninClaimedLabel_%d" % (index + 1)
+			claimed_label.material = claimed_material
+			claimed_label.add_theme_constant_override("outline_size", 2)
+			claimed_label.z_index = layer_z + 3
+		var claim_button_rect := Rect2(card_rect.position.x + 12, card_rect.position.y + 190, card_rect.size.x - 24, 39)
 		if is_current and available:
-			var signin_hit := _add_daily_program_button(parent, "今日签到", Rect2(card_rect.position.x + 20, card_rect.position.y + 197, card_rect.size.x - 40, 62), _claim_signin, "claim", true, 24)
+			var signin_hit := _add_daily_program_button(parent, "今日签到", claim_button_rect, _claim_signin, "claim", true, 19)
 			signin_hit.name = "CurrentSigninButton"
 			signin_hit.z_index = layer_z + 3
 		elif is_current and is_tomorrow_preview:
-			var tomorrow_badge := _add_daily_program_button(parent, "明日领取", Rect2(card_rect.position.x + 20, card_rect.position.y + 197, card_rect.size.x - 40, 62), Callable(), "claim", false, 22)
+			var tomorrow_badge := _add_daily_program_button(parent, "明日领取", claim_button_rect, Callable(), "claim", false, 19)
 			tomorrow_badge.name = "TomorrowSigninBadge"
 			tomorrow_badge.z_index = layer_z + 3
 
@@ -776,27 +863,20 @@ func _add_invisible_button_to(parent: Control, rect: Rect2, callback: Callable, 
 func _add_daily_close_button() -> void:
 	var button := TextureButton.new()
 	button.name = "DailyCloseButton"
-	button.texture_normal = load(DAILY_PROGRAM_BACKPLATES + "daily_return_button_v02.png")
+	# v03 is a complete arrow button (the arrow is baked into the approved
+	# transparent PNG), so do not add the legacy arrow child on top of it.
+	button.texture_normal = load(DAILY_PROGRAM_BACKPLATES + "daily_return_button_v03.png")
 	button.texture_pressed = button.texture_normal
 	button.ignore_texture_size = true
 	button.stretch_mode = TextureButton.STRETCH_SCALE
 	button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	button.position = Vector2(796, 8)
-	button.size = Vector2(97, 89)
+	# Lift the complete arrow button clear of the task panel's top border.
+	button.position = Vector2(796, -4)
+	button.size = Vector2(97, 92)
 	button.focus_mode = Control.FOCUS_NONE
 	button.pressed.connect(close)
 	button.button_down.connect(func(): button.scale = Vector2(0.94, 0.94); button.pivot_offset = button.size * 0.5)
 	button.button_up.connect(func(): button.scale = Vector2.ONE)
-	var arrow := TextureRect.new()
-	arrow.name = "ArrowGlyph"
-	arrow.texture = load(DAILY_PROGRAM_ICONS + "daily_return_arrow_v02.png")
-	arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	arrow.stretch_mode = TextureRect.STRETCH_SCALE
-	arrow.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	arrow.position = Vector2(5, 6)
-	arrow.size = Vector2(88, 80)
-	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(arrow)
 	_content.add_child(button)
 
 
@@ -862,55 +942,74 @@ func _add_daily_sparkle_trail() -> void:
 		_content.add_child(sparkle)
 
 
-func _add_daily_program_nine_patch(parent: Control, file_name: String, rect: Rect2, margins: Vector4, node_name: String) -> NinePatchRect:
-	var plate := NinePatchRect.new()
-	plate.name = node_name
-	plate.texture = load(DAILY_PROGRAM_BACKPLATES + file_name)
-	plate.patch_margin_left = int(margins.x)
-	plate.patch_margin_top = int(margins.y)
-	plate.patch_margin_right = int(margins.z)
-	plate.patch_margin_bottom = int(margins.w)
-	plate.position = rect.position
-	plate.size = rect.size
-	plate.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(plate)
-	return plate
-
-
 func _add_daily_program_progress(parent: Control, rect: Rect2, ratio: float) -> void:
-	# Leave an actual center strip. A top+bottom sum equal to the full height
-	# collapses the NinePatch middle and folds both rounded caps together.
-	var vertical_margin := maxi(1, int(floorf((rect.size.y - 2.0) * 0.5)))
-	_add_daily_program_nine_patch(
-		parent,
-		"daily_progress_track_v01.png",
-		rect,
-		Vector4(24, vertical_margin, 24, vertical_margin),
-		"ProgressTrack"
-	)
+	_add_daily_progress_capsule(parent, DAILY_PROGRAM_BACKPLATES + "daily_progress_track_v01.png", rect, "ProgressTrack")
 	var clipped_ratio := clampf(ratio, 0.0, 1.0)
 	if clipped_ratio <= 0.0:
 		return
-	var clip := Control.new()
-	clip.name = "ProgressFillClip"
-	clip.clip_contents = true
-	clip.position = Vector2(roundf(rect.position.x), roundf(rect.position.y))
-	var clip_width := rect.size.x if is_equal_approx(clipped_ratio, 1.0) else roundf(rect.size.x * clipped_ratio)
-	clip.size = Vector2(clip_width, roundf(rect.size.y))
-	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	parent.add_child(clip)
-	var fill := NinePatchRect.new()
-	fill.name = "ProgressFill"
-	fill.texture = load(DAILY_PROGRAM_BACKPLATES + "daily_progress_fill_v01.png")
-	fill.patch_margin_left = 24
-	fill.patch_margin_top = vertical_margin
-	fill.patch_margin_right = 24
-	fill.patch_margin_bottom = vertical_margin
-	fill.size = rect.size
-	fill.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	clip.add_child(fill)
+	var fill_width := rect.size.x if is_equal_approx(clipped_ratio, 1.0) else roundf(rect.size.x * clipped_ratio)
+	_add_daily_progress_capsule(
+		parent,
+		DAILY_PROGRAM_BACKPLATES + "daily_progress_fill_v01.png",
+		Rect2(roundf(rect.position.x), roundf(rect.position.y), fill_width, roundf(rect.size.y)),
+		"ProgressFill"
+	)
+
+
+func _add_daily_progress_capsule(parent: Control, texture_path: String, rect: Rect2, node_name: String) -> Control:
+	var texture := load(texture_path) as Texture2D
+	var capsule := Control.new()
+	capsule.name = node_name
+	capsule.position = rect.position
+	capsule.size = rect.size
+	capsule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(capsule)
+	if texture == null or rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return capsule
+	var source_size := texture.get_size()
+	var source_cap_width := ceilf(source_size.y * 0.5)
+	var target_cap_width := minf(rect.size.y * 0.5, rect.size.x * 0.5)
+	var center_width := maxf(0.0, rect.size.x - target_cap_width * 2.0)
+	_add_daily_progress_slice(
+		capsule,
+		texture,
+		Rect2(0, 0, source_cap_width, source_size.y),
+		Rect2(0, 0, target_cap_width, rect.size.y),
+		"LeftCap"
+	)
+	if center_width > 0.0:
+		_add_daily_progress_slice(
+			capsule,
+			texture,
+			Rect2(source_cap_width, 0, source_size.x - source_cap_width * 2.0, source_size.y),
+			Rect2(target_cap_width, 0, center_width, rect.size.y),
+			"Center"
+		)
+	_add_daily_progress_slice(
+		capsule,
+		texture,
+		Rect2(source_size.x - source_cap_width, 0, source_cap_width, source_size.y),
+		Rect2(rect.size.x - target_cap_width, 0, target_cap_width, rect.size.y),
+		"RightCap"
+	)
+	return capsule
+
+
+func _add_daily_progress_slice(parent: Control, atlas: Texture2D, source_rect: Rect2, target_rect: Rect2, node_name: String) -> void:
+	var region := AtlasTexture.new()
+	region.atlas = atlas
+	region.region = source_rect
+	region.filter_clip = true
+	var slice := TextureRect.new()
+	slice.name = node_name
+	slice.texture = region
+	slice.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	slice.stretch_mode = TextureRect.STRETCH_SCALE
+	slice.position = target_rect.position
+	slice.size = target_rect.size
+	slice.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	slice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(slice)
 
 
 func _add_daily_program_button(parent: Control, text: String, rect: Rect2, callback: Callable, state: String, enabled: bool, font_size: int = 32) -> TextureButton:
@@ -940,10 +1039,10 @@ func _add_daily_program_button(parent: Control, text: String, rect: Rect2, callb
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if state == "claim":
 		label.add_theme_color_override("font_outline_color", Color("7a3d08"))
-		label.add_theme_constant_override("outline_size", 4)
+		label.add_theme_constant_override("outline_size", 4 if font_size >= 28 else 2)
 	else:
 		label.add_theme_color_override("font_outline_color", Color("263a59"))
-		label.add_theme_constant_override("outline_size", 3)
+		label.add_theme_constant_override("outline_size", 3 if font_size >= 28 else 2)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(label)
 	parent.add_child(button)
@@ -951,36 +1050,34 @@ func _add_daily_program_button(parent: Control, text: String, rect: Rect2, callb
 
 
 func _build_task_content() -> void:
-	var names := {"settle_once": "完成 1 次挑战", "merge_20": "合成 20 次", "kill_30": "击败 30 个怪物", "login": "今日登录"}
-	var rewards := {"settle_once": "×10", "merge_20": "×30", "kill_30": "×50", "login": "×20"}
 	var task_icons := {
-		"settle_once": ICONS + "task_swords.png",
-		"merge_20": DAILY_PROGRAM_ICONS + "daily_icon_merge_v01.png",
-		"kill_30": DAILY_PROGRAM_ICONS + "daily_icon_monster_v01.png",
+		"challenge": ICONS + "task_swords.png",
+		"merge": DAILY_PROGRAM_ICONS + "daily_icon_merge_v01.png",
+		"monster": DAILY_PROGRAM_ICONS + "daily_icon_monster_v01.png",
 		"login": "res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_signin_calendar_v01.tres",
 	}
 	var reward_icons := {
-		"settle_once": "res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_currency_diamond_v01.tres",
-		"merge_20": ICONS + "coin.png",
-		"kill_30": ICONS + "coin.png",
-		"login": "res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_currency_diamond_v01.tres",
+		"crystals": CurrencyAssetsScript.DIAMOND_PATH,
+		"coins": CurrencyAssetsScript.COIN_PATH,
 	}
 	_build_activity_strip()
 	var row_positions := [388.0, 555.0, 724.0, 890.0]
-	var task_ids := ["settle_once", "merge_20", "kill_30", "login"]
+	var task_ids := service.get_ordered_task_ids()
 	for index in range(task_ids.size()):
 		var task_id: String = task_ids[index]
-		var definition := MetaProgressService.TASKS[task_id] as Dictionary
-		var progress := int(service.task_progress.get(task_id, 0))
-		var target := int(definition["target"])
+		var task_state := service.get_task_state(task_id)
+		var progress := int(task_state["progress"])
+		var target := int(task_state["target"])
+		var reward := task_state["reward"] as Dictionary
+		var reward_kind := "crystals" if reward.has("crystals") else "coins"
 		var row := Control.new()
 		row.position = Vector2(53, row_positions[index])
 		row.size = Vector2(774, 158)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_content.add_child(row)
 		_add_icon(row, DAILY_PROGRAM_ICONS + "daily_icon_slot_v01.png", Rect2(14, 15, 112, 112))
-		_add_icon(row, str(task_icons[task_id]), Rect2(28, 28, 84, 84))
-		var name_label := _label(str(names[task_id]), 25, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+		_add_icon(row, str(task_icons[task_state["icon_key"]]), Rect2(28, 28, 84, 84))
+		var name_label := _label(str(task_state["title"]), 25, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
 		name_label.position = Vector2(145, 17)
 		name_label.size = Vector2(330, 44)
 		row.add_child(name_label)
@@ -989,8 +1086,8 @@ func _build_task_content() -> void:
 		progress_label.position = Vector2(158, 86)
 		progress_label.size = Vector2(258, 37)
 		row.add_child(progress_label)
-		_add_icon(row, str(reward_icons[task_id]), Rect2(461, 21, 96, 96))
-		var reward_label := _label(str(rewards[task_id]), 18, Color("17345d"))
+		_add_icon(row, str(reward_icons[reward_kind]), Rect2(461, 21, 96, 96))
+		var reward_label := _label("×%d" % int(reward.get(reward_kind, 0)), 18, Color("17345d"))
 		reward_label.position = Vector2(456, 101)
 		reward_label.size = Vector2(98, 35)
 		row.add_child(reward_label)
@@ -1090,7 +1187,7 @@ func _add_progress_to(parent: Control, rect: Rect2, ratio: float) -> void:
 
 func _add_task_button(parent: Control, text: String, rect: Rect2, callback: Callable, color: String, enabled: bool) -> void:
 	var button := TextureButton.new()
-	var button_file := "daily_button_disabled_v01.png" if color == "gray" else "daily_button_claim_v01.png" if color == "claim" else "daily_return_button_v02.png"
+	var button_file := "daily_button_disabled_v01.png" if color == "gray" else "daily_button_claim_v01.png" if color == "claim" else "daily_return_button_v03.png"
 	var normal_path := DAILY_PROGRAM_BACKPLATES + button_file
 	button.texture_normal = load(normal_path)
 	button.texture_pressed = button.texture_normal
@@ -1291,23 +1388,161 @@ func _build_first_purchase() -> void:
 		reward.position = Vector2(24 + index * 104, 145)
 		reward.size = Vector2(94, 28)
 		_content.add_child(reward)
-	_add_icon(_content, "res://assets/runtime/ui/components/card_icons/atlas_regions/ascension_hammer.tres", Rect2(250, 121, 50, 50))
+	_add_icon(_content, "res://assets/runtime/ui/components/card_icons/imprints/imprint_ascension_hammer_v01.png", Rect2(250, 121, 50, 50))
 	_add_shell_button("已领取" if service.first_purchase_owned else "¥6", Rect2(99, 365, 263, 62), Callable() if service.first_purchase_owned else func(): _request_purchase("first_purchase"), Color.WHITE)
 
 
 func _build_piggy() -> void:
-	if APPROVED_EFFECT_SHELLS:
-		_title.text = ""
-		_add_invisible_button(Rect2(90, 397, 265, 62), func(): _request_purchase("piggy_bank") if service.piggy_coins > 0 else _show_notice("当前尚未积累"))
+	_title_bar.visible = false
+	_title.text = ""
+	_add_stretched_texture(
+		_content,
+		load(PIGGY_BANK_BACKPLATES + "piggy_bank_title_ribbon_v01.png"),
+		Rect2(39, 4, 460, 85),
+		"PiggyBankTitleRibbon"
+	)
+	var title := _label("存钱罐", 38, Color.WHITE)
+	title.name = "PiggyBankTitle"
+	title.position = Vector2(86, 13)
+	title.size = Vector2(367, 58)
+	title.add_theme_constant_override("outline_size", 3)
+	_content.add_child(title)
+
+	var selected_stage := 3 if _piggy_show_purchased_state else 0 if service.piggy_coins <= 0 else 1 if service.piggy_coins < 1000 else 2
+	var stage_names := ["未积累", "积累中", "已满", "已购买"]
+	var stage_icons := [
+		"piggy_bank_stage_empty_v01.png",
+		"piggy_bank_stage_progress_v01.png",
+		"piggy_bank_stage_full_v01.png",
+		"piggy_bank_stage_purchased_v01.png",
+	]
+	for index in range(4):
+		var card_rect := Rect2(26 + index * 121, 124, 115, 143)
+		var is_selected := index == selected_stage
+		if is_selected:
+			_add_piggy_selected_frame(card_rect.grow(4.0), index)
+		var card := _add_stretched_texture(
+			_content,
+			load(PIGGY_BANK_BACKPLATES + "piggy_bank_stage_card_default_v01.png"),
+			card_rect,
+			"PiggyBankStageCard_%d" % (index + 1)
+		)
+		if is_selected:
+			card.modulate = Color("57d4ff")
+		var pig := _add_icon(
+			_content,
+			PIGGY_BANK_ICONS + stage_icons[index],
+			Rect2(card_rect.position.x + 5, card_rect.position.y + 13, 105, 88)
+		)
+		pig.name = "PiggyBankStageIcon_%d" % (index + 1)
+		var stage_label := _label(stage_names[index], 16, Color.WHITE if is_selected else Color("17345d"))
+		stage_label.name = "PiggyBankStageLabel_%d" % (index + 1)
+		stage_label.position = Vector2(card_rect.position.x + 3, card_rect.position.y + 107)
+		stage_label.size = Vector2(card_rect.size.x - 6, 27)
+		stage_label.add_theme_constant_override("outline_size", 2 if is_selected else 0)
+		_content.add_child(stage_label)
+
+	_add_piggy_progress(Rect2(66, 300, 407, 40), clampf(float(service.piggy_coins) / 1000.0, 0.0, 1.0))
+	var progress_copy := _label("%d/1000" % service.piggy_coins, 20, Color.WHITE)
+	progress_copy.name = "PiggyBankProgressText"
+	progress_copy.position = Vector2(66, 299)
+	progress_copy.size = Vector2(407, 40)
+	progress_copy.add_theme_constant_override("outline_size", 3)
+	_content.add_child(progress_copy)
+
+	_add_stretched_texture(
+		_content,
+		load(PIGGY_BANK_BACKPLATES + "piggy_bank_info_panel_v01.png"),
+		Rect2(58, 365, 422, 53),
+		"PiggyBankInfoPanel"
+	)
+	var info := _label("挑战可积累金币", 19, Color("17345d"))
+	info.name = "PiggyBankInfoText"
+	info.position = Vector2(72, 373)
+	info.size = Vector2(394, 36)
+	_content.add_child(info)
+
+	var purchase_text := "已领取" if _piggy_show_purchased_state else "¥12"
+	_add_piggy_purchase_button(
+		purchase_text,
+		Rect2(99, 443, 341, 101),
+		func(): _request_purchase("piggy_bank") if service.piggy_coins > 0 else _show_notice("当前尚未积累"),
+		_piggy_show_purchased_state
+	)
+
+
+func _add_piggy_selected_frame(rect: Rect2, index: int) -> void:
+	var frame := Panel.new()
+	frame.name = "PiggyBankSelectedFrame_%d" % (index + 1)
+	frame.position = rect.position
+	frame.size = rect.size
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("44c9f4")
+	style.border_color = Color("ffc528")
+	style.set_border_width_all(4)
+	style.corner_radius_top_left = 20
+	style.corner_radius_top_right = 20
+	style.corner_radius_bottom_left = 20
+	style.corner_radius_bottom_right = 20
+	style.shadow_color = Color(1.0, 0.69, 0.05, 0.34)
+	style.shadow_size = 4
+	frame.add_theme_stylebox_override("panel", style)
+	_content.add_child(frame)
+
+
+func _add_piggy_progress(rect: Rect2, ratio: float) -> void:
+	_add_stretched_texture(
+		_content,
+		load(PIGGY_BANK_BACKPLATES + "piggy_bank_progress_track_v01.png"),
+		rect,
+		"PiggyBankProgressTrack"
+	)
+	if ratio <= 0.0:
 		return
-	_title.text = "存钱罐"
-	_title.add_theme_color_override("font_color", Color.WHITE)
-	_place_title(Rect2(87, 5, 270, 58), 24)
-	var text := _label("%d / 1000\n挑战可积累金币" % service.piggy_coins, 18, Color("17345d"))
-	text.position = Vector2(70, 316)
-	text.size = Vector2(305, 65)
-	_content.add_child(text)
-	_add_shell_button("¥12", Rect2(90, 397, 265, 62), func(): _request_purchase("piggy_bank") if service.piggy_coins > 0 else _show_notice("当前尚未积累"), Color.WHITE)
+	var fill := NinePatchRect.new()
+	fill.name = "PiggyBankProgressFill"
+	fill.texture = load(PIGGY_BANK_BACKPLATES + "piggy_bank_progress_fill_v01.png")
+	fill.patch_margin_left = 18
+	fill.patch_margin_top = 14
+	fill.patch_margin_right = 18
+	fill.patch_margin_bottom = 14
+	fill.position = rect.position + Vector2(7, 2)
+	fill.size = Vector2(maxf(36.0, 394.0 * ratio), 36)
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content.add_child(fill)
+
+
+func _add_piggy_purchase_button(text: String, rect: Rect2, callback: Callable, disabled: bool) -> TextureButton:
+	var button := TextureButton.new()
+	button.name = "PiggyBankPurchaseButton"
+	button.texture_normal = load(PIGGY_BANK_BACKPLATES + "piggy_bank_purchase_button_default_v01.png")
+	button.texture_pressed = button.texture_normal
+	button.texture_disabled = button.texture_normal
+	button.ignore_texture_size = true
+	button.stretch_mode = TextureButton.STRETCH_SCALE
+	button.position = rect.position
+	button.size = rect.size
+	button.disabled = disabled
+	button.modulate = Color(0.72, 0.76, 0.82) if disabled else Color.WHITE
+	button.focus_mode = Control.FOCUS_NONE
+	if not disabled and callback.is_valid():
+		button.pressed.connect(callback)
+		button.button_down.connect(func():
+			button.pivot_offset = button.size * 0.5
+			button.scale = Vector2(0.97, 0.97)
+			button.modulate = Color(0.88, 0.88, 0.88)
+		)
+		button.button_up.connect(func():
+			button.scale = Vector2.ONE
+			button.modulate = Color.WHITE
+		)
+	var label := _label(text, 36, Color.WHITE)
+	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	label.add_theme_constant_override("outline_size", 4)
+	button.add_child(label)
+	_content.add_child(button)
+	return button
 
 
 func _add_progress(rect: Rect2, ratio: float) -> void:
@@ -1416,8 +1651,8 @@ func _add_state_caption(copy: String, rect: Rect2, color: Color) -> void:
 func _shop_icon_path(product_id: String) -> String:
 	var file := "icon_imprint_chest.png"
 	match product_id:
-		"coins_10000": file = "icon_coin_bundle.png"
-		"crystals_500": return SHOP_ROOT + "icons/shop_crystal.png"
+		"coins_10000": return CurrencyAssetsScript.COIN_PATH
+		"crystals_500": return CurrencyAssetsScript.DIAMOND_PATH
 		"frag_fire_conduit": return "res://assets/runtime/ui/components/card_icons/atlas_regions/fire_conduit.tres"
 		"frag_poison_tank": return "res://assets/runtime/ui/components/card_icons/atlas_regions/poison_tank.tres"
 		"frag_star_boiler": return "res://assets/runtime/ui/components/card_icons/atlas_regions/star_boiler.tres"
@@ -1478,6 +1713,7 @@ func _build_purchase_confirm() -> void:
 	_title.text = ""
 	var dark_blue := Color("17345d")
 	var title := _label("确认购买", 34, dark_blue)
+	title.name = "PurchaseTitle"
 	title.position = Vector2(42, 18)
 	title.size = Vector2(434, 58)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1487,27 +1723,266 @@ func _build_purchase_confirm() -> void:
 	_add_stretched_texture(_content, load(PURCHASE_CONFIRM_BACKPLATES + "purchase_divider_vertical_v01.png"), Rect2(257, 106, 14, 240), "PurchaseDividerVertical")
 	_add_icon(_content, PURCHASE_CONFIRM_ICONS + "purchase_icon_double_coin_base_v01.png", Rect2(67, 99, 158, 158)).name = "PurchaseDoubleCoinIcon"
 	_add_icon(_content, PURCHASE_CONFIRM_ICONS + "purchase_icon_no_ad_base_v01.png", Rect2(293, 99, 158, 158)).name = "PurchaseNoAdIcon"
-	_add_purchase_copy("双倍金币", Rect2(32, 247, 228, 38), 27)
-	_add_purchase_copy("去广告", Rect2(258, 247, 228, 38), 27)
+	_add_purchase_copy("双倍金币", Rect2(32, 247, 228, 38), 26)
+	_add_purchase_copy("去广告", Rect2(258, 247, 228, 38), 26)
 	_add_purchase_copy("结算金币 +100%", Rect2(28, 285, 236, 32), 17)
 	_add_purchase_copy("移除非主动广告\n奖励广告保留", Rect2(270, 280, 220, 58), 16)
 	_add_stretched_texture(_content, load(PURCHASE_CONFIRM_BACKPLATES + "purchase_status_tag_permanent_v01.png"), Rect2(174, 337, 170, 57), "PurchasePermanentStatus")
 	_add_purchase_copy("永久生效", Rect2(174, 345, 170, 42), 22, Color("276b1e"))
 	_add_purchase_copy("¥6", Rect2(174, 393, 170, 51), 36)
-	_add_purchase_art_button("取消", PURCHASE_CONFIRM_BACKPLATES + "purchase_button_cancel_default_v01.png", Rect2(35, 456, 184, 79), func(): open(_purchase_return_page, source), "PurchaseCancelButton")
-	_add_purchase_art_button("确认购买", PURCHASE_CONFIRM_BACKPLATES + "purchase_button_confirm_default_v01.png", Rect2(299, 456, 184, 79), func(): _purchase(_pending_product_id), "PurchaseConfirmButton")
+	_add_purchase_art_button("取消", SHARED_BUTTONS + "button_blue_default.png", Rect2(35, 456, 192, 80), func(): open(_purchase_return_page, source), "PurchaseCancelButton")
+	_add_purchase_art_button("确认购买", SHARED_BUTTONS + "button_yellow_default.png", Rect2(291, 456, 192, 80), func(): _purchase(_pending_product_id), "PurchaseConfirmButton")
 
 
 func _build_generic_purchase_confirm() -> void:
-	_title.text = "购买确认"
+	# Keep the generic confirmation copy inside the 518 x 552 purchase shell.
+	# The previous layout used the shared 550 px title/message width and placed
+	# the right button at x=355 with a 250 px width, so it extended beyond the
+	# shell after the modal was scaled to the viewport.
+	_title_bar.visible = false
+	_title.text = "确认购买"
+	_title.position = Vector2(42, 72)
+	_title.size = Vector2(434, 72)
+	_title.add_theme_font_size_override("font_size", 34)
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	UiTypographyScript.apply_title_shadow(_title)
 	var product := service._product(_pending_product_id)
 	var price := str(product.get("price", "水晶 %d" % int(product.get("cost", 0))))
-	var message := _label("确认购买该商品？\n%s" % price, 31, Color("17345d"))
-	message.position = Vector2(55, 120)
-	message.size = Vector2(550, 125)
+	var message := _label("确认购买该商品？", 26, Color("17345d"))
+	message.name = "PurchasePrompt"
+	message.position = Vector2(45, 190)
+	message.size = Vector2(428, 58)
+	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	message.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_content.add_child(message)
-	_add_button("取消", Rect2(55, 285, 250, 92), func(): open(_purchase_return_page, source), "blue")
-	_add_button("确认购买", Rect2(355, 285, 250, 92), func(): _purchase(_pending_product_id), "yellow")
+	var price_label := _label(price, 36, Color("17345d"))
+	price_label.name = "PurchasePrice"
+	price_label.position = Vector2(45, 245)
+	price_label.size = Vector2(428, 58)
+	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	price_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_content.add_child(price_label)
+	_add_purchase_art_button("取消", SHARED_BUTTONS + "button_blue_default.png", Rect2(35, 340, 192, 80), func(): open(_purchase_return_page, source), "PurchaseCancelButton")
+	_add_purchase_art_button("确认购买", SHARED_BUTTONS + "button_yellow_default.png", Rect2(291, 340, 192, 80), func(): _purchase(_pending_product_id), "PurchaseConfirmButton")
+
+
+func _build_crystal_upgrade_v03() -> void:
+	_title_bar.visible = false
+	_title.text = ""
+	_add_stretched_texture(_content, load("res://assets/runtime/ui/interfaces/main_hub/standalone/lobby_background_clean_v01.png"), Rect2(0, 0, 941, 1672), "CrystalUpgradeBackground")
+
+	var back := Button.new()
+	back.name = "CrystalUpgradeBackButton"
+	# Keep the page-specific return action, but place it in the exact same
+	# top-left hit footprint as the lobby settings control. The delivered return
+	# texture has no transparent inset, so its visible art must sit inside that
+	# footprint; stretching it over the full hit target made it look larger than
+	# the lobby's inset settings frame.
+	back.flat = true
+	back.position = Vector2(23, 25)
+	back.size = Vector2(127, 121)
+	back.pivot_offset = back.size * 0.5
+	back.focus_mode = Control.FOCUS_NONE
+	back.pressed.connect(close)
+	back.button_down.connect(func(): back.scale = Vector2(0.96, 0.96))
+	back.button_up.connect(func(): back.scale = Vector2.ONE)
+	_content.add_child(back)
+	var back_art := TextureRect.new()
+	back_art.name = "CrystalUpgradeBackArt"
+	back_art.texture = load(CRYSTAL_UPGRADE_BUTTONS + "crystal_upgrade_back_button_default_v03.png")
+	back_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	back_art.stretch_mode = TextureRect.STRETCH_SCALE
+	back_art.position = Vector2(6, 6)
+	back_art.size = Vector2(115, 109)
+	back_art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	back_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	back.add_child(back_art)
+	# The crystal page shares the lobby HUD instead of introducing a second top
+	# bar language. There is deliberately no page title in this band.
+	_crystal_hub_counter(
+		"CrystalUpgradeDiamondCounter",
+		Vector2(205, 53),
+		CurrencyAssetsScript.DIAMOND_PATH,
+		Rect2(203, 40, 82, 89),
+		service.crystals
+	)
+	_crystal_hub_counter(
+		"CrystalUpgradeCoinCounter",
+		Vector2(454, 53),
+		CurrencyAssetsScript.COIN_PATH,
+		Rect2(450, 39, 86, 87),
+		service.coins
+	)
+
+	# The supplied v03 section is a complete, text-free frame. Keep it at its
+	# authored size instead of stretching it with NinePatch.
+	_crystal_texture("crystal_upgrade_current_section_v03.png", Rect2(16, 146, 908, 581), "CrystalUpgradeCurrentPanel")
+	_crystal_text("当前水晶", Rect2(250, 152, 440, 62), 46, Color.WHITE)
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + "crystal_upgrade_tower_lv03_v02.png", Rect2(105, 272, 318, 374)).name = "CrystalUpgradeCurrentTower"
+	_crystal_texture("crystal_upgrade_current_info_panel_v03.png", Rect2(460, 252, 432, 445), "CrystalUpgradeCurrentStatsPanel")
+	_crystal_text("Lv.03", Rect2(476, 268, 160, 58), 32, Color("b7f8ff"))
+	_crystal_detail_stat(344, "crystal_upgrade_stat_attack_v02.png", "攻击", "120")
+	_crystal_detail_stat(414, "crystal_upgrade_stat_cooldown_v02.png", "冷却", "2.4秒")
+	_crystal_detail_stat(484, "crystal_upgrade_stat_range_v02.png", "范围", "3格")
+	_crystal_text("已开启功能", Rect2(500, 564, 350, 46), 26, Color.WHITE)
+	_crystal_text("基础攻击强化", Rect2(500, 615, 350, 52), 24, Color("17345d"))
+
+	_crystal_texture("crystal_upgrade_materials_section_v03.png", Rect2(16, 736, 908, 382), "CrystalUpgradeMaterialsPanel")
+	_crystal_text("升级所需素材", Rect2(240, 745, 460, 76), 44, Color.WHITE)
+	_crystal_texture("crystal_upgrade_material_cards_v03.png", Rect2(48, 826, 844, 193), "CrystalUpgradeMaterialCards")
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + "crystal_upgrade_material_fragment_v02.png", Rect2(67, 836, 170, 165)).name = "CrystalUpgradeFragmentIcon"
+	_crystal_text("水晶碎片", Rect2(237, 832, 205, 57), 34, Color("17345d"))
+	var fragment_value := _crystal_text("18/30", Rect2(239, 919, 187, 62), 30, Color("d63b20"))
+	fragment_value.add_theme_color_override("font_outline_color", Color("4c1d0b"))
+	fragment_value.add_theme_constant_override("outline_size", 2)
+	_add_icon(_content, CurrencyAssetsScript.COIN_PATH, Rect2(505, 839, 145, 140)).name = "CrystalUpgradeCoinIcon"
+	_crystal_text("金币", Rect2(667, 832, 205, 57), 34, Color("17345d"))
+	var coin_value := _crystal_text("3766/5000", Rect2(660, 919, 196, 62), 30, Color("d63b20"))
+	coin_value.add_theme_color_override("font_outline_color", Color("4c1d0b"))
+	coin_value.add_theme_constant_override("outline_size", 2)
+	_crystal_texture("crystal_upgrade_warning_bar_v03.png", Rect2(46, 1034, 849, 68), "CrystalUpgradeWarningBar")
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + "crystal_upgrade_warning_v02.png", Rect2(169, 1045, 46, 47)).name = "CrystalUpgradeWarningIcon"
+	_crystal_text("缺少：水晶碎片 ×12、金币 ×1234", Rect2(229, 1038, 620, 58), 23, Color("cc4a34"), HORIZONTAL_ALIGNMENT_LEFT)
+
+	_crystal_texture("crystal_upgrade_preview_section_v03.png", Rect2(16, 1129, 908, 363), "CrystalUpgradePreviewPanel")
+	_crystal_text("升级预览", Rect2(260, 1137, 420, 76), 44, Color.WHITE)
+	_crystal_texture("crystal_upgrade_preview_stats_v03.png", Rect2(199, 1215, 533, 262), "CrystalUpgradePreviewStats")
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + "crystal_upgrade_tower_lv03_v02.png", Rect2(46, 1267, 136, 174)).name = "CrystalUpgradePreviewCurrent"
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + "crystal_upgrade_tower_lv04_v02.png", Rect2(760, 1256, 136, 178)).name = "CrystalUpgradePreviewNext"
+	_crystal_text("当前 Lv.03", Rect2(203, 1218, 239, 49), 22, Color("17345d"))
+	_crystal_text("升级后 Lv.04", Rect2(475, 1218, 239, 49), 22, Color("087eaa"))
+	_crystal_preview_line(1278, "攻击", "120", "160")
+	_crystal_preview_line(1347, "冷却", "2.4秒", "2.0秒")
+	_crystal_preview_line(1416, "范围", "3格", "4格")
+	_crystal_texture("crystal_upgrade_disabled_button_v02.png", Rect2(145, 1515, 650, 132), "CrystalUpgradeDisabledButton")
+	_crystal_text("材料不足", Rect2(145, 1518, 650, 115), 44, Color("e7f1ff"))
+
+
+func _crystal_texture(file_name: String, rect: Rect2, node_name: String) -> TextureRect:
+	var panel := TextureRect.new()
+	panel.name = node_name
+	panel.texture = load(CRYSTAL_UPGRADE_BACKPLATES + file_name)
+	panel.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	panel.stretch_mode = TextureRect.STRETCH_SCALE
+	panel.position = rect.position
+	panel.size = rect.size
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_content.add_child(panel)
+	return panel
+
+
+func _crystal_detail_stat(y: float, icon_file: String, label_text: String, value_text: String) -> void:
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + icon_file, Rect2(493, y + 8, 44, 46))
+	_crystal_text(label_text, Rect2(548, y, 130, 64), 29, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+	_crystal_text(value_text, Rect2(696, y, 171, 64), 29, Color("17345d"), HORIZONTAL_ALIGNMENT_RIGHT)
+
+
+func _crystal_preview_line(y: float, label_text: String, current_value: String, next_value: String) -> void:
+	var stat_icon: String = str({
+		"攻击": "crystal_upgrade_stat_attack_v02.png",
+		"冷却": "crystal_upgrade_stat_cooldown_v02.png",
+		"范围": "crystal_upgrade_stat_range_v02.png",
+	}.get(label_text, ""))
+	if stat_icon != "":
+		_add_icon(_content, CRYSTAL_UPGRADE_ICONS + stat_icon, Rect2(217, y + 5, 37, 37))
+	_crystal_text(label_text, Rect2(263, y, 82, 46), 23, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+	_crystal_text(current_value, Rect2(350, y, 86, 46), 24, Color("17345d"), HORIZONTAL_ALIGNMENT_RIGHT)
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + "crystal_upgrade_stat_arrow_v02.png", Rect2(477, y + 6, 42, 34))
+	_crystal_text(next_value, Rect2(594, y, 109, 46), 25, Color("087eaa"), HORIZONTAL_ALIGNMENT_RIGHT)
+
+
+func _crystal_panel(rect: Rect2, fill: Color, border: Color, radius: int) -> Panel:
+	var panel := Panel.new()
+	panel.name = "CrystalUpgradePanel_%d_%d" % [int(rect.position.x), int(rect.position.y)]
+	panel.position = rect.position
+	panel.size = rect.size
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(6)
+	style.set_corner_radius_all(radius)
+	style.shadow_color = Color(0.02, 0.13, 0.32, 0.42)
+	style.shadow_size = 7
+	style.shadow_offset = Vector2(0, 5)
+	panel.add_theme_stylebox_override("panel", style)
+	_content.add_child(panel)
+	return panel
+
+
+func _crystal_text(text: String, rect: Rect2, font_size: int, color := Color.WHITE, alignment := HORIZONTAL_ALIGNMENT_CENTER) -> Label:
+	var label := _label(text, font_size, color, alignment)
+	label.position = rect.position
+	label.size = rect.size
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var light_text := color == Color.WHITE or color == Color("b7f8ff") or color == Color("e7f1ff")
+	UiTypographyScript.apply(label, 800 if light_text else 700)
+	label.add_theme_color_override("font_outline_color", Color(0.03, 0.08, 0.18, 0.86) if light_text else Color(0.03, 0.08, 0.18, 0.55))
+	label.add_theme_color_override("font_shadow_color", Color(0.02, 0.05, 0.13, 0.48) if light_text else Color.TRANSPARENT)
+	label.add_theme_constant_override("shadow_offset_x", 2 if light_text else 0)
+	label.add_theme_constant_override("shadow_offset_y", 3 if light_text else 0)
+	label.add_theme_constant_override("outline_size", 5 if light_text else 1)
+	_content.add_child(label)
+	return label
+
+
+func _crystal_hub_counter(node_name: String, panel_position: Vector2, icon_path: String, icon_rect: Rect2, value: int) -> void:
+	var panel_rect := Rect2(panel_position, CurrencyAssetsScript.HUB_COUNTER_PANEL_SIZE)
+	var panel := TextureRect.new()
+	panel.name = node_name
+	panel.texture = CurrencyAssetsScript.HUB_COUNTER_PANEL_TEXTURE
+	panel.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	panel.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	panel.position = panel_rect.position
+	panel.size = panel_rect.size
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content.add_child(panel)
+
+	var currency_icon := _add_stretched_texture(_content, load(icon_path), icon_rect, node_name + "Icon")
+	currency_icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var value_label := _crystal_text(
+		_format_hub_resource_value(value),
+		Rect2(panel_rect.position + Vector2(68, 2), Vector2(panel_rect.size.x - 112, panel_rect.size.y - 4)),
+		31,
+		Color.WHITE
+	)
+	value_label.name = node_name + "Value"
+	var plus_icon := _add_stretched_texture(
+		_content,
+		load(MAIN_HUB_META_ICONS + "lobby_icon_plus_v01.tres"),
+		Rect2(panel_rect.end - Vector2(58, 59), Vector2(57, 57)),
+		node_name + "Plus"
+	)
+	plus_icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
+
+func _format_hub_resource_value(value: int) -> String:
+	if value >= 100_000:
+		return "%dK" % roundi(float(value) / 1000.0)
+	return str(maxi(0, value))
+
+
+func _crystal_badge(text: String, rect: Rect2) -> void:
+	_crystal_panel(rect, Color("087fc9"), Color("0d5aa7"), 18)
+	_crystal_text(text, rect, 36, Color("b6f7ff"))
+
+
+func _crystal_stat_row(y: float, icon_file: String, label_text: String, value_text: String) -> void:
+	_crystal_panel(Rect2(477, y, 408, 67), Color("c5e1fa"), Color("6aa9e8"), 16)
+	_add_icon(_content, CRYSTAL_UPGRADE_ICONS + icon_file, Rect2(490, y + 7, 54, 56))
+	_crystal_text(label_text, Rect2(548, y + 4, 150, 58), 29, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+	_crystal_text(value_text, Rect2(700, y + 4, 170, 58), 29, Color("17345d"), HORIZONTAL_ALIGNMENT_RIGHT)
+
+
+func _crystal_preview_stat(y: float, label_text: String, value_text: String, upgraded: bool) -> void:
+	var x := 211.0 if not upgraded else 483.0
+	_crystal_text("→" if upgraded else "", Rect2(x, y, 45, 40), 24, Color("0bd7ef"))
+	_crystal_text(label_text, Rect2(x + 48, y, 78, 40), 21, Color("17345d"), HORIZONTAL_ALIGNMENT_LEFT)
+	_crystal_text(value_text, Rect2(x + 125, y, 104, 40), 22, Color("087eaa") if upgraded else Color("17345d"), HORIZONTAL_ALIGNMENT_RIGHT)
 
 
 func _add_purchase_copy(text: String, rect: Rect2, font_size: int, color := Color("17345d")) -> Label:
@@ -1526,7 +2001,8 @@ func _add_purchase_art_button(text: String, texture_path: String, rect: Rect2, c
 	var button := TextureButton.new()
 	button.name = node_name
 	button.texture_normal = load(texture_path)
-	button.texture_pressed = button.texture_normal
+	var pressed_path := texture_path.replace("_default.png", "_pressed.png")
+	button.texture_pressed = load(pressed_path) if ResourceLoader.exists(pressed_path) else button.texture_normal
 	button.ignore_texture_size = true
 	button.stretch_mode = TextureButton.STRETCH_SCALE
 	button.position = rect.position
@@ -1538,7 +2014,7 @@ func _add_purchase_art_button(text: String, texture_path: String, rect: Rect2, c
 		button.scale = Vector2(0.97, 0.97)
 	)
 	button.button_up.connect(func(): button.scale = Vector2.ONE)
-	var label := _label(text, 25, Color.WHITE)
+	var label := _label(text, 28, Color.WHITE)
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(label)
@@ -1553,6 +2029,8 @@ func _purchase(product_id: String) -> void:
 		if product_id == "first_purchase":
 			_play_first_purchase_reward()
 		else:
+			if product_id == "piggy_bank":
+				_piggy_show_purchased_state = true
 			open(_purchase_return_page, source)
 			_show_notice("购买成功")
 	else:
@@ -1630,7 +2108,7 @@ func _confirm_exit() -> void:
 
 
 func _cancel_clear() -> void:
-	open("settings", source)
+	close()
 
 
 func _confirm_clear() -> void:
@@ -1639,9 +2117,9 @@ func _confirm_clear() -> void:
 
 
 func _on_shade_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and (page_id == "pause" or source == "hub"):
+	if event is InputEventMouseButton and event.pressed and (page_id == "pause" or page_id == "settings" or source == "hub"):
 		close()
-	elif event is InputEventScreenTouch and event.pressed and (page_id == "pause" or source == "hub"):
+	elif event is InputEventScreenTouch and event.pressed and (page_id == "pause" or page_id == "settings" or source == "hub"):
 		close()
 
 

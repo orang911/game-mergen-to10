@@ -31,6 +31,9 @@ const HUB_DEFAULT_COINS := 1804
 # Temporary review switch. Keep the saved completion state intact while making
 # the awakening tutorial replay on every Start/Restart until visual review ends.
 const REPEAT_FIRST_WAVE_TUTORIAL := false
+const MERGE_SHAKE_SMALL := Vector2(6.0, 0.12)
+const MERGE_SHAKE_MEDIUM := Vector2(9.0, 0.15)
+const MERGE_SHAKE_LARGE := Vector2(12.0, 0.18)
 
 enum GameStatus { NONE, START, OVER, PAUSE }
 
@@ -93,6 +96,12 @@ var _first_wave_tutorial: FirstWaveTutorialController
 var _crystal_awakened_unlocked := false
 var _first_wave_tutorial_completed := false
 var _merge_generation := 0
+var _game_layer_base_position := Vector2.ZERO
+var _merge_shake_tween: Tween
+var _merge_shake_generation := 0
+var _merge_shake_active := false
+var _merge_shake_intensity := 0.0
+var _merge_shake_duration := 0.0
 var _wallet_coins := HUB_DEFAULT_COINS
 var _wallet_crystals := HUB_DEFAULT_CRYSTALS
 var _run_rewards_committed := false
@@ -351,6 +360,7 @@ func _build_scene() -> void:
 		_combo_audio_players.append(combo_player)
 
 func _layout_scene() -> void:
+	_stop_merge_screen_shake()
 	var viewport_size := size
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		viewport_size = Vector2(941, 1672)
@@ -366,7 +376,8 @@ func _layout_scene() -> void:
 		main_hub_view.layout_for_viewport(viewport_size)
 
 	# Game layer: letterboxed at design aspect ratio, all children work in 941x1672 coords
-	game_layer.position = (viewport_size - design_size * scale_factor) * 0.5
+	_game_layer_base_position = (viewport_size - design_size * scale_factor) * 0.5
+	game_layer.position = _game_layer_base_position
 	game_layer.scale = Vector2(scale_factor, scale_factor)
 	game_layer.size = design_size
 
@@ -397,6 +408,7 @@ func _layout_scene() -> void:
 		_set_rect(modal_layer, Vector2.ZERO, design_size)
 	for block in block_map.values():
 		if block:
+			block.reset_motion()
 			block.position = _position_for_site(block.board_site)
 
 func _set_rect(node: Control, pos: Vector2, node_size: Vector2) -> void:
@@ -505,6 +517,7 @@ func _make_round_panel(fill_color: Color, border_color: Color, radius: float) ->
 	return panel
 
 func show_main_menu() -> void:
+	_stop_merge_screen_shake()
 	game_status = GameStatus.NONE
 	_set_chapter_home_locked(false)
 	background.visible = false
@@ -557,6 +570,7 @@ func _progress_text_for_snapshot(snapshot: Dictionary) -> String:
 	return node_id
 
 func show_loading() -> void:
+	_stop_merge_screen_shake()
 	game_status = GameStatus.NONE
 	background.visible = true
 	main_layer.visible = true
@@ -688,9 +702,8 @@ func _on_hub_entry_pressed(entry_id: String) -> void:
 	match entry_id:
 		"tasks", "signin": secondary_ui.open("daily", "hub")
 		"double_coin", "remove_ads": secondary_ui.open_benefits(entry_id, "hub")
-		"first_purchase": secondary_ui.open("first_purchase", "hub")
 		"piggy": secondary_ui.open("piggy", "hub")
-		"shop": secondary_ui.open("shop", "hub")
+		"crystal_upgrade": secondary_ui.open("crystal_upgrade", "hub")
 
 
 func _on_secondary_closed(page: String, page_source: String) -> void:
@@ -733,16 +746,10 @@ func _on_first_purchase_completed() -> void:
 func _refresh_hub_meta() -> void:
 	if main_hub_view == null or meta_progress == null:
 		return
-	main_hub_view.set_daily_activity(meta_progress.get_activity())
-	var task_ready := false
-	for task_id in MetaProgressService.TASKS:
-		var definition := MetaProgressService.TASKS[task_id] as Dictionary
-		if int(meta_progress.task_progress.get(task_id, 0)) >= int(definition["target"]) and not bool(meta_progress.task_claimed.get(task_id, false)):
-			task_ready = true
-	main_hub_view.set_entry_alert("tasks", task_ready or (meta_progress.get_activity() >= 100 and not meta_progress.activity_claimed))
+	main_hub_view.set_task_summary(meta_progress.get_first_unclaimed_task_state())
+	main_hub_view.set_entry_alert("tasks", meta_progress.has_claimable_task() or (meta_progress.get_activity() >= 100 and not meta_progress.activity_claimed))
 	main_hub_view.set_entry_alert("signin", meta_progress.signin_last_date != meta_progress.last_sync_date)
 	main_hub_view.set_entry_alert("piggy", meta_progress.piggy_coins >= 1000)
-	main_hub_view.set_entry_visible("first_purchase", not meta_progress.first_purchase_owned)
 
 
 func _show_balance_simulation() -> void:
@@ -1245,7 +1252,9 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 	clicked.level = result_level
 	clicked.complete_merge_highlight()
 	clicked.play_merge_result_reveal()
+	clicked.play_merge_result_pop()
 	_play_merge_effect(clicked)
+	_play_merge_screen_shake(merged_count)
 
 	# The base merge attack leads the sequence.  A prepared imprint must not
 	# change the first attack beat or visually compete with its launch.
@@ -1283,7 +1292,6 @@ func merge_selected_blocks(clicked: MergeBlock) -> void:
 		var merge_origin := _board_local_to_global(clicked.position + Vector2(BLOCK_SIZE * 0.5, BLOCK_SIZE * 0.5))
 		skill_imprint_system.add_energy(GameConfig.SKILL_ENERGY_PER_MERGE_UNIT * (merged_count - 1), merge_origin, 3, false)
 	_refresh_score(merged_count, source_level)
-	_pulse(clicked)
 
 	if clicked.level >= GameConfig.MAX_BLOCK_LEVEL:
 		await get_tree().create_timer(0.16).timeout
@@ -1736,6 +1744,7 @@ func _remove_block_to_target(block: MergeBlock, target_position: Vector2, delay:
 
 	_spawn_merge_trail(block, target_position, delay, duration)
 	block.selected = false
+	block.reset_motion()
 	board_layer.move_child(block, board_layer.get_child_count() - 1)
 	var tween := create_tween()
 	if delay > 0.0:
@@ -1760,11 +1769,64 @@ func _spawn_merge_trail(block: MergeBlock, target_position: Vector2, delay: floa
 	board_layer.move_child(ghost, 0)
 	ghost.play_to(target_position, delay, duration)
 
-func _pulse(block: MergeBlock) -> void:
-	block.pivot_offset = block.size * 0.5
-	var tween := create_tween()
-	tween.tween_property(block, "scale", Vector2(1.14, 1.14), 0.08)
-	tween.tween_property(block, "scale", Vector2.ONE, 0.1)
+func _merge_shake_profile(merge_count: int) -> Vector2:
+	if merge_count >= 6:
+		return MERGE_SHAKE_LARGE
+	if merge_count >= 4:
+		return MERGE_SHAKE_MEDIUM
+	return MERGE_SHAKE_SMALL
+
+
+func _play_merge_screen_shake(merge_count: int) -> void:
+	if game_layer == null or not is_instance_valid(game_layer) or not game_layer.visible:
+		return
+	_stop_merge_screen_shake()
+	var profile := _merge_shake_profile(merge_count)
+	_merge_shake_intensity = profile.x
+	_merge_shake_duration = profile.y
+	_merge_shake_active = true
+	var generation := _merge_shake_generation
+	var horizontal := _merge_shake_intensity
+	var vertical := horizontal * 0.34
+	var offsets: Array[Vector2] = [
+		Vector2(horizontal, -vertical),
+		Vector2(-horizontal * 0.76, vertical * 0.72),
+		Vector2(horizontal * 0.52, -vertical * 0.50),
+		Vector2(-horizontal * 0.28, vertical * 0.28),
+		Vector2.ZERO,
+	]
+	var duration_weights: Array[float] = [0.14, 0.18, 0.20, 0.22, 0.26]
+	_merge_shake_tween = create_tween()
+	for index in range(offsets.size()):
+		_merge_shake_tween.tween_property(
+			game_layer,
+			"position",
+			_game_layer_base_position + offsets[index],
+			_merge_shake_duration * duration_weights[index]
+		).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_merge_shake_tween.tween_callback(_complete_merge_screen_shake.bind(generation))
+
+
+func _complete_merge_screen_shake(generation: int) -> void:
+	if generation != _merge_shake_generation:
+		return
+	if game_layer and is_instance_valid(game_layer):
+		game_layer.position = _game_layer_base_position
+	_merge_shake_tween = null
+	_merge_shake_active = false
+
+
+func _stop_merge_screen_shake() -> void:
+	_merge_shake_generation += 1
+	if _merge_shake_tween and _merge_shake_tween.is_valid():
+		_merge_shake_tween.kill()
+	_merge_shake_tween = null
+	_merge_shake_active = false
+	_merge_shake_intensity = 0.0
+	_merge_shake_duration = 0.0
+	if game_layer and is_instance_valid(game_layer):
+		game_layer.position = _game_layer_base_position
+
 
 func _play_merge_effect(block: MergeBlock) -> void:
 	if merge_frames.is_empty():
@@ -1810,6 +1872,7 @@ func _reset_index_map() -> void:
 		index_map.append(row)
 
 func _clear_game_world() -> void:
+	_stop_merge_screen_shake()
 	_clear_merge_trails()
 	for block in block_map.values():
 		if block:
@@ -2550,6 +2613,7 @@ func _on_card_modal_closed(_kind: String) -> void:
 
 
 func _reset_card_runtime() -> void:
+	_stop_merge_screen_shake()
 	_merge_generation += 1
 	_stop_first_wave_tutorial()
 	_instant_item_generation += 1

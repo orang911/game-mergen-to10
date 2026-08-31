@@ -5,11 +5,36 @@ signal changed
 signal reward_granted(reward: Dictionary)
 signal purchase_finished(product_id: String, success: bool, result: Dictionary)
 
+const TASK_ORDER := ["settle_once", "merge_20", "kill_30", "login"]
 const TASKS := {
-	"settle_once": {"target": 1, "reward": {"crystals": 10}, "activity": 20},
-	"merge_20": {"target": 20, "reward": {"coins": 30}, "activity": 20},
-	"kill_30": {"target": 30, "reward": {"coins": 50}, "activity": 30},
-	"login": {"target": 1, "reward": {"crystals": 20}, "activity": 30},
+	"settle_once": {
+		"title": "完成 1 次挑战",
+		"target": 1,
+		"reward": {"crystals": 10},
+		"activity": 20,
+		"icon_key": "challenge",
+	},
+	"merge_20": {
+		"title": "合成 20 次",
+		"target": 20,
+		"reward": {"coins": 30},
+		"activity": 20,
+		"icon_key": "merge",
+	},
+	"kill_30": {
+		"title": "击败 30 个怪物",
+		"target": 30,
+		"reward": {"coins": 50},
+		"activity": 30,
+		"icon_key": "monster",
+	},
+	"login": {
+		"title": "今日登录",
+		"target": 1,
+		"reward": {"crystals": 20},
+		"activity": 30,
+		"icon_key": "login",
+	},
 }
 const SIGNIN_REWARDS := [
 	{"crystals": 20}, {"coins": 30}, {"crystals": 20}, {"coins": 50},
@@ -63,7 +88,7 @@ func setup(initial_coins: int, initial_crystals: int, levels: Dictionary) -> voi
 
 
 func _ensure_defaults() -> void:
-	for task_id in TASKS:
+	for task_id in TASK_ORDER:
 		task_progress[task_id] = maxi(0, int(task_progress.get(task_id, 0)))
 		task_claimed[task_id] = bool(task_claimed.get(task_id, false))
 	for card_id in CardCatalog.ALL_CARD_IDS:
@@ -178,9 +203,50 @@ func claim_activity_chest() -> Dictionary:
 	return reward
 
 
+func get_ordered_task_ids() -> Array[String]:
+	var ordered_ids: Array[String] = []
+	for task_id in TASK_ORDER:
+		ordered_ids.append(str(task_id))
+	return ordered_ids
+
+
+func get_task_state(task_id: String) -> Dictionary:
+	if not TASKS.has(task_id):
+		return {}
+	var definition := TASKS[task_id] as Dictionary
+	var target := int(definition["target"])
+	var progress := clampi(int(task_progress.get(task_id, 0)), 0, target)
+	var claimed := bool(task_claimed.get(task_id, false))
+	return {
+		"id": task_id,
+		"title": str(definition["title"]),
+		"target": target,
+		"progress": progress,
+		"reward": (definition["reward"] as Dictionary).duplicate(true),
+		"activity": int(definition["activity"]),
+		"icon_key": str(definition["icon_key"]),
+		"claimed": claimed,
+		"claimable": progress >= target and not claimed,
+	}
+
+
+func get_first_unclaimed_task_state() -> Dictionary:
+	for task_id in TASK_ORDER:
+		if not bool(task_claimed.get(task_id, false)):
+			return get_task_state(str(task_id))
+	return {}
+
+
+func has_claimable_task() -> bool:
+	for task_id in TASK_ORDER:
+		if bool(get_task_state(str(task_id)).get("claimable", false)):
+			return true
+	return false
+
+
 func get_activity() -> int:
 	var total := 0
-	for task_id in TASKS:
+	for task_id in TASK_ORDER:
 		if bool(task_claimed.get(task_id, false)):
 			total += int((TASKS[task_id] as Dictionary)["activity"])
 	return total

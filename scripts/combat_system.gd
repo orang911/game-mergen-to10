@@ -9,7 +9,9 @@ const TUTORIAL_BASIC_SPAWN_DELAY := 0.45
 const TUTORIAL_HEAVY_SPAWN_DELAY := 0.65
 const TUTORIAL_BREAKTHROUGH_BASE_SPEED := 78.0
 const TUTORIAL_BREAKTHROUGH_SPEED_MULTIPLIER := 2.0
-const MERGE_SHOT_INTERVAL := 0.05
+# Compatibility alias retained for callers that referenced the old fixed gap.
+# New sequences use ProjectileSystem.get_multi_shot_post_hit_gap().
+const MERGE_SHOT_INTERVAL := ProjectileSystem.MULTI_SHOT_EARLY_GAP
 const HUD_WARNING_PATH_PROGRESS := 0.85
 const HUD_WARNING_DURABILITY_RATIO := 0.25
 const HUD_THREAT_POLL_INTERVAL := 0.10
@@ -62,6 +64,7 @@ var _tutorial_breakthrough_triggered := false
 var _merge_attack_generation := 0
 var _active_merge_sequences: Dictionary = {}
 var _merge_sequence_outcomes: Dictionary = {}
+var _merge_sequence_presentation_states: Dictionary = {}
 var _hud_threat_poll_elapsed := 0.0
 var _hud_durability_ratio := 1.0
 
@@ -74,6 +77,97 @@ func _process(delta: float) -> void:
 		return
 	_hud_threat_poll_elapsed = 0.0
 	_refresh_hud_danger_state()
+
+
+func _begin_merge_presentation(sequence_id: int, element_key: String, shot_count: int) -> void:
+	_merge_sequence_presentation_states[sequence_id] = {
+		"element_key": element_key,
+		"shot_count": maxi(1, shot_count),
+		"pending_count": 0,
+		"successful_count": 0,
+		"last_success_position": Vector2.ZERO,
+		"completed": false,
+		"finish_emitted": false,
+	}
+
+
+func _set_merge_presentation_shot_count(sequence_id: int, shot_count: int) -> void:
+	if not _merge_sequence_presentation_states.has(sequence_id):
+		return
+	var state: Dictionary = _merge_sequence_presentation_states[sequence_id]
+	state["shot_count"] = maxi(1, shot_count)
+	_merge_sequence_presentation_states[sequence_id] = state
+
+
+func _register_merge_presentation_pending(sequence_id: int) -> void:
+	if not _merge_sequence_presentation_states.has(sequence_id):
+		return
+	var state: Dictionary = _merge_sequence_presentation_states[sequence_id]
+	state["pending_count"] = int(state.get("pending_count", 0)) + 1
+	_merge_sequence_presentation_states[sequence_id] = state
+
+
+func _record_merge_presentation_success(sequence_id: int, hit_position: Vector2) -> void:
+	if not _merge_sequence_presentation_states.has(sequence_id):
+		return
+	var state: Dictionary = _merge_sequence_presentation_states[sequence_id]
+	state["successful_count"] = int(state.get("successful_count", 0)) + 1
+	state["last_success_position"] = hit_position
+	_merge_sequence_presentation_states[sequence_id] = state
+
+
+func _complete_merge_presentation_pending(sequence_id: int) -> void:
+	if not _merge_sequence_presentation_states.has(sequence_id):
+		return
+	var state: Dictionary = _merge_sequence_presentation_states[sequence_id]
+	state["pending_count"] = maxi(0, int(state.get("pending_count", 0)) - 1)
+	_merge_sequence_presentation_states[sequence_id] = state
+	_try_finish_merge_presentation(sequence_id)
+
+
+func _mark_merge_presentation_complete(sequence_id: int) -> void:
+	if not _merge_sequence_presentation_states.has(sequence_id):
+		return
+	var state: Dictionary = _merge_sequence_presentation_states[sequence_id]
+	state["completed"] = true
+	_merge_sequence_presentation_states[sequence_id] = state
+	_try_finish_merge_presentation(sequence_id)
+
+
+func _try_finish_merge_presentation(sequence_id: int) -> void:
+	if not _merge_sequence_presentation_states.has(sequence_id):
+		return
+	var state: Dictionary = _merge_sequence_presentation_states[sequence_id]
+	if not bool(state.get("completed", false)) or int(state.get("pending_count", 0)) > 0:
+		return
+	if bool(state.get("finish_emitted", false)):
+		_merge_sequence_presentation_states.erase(sequence_id)
+		return
+	state["finish_emitted"] = true
+	_merge_sequence_presentation_states[sequence_id] = state
+	if int(state.get("shot_count", 1)) >= 2 and int(state.get("successful_count", 0)) > 0 and effect_system:
+		var last_success_position: Vector2 = state.get("last_success_position", Vector2.ZERO)
+		effect_system.play_merge_sequence_finish_once(
+			sequence_id,
+			str(state.get("element_key", "")),
+			last_success_position
+		)
+	_merge_sequence_presentation_states.erase(sequence_id)
+
+
+func _wait_merge_launch_delay(delay: float, generation: int) -> bool:
+	var remaining := maxf(0.0, delay)
+	var previous_ticks := Time.get_ticks_usec()
+	while remaining > 0.0:
+		await get_tree().process_frame
+		if generation != _merge_attack_generation or not running:
+			return false
+		var now_ticks := Time.get_ticks_usec()
+		var elapsed := maxf(0.0, float(now_ticks - previous_ticks) / 1000000.0)
+		previous_ticks = now_ticks
+		if not get_tree().paused:
+			remaining -= elapsed
+	return true
 
 
 func setup(p_game_layer: Control) -> void:
@@ -293,6 +387,7 @@ func reset() -> void:
 		merge_sequence_state_changed.emit(int(sequence_id), false, 0)
 	_merge_attack_generation += 1
 	_active_merge_sequences.clear()
+	_merge_sequence_presentation_states.clear()
 	_tutorial_generation += 1
 	_tutorial_mode = false
 	_tutorial_paused = false
@@ -459,7 +554,7 @@ func _handle_tutorial_monster_died(monster: Monster) -> void:
 
 func _schedule_tutorial_spawn(role: String, delay: float) -> void:
 	var spawn_generation := _tutorial_generation
-	await get_tree().create_timer(delay).timeout
+	await get_tree().create_timer(delay, false).timeout
 	if spawn_generation != _tutorial_generation or not running or not _tutorial_mode:
 		return
 	if role == "basic":
@@ -533,6 +628,7 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 	var generation := _merge_attack_generation
 	_merge_sequence_outcomes.erase(event.sequence_id)
 	_active_merge_sequences[event.sequence_id] = generation
+	_begin_merge_presentation(event.sequence_id, event.element_key, event.attack_count)
 	var launch_delay := 0.0
 	if effect_system:
 		launch_delay = effect_system.play_merge_feedback(event)
@@ -541,11 +637,8 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 		# complete immediately in embedded/headless editor runs.  Keep the
 		# presentation delay frame-driven instead, so prompt → projectile ordering
 		# has the same guaranteed minimum duration everywhere.
-		var launch_deadline := Time.get_ticks_msec() + roundi(launch_delay * 1000.0)
-		while Time.get_ticks_msec() < launch_deadline:
-			await get_tree().process_frame
-			if generation != _merge_attack_generation or not running:
-				return
+		if not await _wait_merge_launch_delay(launch_delay, generation):
+			return
 	if generation != _merge_attack_generation or not running:
 		return
 	if effect_system:
@@ -560,20 +653,27 @@ func handle_merge_attack(event: MergeAttackEvent) -> void:
 
 
 func _play_merge_distinct_multitarget(event: MergeAttackEvent, generation: int) -> void:
-	var targets := monster_system.get_front_monsters(maxi(1, event.target_count))
+	var candidates := monster_system.get_front_monsters(maxi(1, event.target_count))
+	var targets: Array[Monster] = []
+	for candidate in candidates:
+		var candidate_monster := candidate as Monster
+		if is_instance_valid(candidate_monster) and not candidate_monster.is_queued_for_deletion() and candidate_monster.is_alive() and not candidate_monster.reached:
+			targets.append(candidate_monster)
+	_set_merge_presentation_shot_count(event.sequence_id, targets.size())
 	if targets.is_empty():
 		_finish_merge_sequence(event.sequence_id, generation, 0)
 		return
 	var fired_count := 0
 	for shot_index in range(targets.size()):
 		if shot_index > 0:
-			await get_tree().create_timer(ProjectileSystem.MULTI_SHOT_STAGGER).timeout
+			await get_tree().create_timer(ProjectileSystem.get_multi_shot_gap_before(shot_index, targets.size()), false).timeout
 		if generation != _merge_attack_generation or not running:
 			break
 		var target := targets[shot_index] as Monster
 		if not is_instance_valid(target) or target.is_queued_for_deletion() or not target.is_alive() or target.reached:
 			continue
 		fired_count += 1
+		_register_merge_presentation_pending(event.sequence_id)
 		merge_shot_fired.emit(event.sequence_id, shot_index, target)
 		if effect_system:
 			effect_system.pulse_merge_feedback_shot(event.sequence_id)
@@ -581,21 +681,27 @@ func _play_merge_distinct_multitarget(event: MergeAttackEvent, generation: int) 
 			projectile_system.play_merge_shot(
 				event,
 				target,
-				Callable(self, "_provide_specific_merge_visual_target").bind(target.get_instance_id())
+				Callable(self, "_provide_specific_merge_visual_target").bind(target.get_instance_id()),
+				shot_index,
+				targets.size()
 			)
 		_resolve_merge_distinct_shot(event, target, shot_index, generation)
 	if fired_count > 0:
-		await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION).timeout
+		await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION, false).timeout
 	_finish_merge_sequence(event.sequence_id, generation, fired_count)
 
 
 func _resolve_merge_distinct_shot(event: MergeAttackEvent, target: Monster, shot_index: int, generation: int) -> void:
-	await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION).timeout
+	await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION, false).timeout
 	if generation != _merge_attack_generation or not running:
+		_complete_merge_presentation_pending(event.sequence_id)
 		return
 	if not is_instance_valid(target) or target.is_queued_for_deletion() or not target.is_alive() or target.reached:
+		_complete_merge_presentation_pending(event.sequence_id)
 		return
 	var hit_result := await _resolve_merge_sequence_hit(event, target)
+	if bool(hit_result.get("resolved", false)):
+		_record_merge_presentation_success(event.sequence_id, hit_result.get("hit_position", Vector2.ZERO))
 	merge_shot_resolved.emit(
 		event.sequence_id,
 		shot_index,
@@ -603,6 +709,7 @@ func _resolve_merge_distinct_shot(event: MergeAttackEvent, target: Monster, shot
 		float(hit_result.get("damage", 0.0)),
 		bool(hit_result.get("killed", false))
 	)
+	_complete_merge_presentation_pending(event.sequence_id)
 
 
 func _provide_specific_merge_visual_target(instance_id: int) -> Monster:
@@ -623,6 +730,7 @@ func _play_merge_attack_sequence(event: MergeAttackEvent, generation: int) -> vo
 			break
 		focus_target = launch_target
 		fired_count += 1
+		_register_merge_presentation_pending(event.sequence_id)
 		merge_shot_fired.emit(event.sequence_id, shot_index, launch_target)
 		if effect_system:
 			effect_system.pulse_merge_feedback_shot(event.sequence_id)
@@ -630,16 +738,21 @@ func _play_merge_attack_sequence(event: MergeAttackEvent, generation: int) -> vo
 			projectile_system.play_merge_shot(
 				event,
 				launch_target,
-				Callable(self, "_provide_merge_visual_target").bind(launch_target.get_instance_id())
+				Callable(self, "_provide_merge_visual_target").bind(launch_target.get_instance_id()),
+				shot_index,
+				event.attack_count
 			)
-		await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION).timeout
+		await get_tree().create_timer(ProjectileSystem.MERGE_BOLT_DURATION, false).timeout
 		if generation != _merge_attack_generation or not running:
 			break
 		var resolved_target := _resolve_merge_sequence_target(launch_target)
 		if resolved_target == null:
+			_complete_merge_presentation_pending(event.sequence_id)
 			break
 		focus_target = resolved_target
 		var hit_result := await _resolve_merge_sequence_hit(event, resolved_target)
+		if bool(hit_result.get("resolved", false)):
+			_record_merge_presentation_success(event.sequence_id, hit_result.get("hit_position", Vector2.ZERO))
 		merge_shot_resolved.emit(
 			event.sequence_id,
 			shot_index,
@@ -647,10 +760,11 @@ func _play_merge_attack_sequence(event: MergeAttackEvent, generation: int) -> vo
 			float(hit_result.get("damage", 0.0)),
 			bool(hit_result.get("killed", false))
 		)
+		_complete_merge_presentation_pending(event.sequence_id)
 		if bool(hit_result.get("killed", false)):
 			focus_target = null
 		if shot_index < event.attack_count - 1:
-			await get_tree().create_timer(MERGE_SHOT_INTERVAL).timeout
+			await get_tree().create_timer(ProjectileSystem.get_multi_shot_post_hit_gap(shot_index, event.attack_count), false).timeout
 	_finish_merge_sequence(event.sequence_id, generation, fired_count)
 
 
@@ -671,7 +785,7 @@ func _provide_merge_visual_target(original_instance_id: int) -> Monster:
 
 func _resolve_merge_sequence_hit(event: MergeAttackEvent, target: Monster) -> Dictionary:
 	if not is_instance_valid(target) or not target.is_alive() or target.reached:
-		return {"damage": 0.0, "killed": false}
+		return {"resolved": false, "damage": 0.0, "killed": false}
 	var hit_center := target.global_position + target.size * 0.5
 	var final_damage := event.damage
 	var annihilated := false
@@ -707,7 +821,7 @@ func _resolve_merge_sequence_hit(event: MergeAttackEvent, target: Monster) -> Di
 		_apply_merge_fire_splash(event, target, hit_center)
 	elif event.element == GameConfig.AttackElement.LIGHTNING:
 		await _play_current_lightning_chain(event, target, hit_center)
-	return {"damage": final_damage, "killed": killed}
+	return {"resolved": true, "damage": final_damage, "killed": killed, "hit_position": hit_center}
 
 
 func _play_current_lightning_chain(event: MergeAttackEvent, primary: Monster, hit_center: Vector2) -> void:
@@ -723,7 +837,7 @@ func _play_current_lightning_chain(event: MergeAttackEvent, primary: Monster, hi
 			break
 	if not chain_targets.is_empty():
 		await _play_merge_lightning_chain(event, primary, chain_targets, hit_center, _merge_attack_generation)
-		await get_tree().create_timer(ChainBolt.PLAY_DURATION).timeout
+		await get_tree().create_timer(ChainBolt.PLAY_DURATION, false).timeout
 
 
 func _apply_merge_fire_splash(event: MergeAttackEvent, primary: Monster, hit_center: Vector2) -> void:
@@ -748,6 +862,7 @@ func _apply_merge_fire_splash(event: MergeAttackEvent, primary: Monster, hit_cen
 
 func _finish_merge_sequence(sequence_id: int, generation: int, fired_count: int) -> void:
 	if generation == _merge_attack_generation:
+		_mark_merge_presentation_complete(sequence_id)
 		_active_merge_sequences.erase(sequence_id)
 		_record_merge_sequence_outcome(sequence_id, true)
 		if effect_system:
@@ -773,7 +888,7 @@ func _play_merge_lightning_chain(event: MergeAttackEvent, first_target: Monster,
 	var hop_damage := event.damage
 	var retention := float(event.effect_params.get("chain_damage_ratio", 0.5))
 	for chain_target in chain_targets:
-		await get_tree().create_timer(ProjectileSystem.LIGHTNING_LINK_STAGGER).timeout
+		await get_tree().create_timer(ProjectileSystem.LIGHTNING_LINK_STAGGER, false).timeout
 		if not running or generation != _merge_attack_generation:
 			return
 		if not is_instance_valid(chain_target) or not chain_target.is_alive():
@@ -840,39 +955,56 @@ func trigger_card_attack(card_id: String, trigger_level: int, card_level: int, o
 func _play_skill_strike(targets: Array[Monster], damage: float, element_key: String, origin: Vector2, overrides: Dictionary) -> void:
 	if targets.is_empty():
 		return
-	var event := _make_skill_event(element_key, damage, origin, targets.size())
+	var valid_targets: Array[Monster] = []
+	for candidate in targets:
+		var target := candidate as Monster
+		if is_instance_valid(target) and not target.is_queued_for_deletion() and target.is_alive() and not target.reached:
+			valid_targets.append(target)
+	if valid_targets.is_empty():
+		return
+	var event := _make_skill_event(element_key, damage, origin, valid_targets.size())
 	for key in overrides:
 		event.effect_params[key] = overrides[key]
 	if effect_system:
 		effect_system.play_element_launch(ElementFxRequest.make_launch(event))
+	var generation := _merge_attack_generation
+	_begin_merge_presentation(event.sequence_id, event.element_key, valid_targets.size())
 	if projectile_system:
-		projectile_system.play_merge_attack(event, targets)
-	for i in range(targets.size()):
-		var target := targets[i]
-		if not is_instance_valid(target) or not target.is_alive():
-			continue
-		# Standardized non-lightning skill projectiles resolve when their visual
-		# reaches the target; successive targets keep the same 0.10 s stagger.
-		var hit_delay := ProjectileSystem.MERGE_BOLT_DURATION + float(i) * ProjectileSystem.MULTI_SHOT_STAGGER
+		projectile_system.play_merge_attack(event, valid_targets)
+	for i in range(valid_targets.size()):
+		var target := valid_targets[i]
+		_register_merge_presentation_pending(event.sequence_id)
+		# Visual launch offsets and hit delays share one schedule. This keeps
+		# damage resolution aligned with the independently staggered projectiles.
+		var hit_delay := ProjectileSystem.MERGE_BOLT_DURATION + ProjectileSystem.get_multi_shot_launch_offset(i, valid_targets.size())
 		if hit_delay > 0.0:
-			_schedule_skill_hit(event, target, damage, element_key, hit_delay)
+			_schedule_skill_hit(event, target, damage, element_key, hit_delay, generation)
 		else:
-			_resolve_skill_hit(event, target, damage, element_key)
+			var hit_result := _resolve_skill_hit(event, target, damage, element_key)
+			if bool(hit_result.get("resolved", false)):
+				_record_merge_presentation_success(event.sequence_id, hit_result.get("hit_position", Vector2.ZERO))
+			_complete_merge_presentation_pending(event.sequence_id)
+	_mark_merge_presentation_complete(event.sequence_id)
 
 
-func _schedule_skill_hit(event: MergeAttackEvent, target: Monster, damage: float, element_key: String, delay: float) -> void:
-	await get_tree().create_timer(delay).timeout
-	if not running or not is_instance_valid(target) or target.is_queued_for_deletion():
+
+func _schedule_skill_hit(event: MergeAttackEvent, target: Monster, damage: float, element_key: String, delay: float, generation: int) -> void:
+	await get_tree().create_timer(delay, false).timeout
+	if generation != _merge_attack_generation or not running or not is_instance_valid(target) or target.is_queued_for_deletion():
+		_complete_merge_presentation_pending(event.sequence_id)
 		return
-	_resolve_skill_hit(event, target, damage, element_key)
+	var hit_result := _resolve_skill_hit(event, target, damage, element_key)
+	if bool(hit_result.get("resolved", false)):
+		_record_merge_presentation_success(event.sequence_id, hit_result.get("hit_position", Vector2.ZERO))
+	_complete_merge_presentation_pending(event.sequence_id)
 
 
-func _resolve_skill_hit(event: MergeAttackEvent, target, damage: float, element_key: String) -> void:
+func _resolve_skill_hit(event: MergeAttackEvent, target, damage: float, element_key: String) -> Dictionary:
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
-		return
+		return {"resolved": false}
 	var monster := target as Monster
 	if monster == null or not monster.is_alive():
-		return
+		return {"resolved": false}
 	var hit_pos := monster.global_position + monster.size * 0.5
 	var final_damage := damage
 	var annihilated := false
@@ -895,6 +1027,7 @@ func _resolve_skill_hit(event: MergeAttackEvent, target, damage: float, element_
 	if effect_system:
 		effect_system.play_element_hit(element_key, hit_pos, event.element_tier)
 		effect_system.play_monster_hit(monster, element_key, event.origin_position)
+	return {"resolved": true, "hit_position": hit_pos, "damage": final_damage}
 
 
 func _play_ballista_strike(targets: Array[Monster], damage: float, chain_ratio: float, origin: Vector2, level: int) -> void:
@@ -925,7 +1058,7 @@ func _play_ballista_chain_sequence(event: MergeAttackEvent, first_target: Monste
 	var source_target := first_target
 	var source_pos := first_hit_pos
 	for target in targets:
-		await get_tree().create_timer(ProjectileSystem.LIGHTNING_LINK_STAGGER).timeout
+		await get_tree().create_timer(ProjectileSystem.LIGHTNING_LINK_STAGGER, false).timeout
 		if not running:
 			return
 		if not is_instance_valid(target) or not target.is_alive():

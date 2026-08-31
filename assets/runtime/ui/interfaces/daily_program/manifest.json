@@ -1,7 +1,7 @@
 {
   "purpose": "daily-program-composition-clean-alpha-runtime",
-  "version": "v02",
-  "source": "art/production/ui/daily_program_composition/2026-08-16_cutouts_v01/cutouts",
+  "version": "v03",
+  "source": "F:/卖肉/godotT10/审核资源/riwu",
   "assets": [
     {
       "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_button_claim_v01.png",
@@ -81,10 +81,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_return_button_v02.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_return_button_v03.png",
       "size": [
-        237,
-        229
+        91,
+        86
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -92,10 +92,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_card_default_v01.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_card_default_v02.png",
       "size": [
-        519,
-        748
+        107,
+        239
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -103,10 +103,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_card_premium_v01.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_card_claimed_v02.png",
       "size": [
-        519,
-        748
+        107,
+        239
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -114,10 +114,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_card_selected_v01.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_card_selected_v02.png",
       "size": [
-        519,
-        748
+        138,
+        239
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -125,10 +125,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_panel_shell_fixed_v01.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_signin_panel_shell_complete_v03.png",
       "size": [
-        1924,
-        705
+        928,
+        434
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -136,10 +136,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_task_panel_shell_fixed_v01.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_task_panel_shell_complete_v03.png",
       "size": [
-        1171,
-        1138
+        927,
+        1041
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -147,10 +147,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_task_row_default_v01.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_task_row_default_v02.png",
       "size": [
-        381,
-        174
+        843,
+        178
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -158,21 +158,10 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_task_row_selected_v01.png",
+      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_task_row_claimable_v02.png",
       "size": [
-        381,
-        174
-      ],
-      "alpha": true,
-      "alpha_partial_min": 1,
-      "alpha_partial_max": 254,
-      "text_baked": false
-    },
-    {
-      "file": "assets/runtime/ui/interfaces/daily_program/backplates/daily_title_tab_v01.png",
-      "size": [
-        356,
-        149
+        839,
+        176
       ],
       "alpha": true,
       "alpha_partial_min": 1,
@@ -224,28 +213,6 @@
       "text_baked": false
     },
     {
-      "file": "assets/runtime/ui/interfaces/daily_program/icons/daily_icon_coin_v01.png",
-      "size": [
-        512,
-        512
-      ],
-      "alpha": true,
-      "alpha_partial_min": 1,
-      "alpha_partial_max": 254,
-      "text_baked": false
-    },
-    {
-      "file": "assets/runtime/ui/interfaces/daily_program/icons/daily_icon_gem_v01.png",
-      "size": [
-        512,
-        512
-      ],
-      "alpha": true,
-      "alpha_partial_min": 1,
-      "alpha_partial_max": 254,
-      "text_baked": false
-    },
-    {
       "file": "assets/runtime/ui/interfaces/daily_program/icons/daily_icon_login_v01.png",
       "size": [
         512,
@@ -272,17 +239,6 @@
       "size": [
         512,
         512
-      ],
-      "alpha": true,
-      "alpha_partial_min": 1,
-      "alpha_partial_max": 254,
-      "text_baked": false
-    },
-    {
-      "file": "assets/runtime/ui/interfaces/daily_program/icons/daily_return_arrow_v02.png",
-      "size": [
-        128,
-        128
       ],
       "alpha": true,
       "alpha_partial_min": 1,

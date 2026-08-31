@@ -8,15 +8,19 @@ signal settings_pressed
 signal entry_pressed(entry_id: String)
 
 const UiTypographyScript := preload("res://scripts/ui_typography.gd")
+const CurrencyAssetsScript := preload("res://scripts/currency_assets.gd")
 const DESIGN_SIZE := Vector2(941.0, 1672.0)
 const INTRO_DURATION := 0.24
+const FOREST_ANIMATION_IDLE_MIN := 5.0
+const FOREST_ANIMATION_IDLE_MAX := 10.0
 const ASSET_ROOT := "res://assets/runtime/ui/interfaces/main_hub/"
 const STANDALONE_ROOT := ASSET_ROOT + "standalone/"
 const FRAME_ROOT := ASSET_ROOT + "backplates/"
+const HUB_ICON_ROOT := ASSET_ROOT + "icons/"
 const ICON_ROOT := "res://assets/runtime/ui/shared/meta_icons/atlas_regions/"
+const FOREST_ISLAND_LOOP: SpriteFrames = preload("res://assets/runtime/ui/interfaces/main_hub/animations/forest_island_loop_v01/forest_island_loop_v01.tres")
 const FRAME_SOURCE_SCALES := {
 	"lobby_settings_button_frame_default_v01.png": 0.7142857,
-	"lobby_currency_counter_panel_default_v01.png": 0.4938525,
 	"lobby_mission_panel_with_reward_slot_default_v01.png": 0.71875,
 	"lobby_mission_panel_plain_default_v01.png": 0.71875,
 	"lobby_progress_track_default_v01.png": 0.4444444,
@@ -31,10 +35,7 @@ const PACKED_ICON_DEPENDENCIES := [
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_badge_alert_v01.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_ad_tv_v01.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_battle_crystal_v01.tres"),
-	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_currency_coin_v01.tres"),
-	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_currency_diamond_v01.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_double_coin_x2_v01.tres"),
-	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_first_purchase_gift_v02.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_locked_v01.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_piggy_bank_v02.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_plus_v01.tres"),
@@ -43,6 +44,7 @@ const PACKED_ICON_DEPENDENCIES := [
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_shop_v01.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_signin_calendar_v01.tres"),
 	preload("res://assets/runtime/ui/shared/meta_icons/atlas_regions/lobby_icon_task_notebook_v01.tres"),
+	preload("res://assets/runtime/ui/interfaces/main_hub/icons/lobby_icon_battle_portal_v02.png"),
 ]
 
 var _design_root: Control
@@ -59,6 +61,12 @@ var _pending_crystals := 120
 var _pending_coins := 1804
 var _pending_stage_text := "开始游戏"
 var _pending_progress_text := ""
+var _forest_island: TextureRect
+var _forest_animation_time := 0.0
+var _forest_animation_frame := 0
+var _forest_animation_wait_remaining := 0.0
+var _locked_notice: Panel
+var _locked_notice_tween: Tween
 
 
 func _ready() -> void:
@@ -73,24 +81,60 @@ func _ready() -> void:
 		layout_for_viewport(size)
 
 
+func _process(delta: float) -> void:
+	if not visible or _forest_island == null:
+		return
+	var frame_count := FOREST_ISLAND_LOOP.get_frame_count(&"default")
+	var frame_rate := FOREST_ISLAND_LOOP.get_animation_speed(&"default")
+	if frame_count <= 1 or frame_rate <= 0.0:
+		return
+	if _forest_animation_wait_remaining > 0.0:
+		_forest_animation_wait_remaining -= delta
+		if _forest_animation_wait_remaining > 0.0:
+			return
+		# The supplied final frame is the calm pose. Hold it for the complete
+		# random interval, then restart cleanly from frame one.
+		_forest_animation_wait_remaining = 0.0
+		_forest_animation_time = 0.0
+		_forest_animation_frame = 0
+		_forest_island.texture = FOREST_ISLAND_LOOP.get_frame_texture(&"default", 0)
+		return
+	_forest_animation_time += delta
+	var next_frame := floori(_forest_animation_time * frame_rate)
+	if next_frame >= frame_count:
+		_forest_animation_time = float(frame_count) / frame_rate
+		_forest_animation_frame = frame_count - 1
+		_forest_island.texture = FOREST_ISLAND_LOOP.get_frame_texture(&"default", _forest_animation_frame)
+		_forest_animation_wait_remaining = randf_range(FOREST_ANIMATION_IDLE_MIN, FOREST_ANIMATION_IDLE_MAX)
+		return
+	if next_frame == _forest_animation_frame:
+		return
+	_forest_animation_frame = next_frame
+	_forest_island.texture = FOREST_ISLAND_LOOP.get_frame_texture(&"default", _forest_animation_frame)
+
+
 func _build_lobby_art() -> void:
 	if _design_root == null or _design_root.get_child_count() > 0:
 		return
 	_add_texture("Background", STANDALONE_ROOT + "lobby_background_clean_v01.png", Rect2(Vector2.ZERO, DESIGN_SIZE), _design_root, TextureRect.STRETCH_SCALE)
-	_add_texture("ForestIsland", STANDALONE_ROOT + "lobby_forest_island_v01.png", Rect2(166, 563, 610, 606), _design_root)
+	_forest_island = _add_texture("ForestIsland", STANDALONE_ROOT + "lobby_forest_island_v01.png", Rect2(166, 563, 610, 606), _design_root)
+	if FOREST_ISLAND_LOOP.get_frame_count(&"default") > 0:
+		_forest_island.texture = FOREST_ISLAND_LOOP.get_frame_texture(&"default", 0)
 
 	# Top-left settings is intentionally static in the art-only pass.
 	_add_frame("SettingsFrame", "lobby_settings_button_frame_default_v01.png", Rect2(23, 25, 127, 121), Vector4(48, 48, 48, 48))
 	_add_texture("SettingsIcon", _icon_path("lobby_icon_settings_gear_v01.png"), Rect2(34, 33, 104, 104), _design_root)
 	_add_entry_button("settings", Rect2(23, 25, 127, 121), func(): settings_pressed.emit())
 
-	_build_currency_counter("Crystal", Rect2(205, 50, 245, 66), "lobby_icon_currency_diamond_v01.png", Rect2(193, 30, 101, 109), _pending_crystals)
-	_build_currency_counter("Coin", Rect2(454, 50, 241, 66), "lobby_icon_currency_coin_v01.png", Rect2(436, 25, 114, 115), _pending_coins)
+	# Shared currency art keeps one source file, while the lobby uses smaller
+	# per-slot bounds so neither icon overwhelms the compact top counters.
+	_build_currency_counter("Crystal", Vector2(205, 53), CurrencyAssetsScript.DIAMOND_PATH, Rect2(203, 40, 82, 89), _pending_crystals)
+	_build_currency_counter("Coin", Vector2(454, 53), CurrencyAssetsScript.COIN_PATH, Rect2(450, 39, 86, 87), _pending_coins)
 
 	# The plain frame is derived from the source panel without its baked reward
 	# socket. The purple reward slot below is therefore the only visible plate.
 	_add_frame("MissionPanel", "lobby_mission_panel_plain_default_v01.png", Rect2(178, 174, 604, 165), Vector4(64, 64, 64, 64))
-	var mission_title := _add_label("MissionTitle", "击败敌人", Rect2(220, 198, 290, 57), 37)
+	var mission_title := _add_label("MissionTitle", "完成 1 次挑战", Rect2(220, 198, 370, 57), 37)
 	mission_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_add_frame("MissionProgressTrack", "lobby_progress_track_default_v01.png", Rect2(215, 265, 395, 48), Vector4(42, 30, 42, 30))
 	var fill_clip := Control.new()
@@ -99,11 +143,13 @@ func _build_lobby_art() -> void:
 	_set_rect(fill_clip, Vector2(208, 265), Vector2(402, 43))
 	fill_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_design_root.add_child(fill_clip)
-	_add_frame("Fill", "lobby_progress_fill_green_v01.png", Rect2(6, 0, 293, 44), Vector4(40, 28, 40, 28), fill_clip)
-	_add_label("MissionProgressText", "15/20", Rect2(219, 266, 387, 45), 27)
+	var mission_fill := _add_frame("Fill", "lobby_progress_fill_green_v01.png", Rect2(6, 0, 390, 44), Vector4(40, 28, 40, 28), fill_clip)
+	mission_fill.visible = false
+	_add_label("MissionProgressText", "0/1", Rect2(219, 266, 387, 45), 27)
 	_add_frame("MissionRewardSlot", "lobby_reward_slot_purple_default_v02.png", Rect2(624, 195, 135, 118), Vector4(70, 70, 70, 70))
-	_add_texture("MissionRewardIcon", _icon_path("lobby_icon_reward_star_wand_v01.png"), Rect2(635, 193, 109, 109), _design_root)
+	_add_texture("MissionRewardIcon", CurrencyAssetsScript.DIAMOND_PATH, Rect2(648, 206, 84, 84), _design_root)
 	_add_label("MissionRewardCount", "10", Rect2(696, 259, 55, 43), 31)
+	_add_entry_button("mission_tasks", Rect2(178, 174, 604, 165), func(): entry_pressed.emit("tasks"))
 
 	# Text must be rendered at its authored font size. A non-uniform Control
 	# scale makes the glyph outlines visibly taller and softer on phones.
@@ -113,8 +159,10 @@ func _build_lobby_art() -> void:
 	_build_side_entry("SigninEntry", "signin", Rect2(20, 695, 141, 191), "lobby_icon_signin_calendar_v01.png", "签到", true)
 	_build_side_entry("DoubleCoinEntry", "double_coin", Rect2(20, 922, 141, 191), "lobby_icon_double_coin_x2_v01.png", "双倍金币", false)
 	_build_side_entry("AdEntry", "remove_ads", Rect2(780, 469, 141, 191), "lobby_icon_ad_tv_v01.png", "去广告", false)
-	_build_side_entry("GiftEntry", "first_purchase", Rect2(780, 695, 141, 191), "lobby_icon_first_purchase_gift_v02.png", "首充礼包", true)
-	_build_side_entry("PiggyEntry", "piggy", Rect2(780, 922, 141, 191), "lobby_icon_piggy_bank_v02.png", "存钱罐", false)
+	# First purchase is disabled in the current release. Move piggy bank into its
+	# former second-row slot so the right rail stays compact and aligned with the
+	# left-side sign-in entry; keep the third-row right slot intentionally empty.
+	_build_side_entry("PiggyEntry", "piggy", Rect2(780, 695, 141, 191), "lobby_icon_piggy_bank_v02.png", "存钱罐", false)
 
 	_stage_button = Button.new()
 	_stage_button.name = "StageButton"
@@ -145,22 +193,26 @@ func _build_lobby_art() -> void:
 	# keeping their transparent padding, rounded corners and lower border offscreen.
 	_add_frame("BottomNavigation", "lobby_bottom_navigation_background_v01.png", Rect2(-64, 1450, 1069, 402), Vector4(48, 36, 48, 36))
 	_add_frame("BattleSelectedTab", "lobby_navigation_tab_selected_v01.png", Rect2(307, 1448, 327, 404), Vector4(64, 64, 64, 64))
-	_add_texture("ShopIcon", _icon_path("lobby_icon_shop_v01.png"), Rect2(75, 1474, 161, 161), _design_root)
-	_add_label("ShopLabel", "商城", Rect2(64, 1603, 178, 67), 33)
-	_add_entry_button("shop", Rect2(20, 1446, 280, 226), func(): entry_pressed.emit("shop"))
-	_add_texture("BattleIcon", _icon_path("lobby_icon_battle_crystal_v01.png"), Rect2(360, 1430, 222, 200), _design_root)
+	var shop_icon := _add_texture("ShopIcon", _icon_path("lobby_icon_shop_v01.png"), Rect2(75, 1474, 161, 161), _design_root)
+	shop_icon.modulate = Color(0.48, 0.48, 0.52, 1.0)
+	_add_label("ShopLabel", "未解锁", Rect2(64, 1603, 178, 67), 32, Color(0.66, 0.68, 0.74, 1.0))
+	_add_entry_button("locked_shop", Rect2(32, 1450, 253, 222), _show_locked_notice)
+	_add_texture("BattleIcon", HUB_ICON_ROOT + "lobby_icon_battle_portal_v02.png", Rect2(360, 1430, 222, 200), _design_root)
 	_add_label("BattleLabel", "战斗", Rect2(375, 1584, 198, 70), 41)
-	_add_texture("LockedIcon", _icon_path("lobby_icon_locked_v01.png"), Rect2(708, 1477, 152, 152), _design_root)
-	_add_label("LockedLabel", "未解锁", Rect2(684, 1601, 198, 67), 32, Color(0.72, 0.72, 0.76, 1.0))
+	_add_texture("CrystalNavIcon", _icon_path("lobby_icon_battle_crystal_v01.png"), Rect2(708, 1477, 152, 152), _design_root)
+	_add_label("CrystalNavLabel", "水晶", Rect2(684, 1601, 198, 67), 32)
+	_add_entry_button("crystal_upgrade", Rect2(680, 1446, 240, 226), func(): entry_pressed.emit("crystal_upgrade"))
 
 
-func _build_currency_counter(prefix: String, panel_rect: Rect2, icon_file: String, icon_rect: Rect2, value: int) -> void:
-	# The plus-button socket is part of the frame texture and must remain wholly
-	# inside the right patch instead of being stretched with the counter body.
-	_add_frame(prefix + "Counter", "lobby_currency_counter_panel_default_v01.png", panel_rect, Vector4(56, 40, 104, 40))
+func _build_currency_counter(prefix: String, panel_position: Vector2, icon_path: String, icon_rect: Rect2, value: int) -> void:
+	# This asset is a complete 241 x 61 counter, including its right add-button
+	# socket. It must render at native aspect instead of being reconstructed as a
+	# NinePatch, which visibly distorted both the border and socket.
+	var panel_rect := Rect2(panel_position, CurrencyAssetsScript.HUB_COUNTER_PANEL_SIZE)
+	_add_texture(prefix + "Counter", CurrencyAssetsScript.HUB_COUNTER_PANEL_PATH, panel_rect, _design_root, TextureRect.STRETCH_KEEP_ASPECT_CENTERED)
 	# Currency cutouts were authored to the final top-bar silhouettes. Scale them
 	# to the measured reference rectangles instead of adding letterbox padding.
-	_add_texture(prefix + "Icon", _icon_path(icon_file), icon_rect, _design_root, TextureRect.STRETCH_SCALE)
+	_add_texture(prefix + "Icon", icon_path, icon_rect, _design_root, TextureRect.STRETCH_SCALE)
 	var value_label := _add_label(prefix + "Value", str(value), Rect2(panel_rect.position + Vector2(68, 2), Vector2(panel_rect.size.x - 112, panel_rect.size.y - 4)), 31)
 	_add_texture(prefix + "Plus", _icon_path("lobby_icon_plus_v01.png"), Rect2(panel_rect.end - Vector2(58, 59), Vector2(57, 57)), _design_root)
 	if prefix == "Crystal":
@@ -169,14 +221,15 @@ func _build_currency_counter(prefix: String, panel_rect: Rect2, icon_file: Strin
 		_coin_value = value_label
 
 
-func _build_side_entry(node_name: String, entry_id: String, rect: Rect2, icon_file: String, label_text: String, alert: bool) -> void:
+func _build_side_entry(node_name: String, entry_id: String, rect: Rect2, icon_file: String, label_text: String, alert: bool, icon_rect := Rect2(3, 11, 135, 135)) -> void:
 	var root := Control.new()
 	root.name = node_name
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_set_rect(root, rect.position, rect.size)
 	_design_root.add_child(root)
 	_add_frame("Frame", "lobby_side_menu_button_frame_default_v01.png", Rect2(-10, -7, 161, 205), Vector4(54, 54, 54, 54), root)
-	_add_texture("Icon", _icon_path(icon_file), Rect2(3, 11, 135, 135), root)
+	var icon_path := icon_file if icon_file.begins_with("res://") else _icon_path(icon_file)
+	_add_texture("Icon", icon_path, icon_rect, root)
 	var label := _make_label(label_text, 33 if label_text.length() <= 3 else 27, Color.WHITE, 6)
 	label.name = "Label"
 	_set_rect(label, Vector2(-6, 122), Vector2(rect.size.x + 12, 56))
@@ -205,10 +258,6 @@ func set_entry_visible(entry_id: String, entry_visible: bool) -> void:
 	var button := _entry_buttons.get(entry_id) as Control
 	if button:
 		button.visible = entry_visible
-	if entry_id == "first_purchase":
-		var visual := _design_root.get_node_or_null("GiftEntry") as Control
-		if visual:
-			visual.visible = entry_visible
 
 
 func set_entry_alert(entry_id: String, alert_visible: bool) -> void:
@@ -217,18 +266,47 @@ func set_entry_alert(entry_id: String, alert_visible: bool) -> void:
 		alert.visible = alert_visible
 
 
-func set_daily_activity(current: int) -> void:
-	var normalized := clampi(current, 0, 100)
+func set_task_summary(task_state: Dictionary) -> void:
 	var title := _design_root.get_node_or_null("MissionTitle") as Label
-	if title:
-		title.text = "今日活跃度"
 	var progress := _design_root.get_node_or_null("MissionProgressText") as Label
-	if progress:
-		progress.text = "%d/100" % normalized
 	var fill := _design_root.get_node_or_null("MissionProgressFillClip/Fill") as Control
+	var reward_slot := _design_root.get_node_or_null("MissionRewardSlot") as Control
+	var reward_icon := _design_root.get_node_or_null("MissionRewardIcon") as TextureRect
+	var reward_count := _design_root.get_node_or_null("MissionRewardCount") as Label
+	if task_state.is_empty():
+		if title:
+			title.text = "今日任务已完成"
+		if progress:
+			progress.text = "4/4"
+		if fill:
+			fill.visible = true
+			fill.size.x = 390.0
+		if reward_slot:
+			reward_slot.visible = false
+		if reward_icon:
+			reward_icon.visible = false
+		if reward_count:
+			reward_count.visible = false
+		return
+	var current := int(task_state.get("progress", 0))
+	var target := maxi(1, int(task_state.get("target", 1)))
+	if title:
+		title.text = str(task_state.get("title", ""))
+	if progress:
+		progress.text = "%d/%d" % [current, target]
 	if fill:
-		fill.visible = normalized > 0
-		fill.size.x = 390.0 * float(normalized) / 100.0
+		fill.visible = current > 0
+		fill.size.x = 390.0 * clampf(float(current) / float(target), 0.0, 1.0)
+	if reward_slot:
+		reward_slot.visible = true
+	var reward := task_state.get("reward", {}) as Dictionary
+	var reward_kind := "crystals" if reward.has("crystals") else "coins"
+	if reward_icon:
+		reward_icon.visible = true
+		reward_icon.texture = _load_texture(CurrencyAssetsScript.DIAMOND_PATH if reward_kind == "crystals" else CurrencyAssetsScript.COIN_PATH)
+	if reward_count:
+		reward_count.visible = true
+		reward_count.text = str(int(reward.get(reward_kind, 0)))
 
 
 func layout_for_viewport(viewport_size: Vector2) -> void:
@@ -254,8 +332,48 @@ func hide_menu() -> void:
 	if _intro_tween and _intro_tween.is_valid():
 		_intro_tween.kill()
 	_intro_tween = null
+	_clear_locked_notice()
 	set_interactive(false)
 	visible = false
+
+
+func _show_locked_notice() -> void:
+	_clear_locked_notice()
+	_locked_notice = Panel.new()
+	_locked_notice.name = "LockedNotice"
+	_locked_notice.position = Vector2(190, 785)
+	_locked_notice.size = Vector2(561, 102)
+	_locked_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_locked_notice.z_index = 200
+	_locked_notice.modulate.a = 0.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.10, 0.24, 0.94)
+	style.border_color = Color(0.34, 0.68, 1.0, 0.96)
+	style.set_border_width_all(4)
+	style.set_corner_radius_all(24)
+	style.shadow_color = Color(0.0, 0.02, 0.08, 0.55)
+	style.shadow_size = 10
+	style.shadow_offset = Vector2(0, 5)
+	_locked_notice.add_theme_stylebox_override("panel", style)
+	_design_root.add_child(_locked_notice)
+	var copy := _make_label("未解锁，敬请期待", 38, Color.WHITE, 5)
+	copy.name = "Copy"
+	copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_locked_notice.add_child(copy)
+	_locked_notice_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_locked_notice_tween.tween_property(_locked_notice, "modulate:a", 1.0, 0.12)
+	_locked_notice_tween.tween_interval(1.20)
+	_locked_notice_tween.tween_property(_locked_notice, "modulate:a", 0.0, 0.22)
+	_locked_notice_tween.tween_callback(_clear_locked_notice)
+
+
+func _clear_locked_notice() -> void:
+	if _locked_notice_tween and _locked_notice_tween.is_valid():
+		_locked_notice_tween.kill()
+	_locked_notice_tween = null
+	if is_instance_valid(_locked_notice):
+		_locked_notice.queue_free()
+	_locked_notice = null
 
 
 func set_interactive(enabled: bool) -> void:
@@ -407,3 +525,5 @@ func _wire_button_feedback(button: BaseButton) -> void:
 func _exit_tree() -> void:
 	if _intro_tween and _intro_tween.is_valid():
 		_intro_tween.kill()
+	if _locked_notice_tween and _locked_notice_tween.is_valid():
+		_locked_notice_tween.kill()

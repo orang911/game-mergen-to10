@@ -17,9 +17,11 @@ const CONFIRM_RECT := Rect2(319.0, 1205.0, 303.0, 110.0)
 const HINT_RECT := Rect2(150.0, 1140.0, 440.0, 58.0)
 const COMMIT_FLY_DURATION := 0.46
 const COMMIT_ARRIVAL_SCALE := 0.45
-const DESCRIPTION_RECT := Rect2(29.0, 386.0, 224.0, 156.0)
-const DESCRIPTION_MAX_FONT_SIZE := 24
-const DESCRIPTION_MIN_FONT_SIZE := 20
+const ICON_SAFE_RECT := Rect2(44.0, 128.0, 194.0, 202.0)
+const DESCRIPTION_RECT := Rect2(34.0, 378.0, 214.0, 140.0)
+const DESCRIPTION_MAX_FONT_SIZE := 21
+const DESCRIPTION_MIN_FONT_SIZE := 18
+const DESCRIPTION_LINE_SPACING := -2
 
 const CARD_TEXTURE := preload("res://assets/runtime/ui/interfaces/imprint_choice/backplates/ui_item_card_blank_300x636_2x_v01.png")
 const CONFIRM_TEXTURE := preload("res://assets/runtime/ui/interfaces/imprint_choice/buttons/ui_button_confirm_blank_330x120_2x_v01.png")
@@ -218,15 +220,24 @@ func _build_slots() -> void:
 		_set_rect(card, Vector2.ZERO, CARD_SIZE)
 		root.add_child(card)
 
-		var name_label := _label(_imprint_name(card_id), 32, Color.WHITE, 5, 850)
+		var name_label := _label(_imprint_name(card_id), 30, Color.WHITE, 5, 850)
 		name_label.name = "Name"
-		_set_rect(name_label, Vector2(16.0, 13.0), Vector2(250.0, 84.0))
+		name_label.clip_text = true
+		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		_set_rect(name_label, Vector2(20.0, 14.0), Vector2(242.0, 76.0))
 		root.add_child(name_label)
+
+		var icon_clip := Control.new()
+		icon_clip.name = "IconClip"
+		icon_clip.clip_contents = true
+		icon_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_set_rect(icon_clip, ICON_SAFE_RECT.position, ICON_SAFE_RECT.size)
+		root.add_child(icon_clip)
 
 		var icon := _texture_rect(_icon_texture(card_id))
 		icon.name = "Icon"
-		_set_rect(icon, Vector2(31.0, 108.0), Vector2(220.0, 220.0))
-		root.add_child(icon)
+		_set_rect(icon, Vector2.ZERO, ICON_SAFE_RECT.size)
+		icon_clip.add_child(icon)
 
 		var description_text := _imprint_description(card_id, _level_for_index(index))
 		var description := _label(description_text, _description_font_size(description_text), Color(0.035, 0.045, 0.065, 1.0), 0, 700)
@@ -234,7 +245,7 @@ func _build_slots() -> void:
 		description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		description.clip_text = true
-		description.add_theme_constant_override("line_spacing", 1)
+		description.add_theme_constant_override("line_spacing", DESCRIPTION_LINE_SPACING)
 		_set_rect(description, DESCRIPTION_RECT.position, DESCRIPTION_RECT.size)
 		root.add_child(description)
 
@@ -498,17 +509,17 @@ func _imprint_name(card_id: String) -> String:
 func _imprint_description(card_id: String, level: int) -> String:
 	match card_id:
 		"ascension_hammer":
-			return "下一次合成结果提升%d级" % int(GameConfig.ASCENSION_EXTRA_LEVELS[level - 1])
+			return "下一次合成结果\n提升%d级" % int(GameConfig.ASCENSION_EXTRA_LEVELS[level - 1])
 		"unity_dial":
-			return "将其余非最高级方块统一为本次合成前数字"
+			return "将其余非最高级方块\n统一为本次合成前数字"
 		"fate_shuffler":
-			return "重新排列棋盘，并保证至少一组可合成方块"
+			return "重新排列棋盘，并保证\n至少一组可合成方块"
 		"twin_mold":
-			return "使%d个相邻方块变为本次合成结果数字" % int(GameConfig.TWIN_MOLD_TARGETS[level - 1])
+			return "使%d个相邻方块变为\n本次合成结果数字" % int(GameConfig.TWIN_MOLD_TARGETS[level - 1])
 		"castle_cannon":
-			return "对最前方怪物造成%d%%基础攻击伤害" % roundi(float(GameConfig.CASTLE_CANNON_DAMAGE[level - 1]) * 100.0)
+			return "对最前方怪物造成\n%d%%基础攻击伤害" % roundi(float(GameConfig.CASTLE_CANNON_DAMAGE[level - 1]) * 100.0)
 		"dragon_catapult":
-			return "攻击前方%d只怪物，造成%d%%伤害并附加燃烧" % [
+			return "攻击前方%d只怪物\n造成%d%%伤害\n并附加燃烧" % [
 				int(GameConfig.DRAGON_CATAPULT_TARGETS[level - 1]),
 				roundi(float(GameConfig.DRAGON_CATAPULT_DAMAGE[level - 1]) * 100.0),
 			]
@@ -523,10 +534,10 @@ func _description_font_size(value: String) -> int:
 	var longest_line := 0
 	for line in value.split("\n"):
 		longest_line = maxi(longest_line, str(line).length())
-	if compact.length() >= 25 or longest_line >= 15:
+	if value.count("\n") >= 2 or compact.length() >= 25 or longest_line >= 12:
 		return DESCRIPTION_MIN_FONT_SIZE
-	if compact.length() >= 20 or longest_line >= 12:
-		return 22
+	if compact.length() >= 18 or longest_line >= 10:
+		return 19
 	return DESCRIPTION_MAX_FONT_SIZE
 
 

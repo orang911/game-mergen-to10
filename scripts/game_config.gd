@@ -137,12 +137,12 @@ const CRYSTAL_EXTRA_TARGETS_BY_LEVEL := [1, 1, 1, 2, 2]
 const CRYSTAL_PIERCE_DAMAGE_RATIO := [0.35, 0.40, 0.45, 0.50, 0.55]
 
 const SKILL_IMPRINT_TEXTURES := {
-	"ascension_hammer": "res://assets/runtime/ui/components/card_icons/atlas_regions/ascension_hammer.tres",
-	"unity_dial": "res://assets/runtime/ui/components/card_icons/atlas_regions/unity_dial.tres",
-	"fate_shuffler": "res://assets/runtime/ui/components/card_icons/atlas_regions/fate_shuffler.tres",
-	"twin_mold": "res://assets/runtime/ui/components/card_icons/atlas_regions/twin_mold.tres",
-	"castle_cannon": "res://assets/runtime/ui/components/card_icons/atlas_regions/castle_cannon.tres",
-	"dragon_catapult": "res://assets/runtime/ui/components/card_icons/atlas_regions/dragon_catapult.tres",
+	"ascension_hammer": "res://assets/runtime/ui/components/card_icons/imprints/imprint_ascension_hammer_v01.png",
+	"unity_dial": "res://assets/runtime/ui/components/card_icons/imprints/imprint_unity_dial_v01.png",
+	"fate_shuffler": "res://assets/runtime/ui/components/card_icons/imprints/imprint_fate_shuffler_v01.png",
+	"twin_mold": "res://assets/runtime/ui/components/card_icons/imprints/imprint_twin_mold_v01.png",
+	"castle_cannon": "res://assets/runtime/ui/components/card_icons/imprints/imprint_castle_cannon_v01.png",
+	"dragon_catapult": "res://assets/runtime/ui/components/card_icons/imprints/imprint_dragon_catapult_v01.png",
 	"frost_bell": "res://assets/runtime/ui/interfaces/battle/energy_hud/icons/combat_skill_placeholder.png",
 	"thunder_ballista": "res://assets/runtime/ui/interfaces/battle/energy_hud/icons/combat_skill_placeholder.png",
 }
