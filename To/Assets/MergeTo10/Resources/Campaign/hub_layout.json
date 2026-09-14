@@ -1,0 +1,1488 @@
+{
+	"forestFps": 24.0,
+	"forestFrames": 68,
+	"items": [
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 1672.0,
+			"key": "hub_piece_0",
+			"kind": "image",
+			"name": "Background",
+			"outline": 0,
+			"text": "",
+			"w": 941.0,
+			"x": 0.0,
+			"y": 0.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 606.0,
+			"key": "hub_piece_1",
+			"kind": "image",
+			"name": "ForestIsland",
+			"outline": 0,
+			"text": "",
+			"w": 610.0,
+			"x": 166.0,
+			"y": 563.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				34,
+				34,
+				34,
+				34
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 121.0,
+			"key": "hub_piece_2",
+			"kind": "image",
+			"name": "SettingsFrame",
+			"outline": 0,
+			"text": "",
+			"w": 127.0,
+			"x": 23.0,
+			"y": 25.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 104.0,
+			"key": "hub_piece_3",
+			"kind": "image",
+			"name": "SettingsIcon",
+			"outline": 0,
+			"text": "",
+			"w": 104.0,
+			"x": 34.0,
+			"y": 33.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 121.0,
+			"key": "",
+			"kind": "button",
+			"name": "SettingsButton",
+			"outline": 0,
+			"text": "",
+			"w": 127.0,
+			"x": 23.0,
+			"y": 25.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 61.0,
+			"key": "hub_piece_4",
+			"kind": "image",
+			"name": "CrystalCounter",
+			"outline": 0,
+			"text": "",
+			"w": 241.0,
+			"x": 205.0,
+			"y": 53.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 89.0,
+			"key": "hub_piece_5",
+			"kind": "image",
+			"name": "CrystalIcon",
+			"outline": 0,
+			"text": "",
+			"w": 82.0,
+			"x": 203.0,
+			"y": 40.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 31,
+			"h": 57.0,
+			"key": "",
+			"kind": "text",
+			"name": "CrystalValue",
+			"outline": 6,
+			"text": "120",
+			"w": 129.0,
+			"x": 273.0,
+			"y": 55.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 57.0,
+			"key": "hub_piece_6",
+			"kind": "image",
+			"name": "CrystalPlus",
+			"outline": 0,
+			"text": "",
+			"w": 57.0,
+			"x": 388.0,
+			"y": 55.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 61.0,
+			"key": "hub_piece_7",
+			"kind": "image",
+			"name": "CoinCounter",
+			"outline": 0,
+			"text": "",
+			"w": 241.0,
+			"x": 454.0,
+			"y": 53.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 87.0,
+			"key": "hub_piece_8",
+			"kind": "image",
+			"name": "CoinIcon",
+			"outline": 0,
+			"text": "",
+			"w": 86.0,
+			"x": 450.0,
+			"y": 39.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 31,
+			"h": 57.0,
+			"key": "",
+			"kind": "text",
+			"name": "CoinValue",
+			"outline": 6,
+			"text": "1804",
+			"w": 129.0,
+			"x": 522.0,
+			"y": 55.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 57.0,
+			"key": "hub_piece_9",
+			"kind": "image",
+			"name": "CoinPlus",
+			"outline": 0,
+			"text": "",
+			"w": 57.0,
+			"x": 637.0,
+			"y": 55.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				46,
+				46,
+				46,
+				46
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 165.0,
+			"key": "hub_piece_10",
+			"kind": "image",
+			"name": "MissionPanel",
+			"outline": 0,
+			"text": "",
+			"w": 604.0,
+			"x": 178.0,
+			"y": 174.0
+		},
+		{
+			"align": 0,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 37,
+			"h": 57.0,
+			"key": "",
+			"kind": "text",
+			"name": "MissionTitle",
+			"outline": 6,
+			"text": "完成 1 次挑战",
+			"w": 370.0,
+			"x": 220.0,
+			"y": 198.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				19,
+				13,
+				19,
+				13
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 48.0,
+			"key": "hub_piece_11",
+			"kind": "image",
+			"name": "MissionProgressTrack",
+			"outline": 0,
+			"text": "",
+			"w": 395.0,
+			"x": 215.0,
+			"y": 265.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 27,
+			"h": 45.0,
+			"key": "",
+			"kind": "text",
+			"name": "MissionProgressText",
+			"outline": 6,
+			"text": "0/1",
+			"w": 387.0,
+			"x": 219.0,
+			"y": 266.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				36,
+				36,
+				36,
+				36
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 118.0,
+			"key": "hub_piece_12",
+			"kind": "image",
+			"name": "MissionRewardSlot",
+			"outline": 0,
+			"text": "",
+			"w": 135.0,
+			"x": 624.0,
+			"y": 195.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 84.0,
+			"key": "hub_piece_13",
+			"kind": "image",
+			"name": "MissionRewardIcon",
+			"outline": 0,
+			"text": "",
+			"w": 84.0,
+			"x": 648.0,
+			"y": 206.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 31,
+			"h": 43.0,
+			"key": "",
+			"kind": "text",
+			"name": "MissionRewardCount",
+			"outline": 6,
+			"text": "10",
+			"w": 55.0,
+			"x": 696.0,
+			"y": 259.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 165.0,
+			"key": "",
+			"kind": "button",
+			"name": "MissionTasksButton",
+			"outline": 0,
+			"text": "",
+			"w": 604.0,
+			"x": 178.0,
+			"y": 174.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 70,
+			"h": 101.0,
+			"key": "",
+			"kind": "text",
+			"name": "LobbyTitle",
+			"outline": 10,
+			"text": "魔幻森林",
+			"w": 525.0,
+			"x": 212.0,
+			"y": 402.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				37,
+				37,
+				37,
+				37
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 205.0,
+			"key": "hub_piece_14",
+			"kind": "image",
+			"name": "Frame",
+			"outline": 0,
+			"text": "",
+			"w": 161.0,
+			"x": 10.0,
+			"y": 462.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 135.0,
+			"key": "hub_piece_15",
+			"kind": "image",
+			"name": "Icon",
+			"outline": 0,
+			"text": "",
+			"w": 135.0,
+			"x": 23.0,
+			"y": 480.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 33,
+			"h": 56.0,
+			"key": "",
+			"kind": "text",
+			"name": "Label",
+			"outline": 6,
+			"text": "任务",
+			"w": 153.0,
+			"x": 14.0,
+			"y": 591.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 74.0,
+			"key": "hub_piece_16",
+			"kind": "image",
+			"name": "Alert",
+			"outline": 0,
+			"text": "",
+			"w": 74.0,
+			"x": 110.0,
+			"y": 445.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 191.0,
+			"key": "",
+			"kind": "button",
+			"name": "TasksButton",
+			"outline": 0,
+			"text": "",
+			"w": 141.0,
+			"x": 20.0,
+			"y": 469.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				37,
+				37,
+				37,
+				37
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 205.0,
+			"key": "hub_piece_17",
+			"kind": "image",
+			"name": "Frame",
+			"outline": 0,
+			"text": "",
+			"w": 161.0,
+			"x": 10.0,
+			"y": 688.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 135.0,
+			"key": "hub_piece_18",
+			"kind": "image",
+			"name": "Icon",
+			"outline": 0,
+			"text": "",
+			"w": 135.0,
+			"x": 23.0,
+			"y": 706.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 33,
+			"h": 56.0,
+			"key": "",
+			"kind": "text",
+			"name": "Label",
+			"outline": 6,
+			"text": "签到",
+			"w": 153.0,
+			"x": 14.0,
+			"y": 817.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 74.0,
+			"key": "hub_piece_19",
+			"kind": "image",
+			"name": "Alert",
+			"outline": 0,
+			"text": "",
+			"w": 74.0,
+			"x": 110.0,
+			"y": 671.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 191.0,
+			"key": "",
+			"kind": "button",
+			"name": "SigninButton",
+			"outline": 0,
+			"text": "",
+			"w": 141.0,
+			"x": 20.0,
+			"y": 695.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				37,
+				37,
+				37,
+				37
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 205.0,
+			"key": "hub_piece_20",
+			"kind": "image",
+			"name": "Frame",
+			"outline": 0,
+			"text": "",
+			"w": 161.0,
+			"x": 10.0,
+			"y": 915.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 135.0,
+			"key": "hub_piece_21",
+			"kind": "image",
+			"name": "Icon",
+			"outline": 0,
+			"text": "",
+			"w": 135.0,
+			"x": 23.0,
+			"y": 933.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 27,
+			"h": 56.0,
+			"key": "",
+			"kind": "text",
+			"name": "Label",
+			"outline": 6,
+			"text": "双倍金币",
+			"w": 153.0,
+			"x": 14.0,
+			"y": 1044.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 191.0,
+			"key": "",
+			"kind": "button",
+			"name": "DoubleCoinButton",
+			"outline": 0,
+			"text": "",
+			"w": 141.0,
+			"x": 20.0,
+			"y": 922.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				37,
+				37,
+				37,
+				37
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 205.0,
+			"key": "hub_piece_22",
+			"kind": "image",
+			"name": "Frame",
+			"outline": 0,
+			"text": "",
+			"w": 161.0,
+			"x": 770.0,
+			"y": 462.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 135.0,
+			"key": "hub_piece_23",
+			"kind": "image",
+			"name": "Icon",
+			"outline": 0,
+			"text": "",
+			"w": 135.0,
+			"x": 783.0,
+			"y": 480.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 33,
+			"h": 56.0,
+			"key": "",
+			"kind": "text",
+			"name": "Label",
+			"outline": 6,
+			"text": "去广告",
+			"w": 153.0,
+			"x": 774.0,
+			"y": 591.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 191.0,
+			"key": "",
+			"kind": "button",
+			"name": "RemoveAdsButton",
+			"outline": 0,
+			"text": "",
+			"w": 141.0,
+			"x": 780.0,
+			"y": 469.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				37,
+				37,
+				37,
+				37
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 205.0,
+			"key": "hub_piece_24",
+			"kind": "image",
+			"name": "Frame",
+			"outline": 0,
+			"text": "",
+			"w": 161.0,
+			"x": 770.0,
+			"y": 688.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 135.0,
+			"key": "hub_piece_25",
+			"kind": "image",
+			"name": "Icon",
+			"outline": 0,
+			"text": "",
+			"w": 135.0,
+			"x": 783.0,
+			"y": 706.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 33,
+			"h": 56.0,
+			"key": "",
+			"kind": "text",
+			"name": "Label",
+			"outline": 6,
+			"text": "存钱罐",
+			"w": 153.0,
+			"x": 774.0,
+			"y": 817.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 191.0,
+			"key": "",
+			"kind": "button",
+			"name": "PiggyButton",
+			"outline": 0,
+			"text": "",
+			"w": 141.0,
+			"x": 780.0,
+			"y": 695.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				39.0,
+				37.0,
+				39.0,
+				37.0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 162.0,
+			"key": "hub_piece_26",
+			"kind": "button",
+			"name": "StageButton",
+			"outline": 0,
+			"text": "",
+			"w": 426.0,
+			"x": 258.0,
+			"y": 1179.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 65,
+			"h": 162.0,
+			"key": "",
+			"kind": "text",
+			"name": "Label",
+			"outline": 7,
+			"text": "开始游戏",
+			"w": 426.0,
+			"x": 258.0,
+			"y": 1179.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				48,
+				36,
+				48,
+				36
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 402.0,
+			"key": "hub_piece_27",
+			"kind": "image",
+			"name": "BottomNavigation",
+			"outline": 0,
+			"text": "",
+			"w": 1069.0,
+			"x": -64.0,
+			"y": 1450.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				40,
+				40,
+				40,
+				40
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 404.0,
+			"key": "hub_piece_28",
+			"kind": "image",
+			"name": "BattleSelectedTab",
+			"outline": 0,
+			"text": "",
+			"w": 327.0,
+			"x": 307.0,
+			"y": 1448.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				0.479999989271164,
+				0.479999989271164,
+				0.519999980926514,
+				1.0
+			],
+			"font": 24,
+			"h": 161.0,
+			"key": "hub_piece_29",
+			"kind": "image",
+			"name": "ShopIcon",
+			"outline": 0,
+			"text": "",
+			"w": 161.0,
+			"x": 75.0,
+			"y": 1474.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				0.660000026226044,
+				0.680000007152557,
+				0.740000009536743,
+				1.0
+			],
+			"font": 32,
+			"h": 67.0,
+			"key": "",
+			"kind": "text",
+			"name": "ShopLabel",
+			"outline": 6,
+			"text": "未解锁",
+			"w": 178.0,
+			"x": 64.0,
+			"y": 1603.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 222.0,
+			"key": "",
+			"kind": "button",
+			"name": "LockedShopButton",
+			"outline": 0,
+			"text": "",
+			"w": 253.0,
+			"x": 32.0,
+			"y": 1450.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 200.0,
+			"key": "hub_piece_30",
+			"kind": "image",
+			"name": "BattleIcon",
+			"outline": 0,
+			"text": "",
+			"w": 222.0,
+			"x": 360.0,
+			"y": 1430.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 41,
+			"h": 70.0,
+			"key": "",
+			"kind": "text",
+			"name": "BattleLabel",
+			"outline": 6,
+			"text": "战斗",
+			"w": 198.0,
+			"x": 375.0,
+			"y": 1584.0
+		},
+		{
+			"align": 1,
+			"aspect": true,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 152.0,
+			"key": "hub_piece_31",
+			"kind": "image",
+			"name": "CrystalNavIcon",
+			"outline": 0,
+			"text": "",
+			"w": 152.0,
+			"x": 708.0,
+			"y": 1477.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 32,
+			"h": 67.0,
+			"key": "",
+			"kind": "text",
+			"name": "CrystalNavLabel",
+			"outline": 6,
+			"text": "水晶",
+			"w": 198.0,
+			"x": 684.0,
+			"y": 1601.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				0,
+				0,
+				0,
+				0
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 226.0,
+			"key": "",
+			"kind": "button",
+			"name": "CrystalUpgradeButton",
+			"outline": 0,
+			"text": "",
+			"w": 240.0,
+			"x": 680.0,
+			"y": 1446.0
+		},
+		{
+			"align": 1,
+			"aspect": false,
+			"border": [
+				16,
+				11,
+				16,
+				11
+			],
+			"color": [
+				1.0,
+				1.0,
+				1.0,
+				1.0
+			],
+			"font": 24,
+			"h": 44.0,
+			"key": "hub_piece_32",
+			"kind": "image",
+			"name": "Fill",
+			"outline": 0,
+			"text": "",
+			"w": 390.0,
+			"x": 214.0,
+			"y": 265.0
+		}
+	]
+}

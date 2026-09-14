@@ -1,0 +1,357 @@
+{
+  "files": [
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\00_current_product_baseline.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/00_current_product_baseline.md",
+      "bytes": 6192,
+      "sha256": "DD322205A2D3C8338FBAD4475D3E8F945CCB7B3E049725AF5E9F38771A7AFA57"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\01_current_state.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/01_current_state.md",
+      "bytes": 2059,
+      "sha256": "CB97FAA3E59953984D52ACD8252DE7E5E46F95D43CB3106F5A2D6010D9B78A47"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\02_core_merge_rules.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/02_core_merge_rules.md",
+      "bytes": 2890,
+      "sha256": "601322898255C4E77C65BE99D9B7392C13093B01B209F46025D8CF460F813188"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\03_combat_design.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/03_combat_design.md",
+      "bytes": 2494,
+      "sha256": "9E3C5F8277E42EDDF6DAB5E9E1032CE4C2DE237B056248B2E6ADD69C29F57B58"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\04_attack_crystal_design.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/04_attack_crystal_design.md",
+      "bytes": 2054,
+      "sha256": "2A106DF9F4930D8379CC0884508A9FD15EFCB12482F7ADE78CDF66D5B0A3828B"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\05_technical_architecture.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/05_technical_architecture.md",
+      "bytes": 3028,
+      "sha256": "B0BBEEECB274B889236D38841C68E17E1442A805778C13E08B994D992EB45F80"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\06_visual_scene_plan.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/06_visual_scene_plan.md",
+      "bytes": 2560,
+      "sha256": "8313C449ED52661FCD1643E175FFF731D10981406BF419DD5F11CC4E2866BD30"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\07_roadmap.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/07_roadmap.md",
+      "bytes": 1828,
+      "sha256": "99605C32EA749593C00C5F6B39E7EED173B0E31A05892B010DB1692FA3C233BC"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\08_open_questions.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/08_open_questions.md",
+      "bytes": 1678,
+      "sha256": "BCCCD98557DC4574510350B178B5E3F72068160CCFF297EB617B1FF9E31C9D40"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\09_decision_log.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/09_decision_log.md",
+      "bytes": 10356,
+      "sha256": "4FDCF22D2BFD647AF4ABDBA29BDA08AA5FAD6B244573BEF84BFF296E22B63406"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\10_architecture_maintenance_art_effects.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/10_architecture_maintenance_art_effects.md",
+      "bytes": 3112,
+      "sha256": "54BA2EC1EF6807B82897216744065036011B1A4641C23E7FE02125C33F72480F"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\11_web_smoke_test_2026-07-08.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/11_web_smoke_test_2026-07-08.md",
+      "bytes": 8972,
+      "sha256": "8C679A6D567E9AC24AD48A2E826DD702BF62EB7236ADACCDC79CBB08A950DC80"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\12_execution_plan_2026-07-15.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/12_execution_plan_2026-07-15.md",
+      "bytes": 5721,
+      "sha256": "4E16AE0AB96535D67566C493F7FF978A9B6EB5A73C4D11C283FFF0FA59E63850"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\13_skill_imprint_mechanism.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/13_skill_imprint_mechanism.md",
+      "bytes": 1947,
+      "sha256": "FACD2FDCFB4D8079FB8D518546362812AF382A5E598DE148A2E22B624340FB55"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\14_initial_card_catalog.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/14_initial_card_catalog.md",
+      "bytes": 2520,
+      "sha256": "5BAB1D52CD9BA32971C65AEB0BEEC5A45F9767B9E9501485E66319BB6C56CF9E"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\15_unified_card_wave_rules_2026-07-16.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/15_unified_card_wave_rules_2026-07-16.md",
+      "bytes": 3132,
+      "sha256": "6C41AA1FB3E3F50E0E988EC5DDA00C9DD6CCA14485D7325EBB7895E5D80CD59E"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\16_crystal_tower_card_design_2026-07-17.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/16_crystal_tower_card_design_2026-07-17.md",
+      "bytes": 6840,
+      "sha256": "C30115FA84AA842B2B72D8AC2063B7BD5023555EA68EF7F2F37E3519C4F699C5"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\17_target_card_catalog_2026-07-17.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/17_target_card_catalog_2026-07-17.md",
+      "bytes": 9503,
+      "sha256": "CD14A86BD738A1B263F27F01B4F403BAB897A261628D8B1D63354ADC53319BB1"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\18_balance_simulation_report_2026-07-22.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/18_balance_simulation_report_2026-07-22.md",
+      "bytes": 3669,
+      "sha256": "1A3B6BAE8FC90F37809E367E6D2D49C75ECF35702565CFD8AB6D9A3361C44537"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\19_refresh_probability_experiment_2026-07-22.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/19_refresh_probability_experiment_2026-07-22.md",
+      "bytes": 2639,
+      "sha256": "6112A7738A3C7F4DCEB321E2C64000E1DDE92D7F94DBF8F2D95864821E992662"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\20_state_scored_refresh_experiment_2026-07-22.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/20_state_scored_refresh_experiment_2026-07-22.md",
+      "bytes": 2439,
+      "sha256": "E8E28D0998F45A3DE7BC70343D0C557573FCC370BE8DA4BC914F20633951FAE0"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\21_sliding_window_board_progression_2026-07-22.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/21_sliding_window_board_progression_2026-07-22.md",
+      "bytes": 2930,
+      "sha256": "99C65CD1914B690613B2BF252B9F962DB3B8A98B93FE94733353CF96195CEBC4"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\22_crystal_tower_long_term_progression_2026-07-23.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/22_crystal_tower_long_term_progression_2026-07-23.md",
+      "bytes": 2000,
+      "sha256": "F6161BEF0C45B23649C368425D5A097480E77E1C815386FA52DFB4032AFF8629"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\23_combo_focus_simulation_2026-07-23.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/23_combo_focus_simulation_2026-07-23.md",
+      "bytes": 3721,
+      "sha256": "2137E0AAE0AC46C38C806A477DACA64A2035668A572BA8412496188E4ABAD902"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\24_chapter_one_campaign.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/24_chapter_one_campaign.md",
+      "bytes": 1855,
+      "sha256": "391E652374B1F2962FCB6BEE771AEC8A825834D55DCC263E402CB8C1EA947193"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\26_combat_balance_master.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/26_combat_balance_master.md",
+      "bytes": 23795,
+      "sha256": "B775175F0CCF355A7BFF08C936E480CA9FFBC47783D55DA5543DEBB6E20ABEF6"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\27_art_production_and_asset_pipeline_standard_2026-08-06.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/27_art_production_and_asset_pipeline_standard_2026-08-06.md",
+      "bytes": 33705,
+      "sha256": "CBAA93D16723D344364B39AD32664BF94815C3314075AE94CC2654A7E67F59AF"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\27_chapter01_ui_art_requirements.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/27_chapter01_ui_art_requirements.md",
+      "bytes": 18670,
+      "sha256": "20A817C97C421DDF5557B11E59DAD2BFF5B5D3B9D1E364893161171CA2DE8322"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\28_secondary_interfaces_2026-08-13.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/28_secondary_interfaces_2026-08-13.md",
+      "bytes": 1433,
+      "sha256": "EBA88E28A46A05D48935E60B3A3C0C43B11A80B76D7C98EFC15DDA46658A7A44"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\29_chain_merge_and_chain_burst_v1.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/29_chain_merge_and_chain_burst_v1.md",
+      "bytes": 2701,
+      "sha256": "A2057009D7F1CA8653F9011EF1888DDDB2DD6ACD72D74CF63C98426950710651"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\30_resonance_v05_test_notes.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/30_resonance_v05_test_notes.md",
+      "bytes": 1706,
+      "sha256": "A3D9C25855D559E1828695381326FE774F5C8026FE2BFC279CADEC119BDCFFE4"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\31_ui_global_audit_2026-09-10.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/31_ui_global_audit_2026-09-10.md",
+      "bytes": 1528,
+      "sha256": "C90B2DA635BDFCE60D823606A9A93A8D60EC7CF1A6BCA9CAC182029B32C2CCE2"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\32_ui_unified_v02_integration.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/32_ui_unified_v02_integration.md",
+      "bytes": 3489,
+      "sha256": "6131DD038887183E49CC778D5B1BE7E96C1FE6D685B97111E1F5474E3A3EAA1C"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\README.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/README.md",
+      "bytes": 2664,
+      "sha256": "E44F9A2A2AE9103B352417FDCA9517295D29B194FD5C1F600150FCFEA077AA16"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\archive\\PROJECT_DIRECTION_FULL_2026-07-04.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/archive/PROJECT_DIRECTION_FULL_2026-07-04.md",
+      "bytes": 86680,
+      "sha256": "FEC0CE85E48F723422BDA18EDDE54CA8B438D4F4CEFD52A2431B66A47DDBB62D"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\.gdignore",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/.gdignore",
+      "bytes": 65,
+      "sha256": "40F00C4426CA22A04B9BCCD087D6DCBD7CFE2E1FB3EC4289EADD8B7BE27A3AC0"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\active_review_visual_queue_2026-08-20.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/active_review_visual_queue_2026-08-20.csv",
+      "bytes": 37326,
+      "sha256": "D5C4A6947E06E8C280CE91D38B56BFD6BB7F6EF2D7E2DD2EE0DFF13E371B7A1C"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\android_arm64_test_build.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/android_arm64_test_build.md",
+      "bytes": 2434,
+      "sha256": "6C135F9B3C594E218CC1A8B050F6C7AC64711D5C0E05850A51DE97DF1AAB10F9"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\art_source_map.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/art_source_map.csv",
+      "bytes": 67067,
+      "sha256": "A1DC64D2988602967D61C6F3E0CFF3176C3650229A790AB249C3FFC112DC67F9"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\asset_inventory.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/asset_inventory.csv",
+      "bytes": 231411,
+      "sha256": "B70EFCFC83A85B3FAF9364727DC6112140F6C9E1C264E85184CF0AEB1C708C93"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\asset_move_map.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/asset_move_map.csv",
+      "bytes": 37222,
+      "sha256": "80FA4D4955B800ECA64A15F8DFAFD1D1043A81AE70CD1AE75D2EBBB8C2A058DE"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\atlas_groups.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/atlas_groups.csv",
+      "bytes": 21574,
+      "sha256": "15763A497E9061473A055AC0D399C29208E96D40034B89C55A13D7C46D3D10BB"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\claude_resource_followup_execution_status_2026-08-20.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/claude_resource_followup_execution_status_2026-08-20.md",
+      "bytes": 9532,
+      "sha256": "8358E0974EC03509054821A9D5043CB37BFFAAC7BF0A0D0B5D83033B13186D57"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\directory_structure_cross_reference_detailed_2026-08-21.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/directory_structure_cross_reference_detailed_2026-08-21.md",
+      "bytes": 42364,
+      "sha256": "6A3AD0E8AA064C3FCF53060074C42466915897FA011E39A930887D2A2E3F8A66"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\directory_structure_register_detailed_2026-08-21.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/directory_structure_register_detailed_2026-08-21.csv",
+      "bytes": 141014,
+      "sha256": "2A2EC239793714B05CEB901B2B260831AFAB5E6DA8BA3192726DAA64A6766C2B"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\non_ui_atlas_source_scan_2026-08-20.json",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/non_ui_atlas_source_scan_2026-08-20.json",
+      "bytes": 1953,
+      "sha256": "DF9A71D1478507B477FF882B333B4E27F696733B963C071C01AFE3FC4D25BD20"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\README.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/README.md",
+      "bytes": 7644,
+      "sha256": "9CEC82B2E8BC30E0BF72D41D05B3C59FF21EC30490C2D6B86D0C0A94A1C0770E"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\resource_asset_register_bilingual_2026-08-20.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/resource_asset_register_bilingual_2026-08-20.csv",
+      "bytes": 1307800,
+      "sha256": "CAF7495212093724370EBFA240668077BCFD08577E094278FD369424AB604558"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\resource_catalog_validation_2026-08-20.json",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/resource_catalog_validation_2026-08-20.json",
+      "bytes": 750,
+      "sha256": "E62B4EB52FBEE37BC3DB7416E2AE5198B304A4D4192B9990DEFD83034B64EEC8"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\resource_catalog_workbook_source_2026-08-20.json",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/resource_catalog_workbook_source_2026-08-20.json",
+      "bytes": 6102367,
+      "sha256": "AFF88D6608E209E79FF0AECFB65C1C374E967BCC7DF57ADBE36D003B30EDECD1"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\resource_directory_cross_reference_bilingual_2026-08-20.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/resource_directory_cross_reference_bilingual_2026-08-20.md",
+      "bytes": 13032,
+      "sha256": "D880E76909A86DEADFEDDCA3756BA2F6C16FEF44FFB152D2B1A37BCA8AE8B13A"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\resource_reorganization_followup_plan_2026-08-20.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/resource_reorganization_followup_plan_2026-08-20.md",
+      "bytes": 5509,
+      "sha256": "9ADBBBAA830359AFF24C0E5251397212F4BA090901D7926F725927EB9B21070D"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\runtime_unreferenced_review_queue_2026-08-20.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/runtime_unreferenced_review_queue_2026-08-20.csv",
+      "bytes": 158913,
+      "sha256": "CA7C1346A16585381B167FF45A664F1CD74CA84094E60DD7563FB03844BAFC66"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\ui_runtime_asset_move_map_2026-08-20.csv",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/ui_runtime_asset_move_map_2026-08-20.csv",
+      "bytes": 67836,
+      "sha256": "A6C9C9C00AF9990F7B89877127A7B86C0EE5C83C8F03E000597CFFF95C7F78D9"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\docs\\assets\\ui_runtime_asset_reorganization_report_2026-08-20.json",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/docs/assets/ui_runtime_asset_reorganization_report_2026-08-20.json",
+      "bytes": 103150,
+      "sha256": "3383242798DF862A40C5257282C75285D20A5C75A2EC850B808BC8B4EF6078E3"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\AGENTS.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/AGENTS.md",
+      "bytes": 6183,
+      "sha256": "6023BF950BC8EF708981BE3AB3559838F293F2CFBFCBE348766B8DC6728725DE"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\MIGRATION_GODOT.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/MIGRATION_GODOT.md",
+      "bytes": 1048,
+      "sha256": "8A5B1CA550673C0CC138C82F02CC78D8A43DF0158DD46FBBF1FD67FAEC4F7593"
+    },
+    {
+      "source": "D:\\UGit\\UGit\\TO10\\PROJECT_DIRECTION.md",
+      "destination": "Docs/LegacyGodot/2026-09-13_v01/PROJECT_DIRECTION.md",
+      "bytes": 1210,
+      "sha256": "A4F89EED4B9DAE6F5C1135432778D6694543BA18BFD6330535EDDD1DA1681D0A"
+    }
+  ],
+  "source": "D:\\UGit\\UGit\\TO10",
+  "date": "2026-09-13",
+  "version": "v01",
+  "count": 58,
+  "target": "D:\\UGit\\T0\\To"
+}

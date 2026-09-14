@@ -1,0 +1,332 @@
+{
+  "regions": [
+    {
+      "texture": "block_tiles_sheet",
+      "width": 304.0,
+      "key": "tile_green",
+      "y": 4.0,
+      "height": 304.0,
+      "x": 4.0
+    },
+    {
+      "texture": "block_tiles_sheet",
+      "width": 304.0,
+      "key": "tile_blue",
+      "y": 4.0,
+      "height": 304.0,
+      "x": 316.0
+    },
+    {
+      "texture": "block_tiles_sheet",
+      "width": 304.0,
+      "key": "tile_yellow",
+      "y": 4.0,
+      "height": 304.0,
+      "x": 628.0
+    },
+    {
+      "texture": "block_tiles_sheet",
+      "width": 304.0,
+      "key": "tile_purple",
+      "y": 4.0,
+      "height": 304.0,
+      "x": 940.0
+    },
+    {
+      "texture": "block_tiles_sheet",
+      "width": 304.0,
+      "key": "tile_red",
+      "y": 4.0,
+      "height": 304.0,
+      "x": 1252.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 68.0,
+      "key": "glyph_1",
+      "y": 4.0,
+      "height": 118.0,
+      "x": 4.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 86.0,
+      "key": "glyph_2",
+      "y": 4.0,
+      "height": 120.0,
+      "x": 204.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 85.0,
+      "key": "glyph_3",
+      "y": 4.0,
+      "height": 120.0,
+      "x": 404.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 98.0,
+      "key": "glyph_4",
+      "y": 4.0,
+      "height": 118.0,
+      "x": 604.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 88.0,
+      "key": "glyph_5",
+      "y": 4.0,
+      "height": 120.0,
+      "x": 804.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 96.0,
+      "key": "glyph_6",
+      "y": 4.0,
+      "height": 122.0,
+      "x": 1004.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 90.0,
+      "key": "glyph_7",
+      "y": 172.0,
+      "height": 118.0,
+      "x": 4.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 94.0,
+      "key": "glyph_8",
+      "y": 172.0,
+      "height": 123.0,
+      "x": 204.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 97.0,
+      "key": "glyph_9",
+      "y": 172.0,
+      "height": 124.0,
+      "x": 404.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 158.0,
+      "key": "glyph_10",
+      "y": 172.0,
+      "height": 120.0,
+      "x": 604.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 113.0,
+      "key": "glyph_11",
+      "y": 172.0,
+      "height": 134.0,
+      "x": 804.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 104.0,
+      "key": "glyph_12",
+      "y": 172.0,
+      "height": 138.0,
+      "x": 1004.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 101.0,
+      "key": "glyph_13",
+      "y": 340.0,
+      "height": 137.0,
+      "x": 4.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 107.0,
+      "key": "glyph_14",
+      "y": 340.0,
+      "height": 137.0,
+      "x": 204.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 89.0,
+      "key": "glyph_15",
+      "y": 340.0,
+      "height": 135.0,
+      "x": 404.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 89.0,
+      "key": "glyph_16",
+      "y": 340.0,
+      "height": 135.0,
+      "x": 604.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 107.0,
+      "key": "glyph_17",
+      "y": 340.0,
+      "height": 137.0,
+      "x": 804.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 105.0,
+      "key": "glyph_18",
+      "y": 340.0,
+      "height": 134.0,
+      "x": 1004.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 54.0,
+      "key": "glyph_19",
+      "y": 508.0,
+      "height": 133.0,
+      "x": 4.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 89.0,
+      "key": "glyph_20",
+      "y": 508.0,
+      "height": 135.0,
+      "x": 204.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 102.0,
+      "key": "glyph_21",
+      "y": 508.0,
+      "height": 135.0,
+      "x": 404.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 85.0,
+      "key": "glyph_22",
+      "y": 508.0,
+      "height": 134.0,
+      "x": 604.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 112.0,
+      "key": "glyph_23",
+      "y": 508.0,
+      "height": 133.0,
+      "x": 804.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 104.0,
+      "key": "glyph_24",
+      "y": 508.0,
+      "height": 130.0,
+      "x": 1004.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 114.0,
+      "key": "glyph_25",
+      "y": 676.0,
+      "height": 132.0,
+      "x": 4.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 95.0,
+      "key": "glyph_26",
+      "y": 676.0,
+      "height": 132.0,
+      "x": 204.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 115.0,
+      "key": "glyph_27",
+      "y": 676.0,
+      "height": 135.0,
+      "x": 404.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 98.0,
+      "key": "glyph_28",
+      "y": 676.0,
+      "height": 133.0,
+      "x": 604.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 92.0,
+      "key": "glyph_29",
+      "y": 676.0,
+      "height": 134.0,
+      "x": 804.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 99.0,
+      "key": "glyph_30",
+      "y": 676.0,
+      "height": 131.0,
+      "x": 1004.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 101.0,
+      "key": "glyph_31",
+      "y": 844.0,
+      "height": 130.0,
+      "x": 4.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 105.0,
+      "key": "glyph_32",
+      "y": 844.0,
+      "height": 130.0,
+      "x": 204.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 131.0,
+      "key": "glyph_33",
+      "y": 844.0,
+      "height": 130.0,
+      "x": 404.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 104.0,
+      "key": "glyph_34",
+      "y": 844.0,
+      "height": 132.0,
+      "x": 604.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 107.0,
+      "key": "glyph_35",
+      "y": 844.0,
+      "height": 132.0,
+      "x": 804.0
+    },
+    {
+      "texture": "block_glyphs_sheet",
+      "width": 89.0,
+      "key": "glyph_36",
+      "y": 844.0,
+      "height": 131.0,
+      "x": 1004.0
+    }
+  ]
+}

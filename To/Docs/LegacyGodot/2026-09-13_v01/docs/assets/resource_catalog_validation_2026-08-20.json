@@ -1,0 +1,26 @@
+{
+  "catalog_date": "2026-08-20",
+  "asset_file_count": 1379,
+  "directory_summary_total": 1379,
+  "counts_match": true,
+  "status_counts": {
+    "ACTIVE_REVIEW_PENDING": 56,
+    "ACTIVE_RUNTIME": 224,
+    "AI_ORIGINAL": 161,
+    "LEGACY_SOURCE": 124,
+    "PRODUCTION_INTERMEDIATE": 391,
+    "REVIEW_PENDING": 37,
+    "RUNTIME_UNREFERENCED": 189,
+    "SUPERSEDED": 197
+  },
+  "audited_runtime_reachable_count_including_shaders": 280,
+  "active_asset_count": 280,
+  "active_count_matches_audit": true,
+  "active_without_reference": [],
+  "review_pending_without_evidence": [],
+  "duplicate_hash_group_count": 206,
+  "duplicate_file_count": 464,
+  "historical_missing_count": 379,
+  "review_queue_count": 12,
+  "passed": true
+}

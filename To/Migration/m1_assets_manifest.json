@@ -1,0 +1,27 @@
+[
+  {
+    "target": "D:\\UGit\\T0\\To\\Assets\\MergeTo10\\Resources\\M1Art\\block_glyphs_sheet.png",
+    "source": "D:\\UGit\\T0\\To\\Migration\\Baselines\\godot_2026-09-11_v01\\Source\\assets\\runtime\\ui\\components\\board_glyphs\\atlases\\block_glyphs_sheet.png",
+    "sha256": "2DFB91090BCE95C40A952A6F1D31402224B7CD588DC4DB28B0F7C772C3B4A5EA"
+  },
+  {
+    "target": "D:\\UGit\\T0\\To\\Assets\\MergeTo10\\Resources\\M1Art\\background.png",
+    "source": "D:\\UGit\\T0\\To\\Migration\\Baselines\\godot_2026-09-11_v01\\Source\\assets\\runtime\\ui\\interfaces\\battle\\standalone\\battle_background.png",
+    "sha256": "E91CC1A2E751ECC3EE95B33CD0B5CB2935FFD577E027CBC2A7FD62951E6E0150"
+  },
+  {
+    "target": "D:\\UGit\\T0\\To\\Assets\\MergeTo10\\Resources\\M1Art\\board_plate.png",
+    "source": "D:\\UGit\\T0\\To\\Migration\\Baselines\\godot_2026-09-11_v01\\Source\\assets\\runtime\\ui\\interfaces\\battle\\board\\standalone\\battle_board_backdrop.png",
+    "sha256": "0975EB86D4C9A9E0E37236DD98017CE6F79ABC0960C7E11F263525644F9ED2E1"
+  },
+  {
+    "target": "D:\\UGit\\T0\\To\\Assets\\MergeTo10\\Resources\\M1Art\\block_tiles_sheet.png",
+    "source": "D:\\UGit\\T0\\To\\Migration\\Baselines\\godot_2026-09-11_v01\\Source\\assets\\runtime\\ui\\components\\board_tiles\\atlases\\block_tiles_sheet.png",
+    "sha256": "3BE2A0BF2046F83B96FDE62CEC566F3CBAB9360000651B864B80A390E4711EE4"
+  },
+  {
+    "target": "D:\\UGit\\T0\\To\\Assets\\MergeTo10\\Resources\\M1Art\\merge_sheet.png",
+    "source": "D:\\UGit\\T0\\To\\Migration\\Baselines\\godot_2026-09-11_v01\\Source\\assets\\runtime\\fx\\merge\\atlases\\merge_sheet.png",
+    "sha256": "0320B8A3A529D1143559B69331151FFE648B5C7F520D47D8E962665A44843127"
+  }
+]

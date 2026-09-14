@@ -1,0 +1,226 @@
+{
+	"traces": [
+		{
+			"delta": 0.0166666666666667,
+			"frames": [
+				0,
+				122,
+				127,
+				189,
+				194,
+				199,
+				261,
+				266,
+				271,
+				276,
+				338,
+				400,
+				405,
+				467,
+				472
+			]
+		},
+		{
+			"delta": 0.0333333333333333,
+			"frames": [
+				0,
+				91,
+				94,
+				125,
+				128,
+				131,
+				162,
+				165,
+				168,
+				171,
+				202,
+				233,
+				236,
+				267,
+				270
+			]
+		},
+		{
+			"delta": 0.2,
+			"frames": [
+				0,
+				6,
+				7,
+				73,
+				74,
+				75,
+				81,
+				82,
+				83,
+				84,
+				90,
+				96,
+				97,
+				103,
+				104
+			]
+		}
+	],
+	"waves": [
+		{
+			"hp_multiplier": 3.0,
+			"large": 0,
+			"medium": 0,
+			"small": 15,
+			"spawn_interval": 1.02,
+			"visual_tier": 1
+		},
+		{
+			"hp_multiplier": 3.6,
+			"large": 0,
+			"medium": 0,
+			"small": 17,
+			"spawn_interval": 0.995,
+			"visual_tier": 1
+		},
+		{
+			"hp_multiplier": 4.32,
+			"large": 0,
+			"medium": 0,
+			"small": 20,
+			"spawn_interval": 0.97,
+			"visual_tier": 1
+		},
+		{
+			"hp_multiplier": 5.184,
+			"large": 0,
+			"medium": 2,
+			"small": 20,
+			"spawn_interval": 0.945,
+			"visual_tier": 1
+		},
+		{
+			"hp_multiplier": 6.2208,
+			"large": 0,
+			"medium": 2,
+			"small": 22,
+			"spawn_interval": 0.92,
+			"visual_tier": 1
+		},
+		{
+			"hp_multiplier": 7.46496,
+			"large": 0,
+			"medium": 4,
+			"small": 23,
+			"spawn_interval": 0.895,
+			"visual_tier": 1
+		},
+		{
+			"hp_multiplier": 8.957952,
+			"large": 0,
+			"medium": 4,
+			"small": 25,
+			"spawn_interval": 0.87,
+			"visual_tier": 1
+		},
+		{
+			"hp_multiplier": 10.7495424,
+			"large": 2,
+			"medium": 5,
+			"small": 25,
+			"spawn_interval": 0.845,
+			"visual_tier": 2
+		},
+		{
+			"hp_multiplier": 12.89945088,
+			"large": 2,
+			"medium": 5,
+			"small": 27,
+			"spawn_interval": 0.82,
+			"visual_tier": 2
+		},
+		{
+			"hp_multiplier": 15.479341056,
+			"large": 2,
+			"medium": 7,
+			"small": 27,
+			"spawn_interval": 0.795,
+			"visual_tier": 2
+		},
+		{
+			"hp_multiplier": 18.5752092672,
+			"large": 2,
+			"medium": 7,
+			"small": 30,
+			"spawn_interval": 0.77,
+			"visual_tier": 2
+		},
+		{
+			"hp_multiplier": 22.29025112064,
+			"large": 3,
+			"medium": 8,
+			"small": 30,
+			"spawn_interval": 0.745,
+			"visual_tier": 2
+		},
+		{
+			"hp_multiplier": 26.748301344768,
+			"large": 3,
+			"medium": 8,
+			"small": 32,
+			"spawn_interval": 0.72,
+			"visual_tier": 2
+		},
+		{
+			"hp_multiplier": 32.0979616137216,
+			"large": 3,
+			"medium": 10,
+			"small": 33,
+			"spawn_interval": 0.695,
+			"visual_tier": 2
+		},
+		{
+			"hp_multiplier": 38.5175539364659,
+			"large": 3,
+			"medium": 10,
+			"small": 35,
+			"spawn_interval": 0.67,
+			"visual_tier": 3
+		},
+		{
+			"hp_multiplier": 46.2210647237591,
+			"large": 5,
+			"medium": 11,
+			"small": 35,
+			"spawn_interval": 0.645,
+			"visual_tier": 3
+		},
+		{
+			"hp_multiplier": 55.4652776685109,
+			"large": 5,
+			"medium": 11,
+			"small": 37,
+			"spawn_interval": 0.62,
+			"visual_tier": 3
+		},
+		{
+			"hp_multiplier": 66.5583332022131,
+			"large": 4,
+			"medium": 12,
+			"small": 39,
+			"spawn_interval": 0.595,
+			"visual_tier": 3
+		},
+		{
+			"hp_multiplier": 79.8699998426557,
+			"large": 5,
+			"medium": 12,
+			"small": 41,
+			"spawn_interval": 0.57,
+			"visual_tier": 3
+		},
+		{
+			"hp_multiplier": 95.8439998111868,
+			"large": 6,
+			"medium": 13,
+			"small": 41,
+			"spawn_interval": 0.545,
+			"visual_tier": 3
+		}
+	]
+}

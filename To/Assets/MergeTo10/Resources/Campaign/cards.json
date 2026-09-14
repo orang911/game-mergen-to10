@@ -1,0 +1,174 @@
+{
+	"baseAttack": [
+		2,
+		4,
+		6,
+		10,
+		14,
+		18,
+		25,
+		32,
+		40
+	],
+	"cards": [
+		{
+			"description": "当前合成结果块\n额外提升等级",
+			"icon": "res://assets/runtime/ui/components/card_icons/imprints/imprint_ascension_hammer_v01.png",
+			"id": "ascension_hammer",
+			"item_name": "星阶铸锤",
+			"skill_name": "晶核跃升",
+			"type": "board"
+		},
+		{
+			"description": "记录印记块合成前数字\n其余非保留方块统一为该数字",
+			"icon": "res://assets/runtime/ui/components/card_icons/imprints/imprint_unity_dial_v01.png",
+			"id": "unity_dial",
+			"item_name": "万象数盘",
+			"skill_name": "万数归一",
+			"type": "board"
+		},
+		{
+			"description": "打乱棋盘数字与印记\n并保证至少一组可合成方块",
+			"icon": "res://assets/runtime/ui/components/card_icons/imprints/imprint_fate_shuffler_v01.png",
+			"id": "fate_shuffler",
+			"item_name": "命运魔箱",
+			"skill_name": "命运洗牌",
+			"type": "board"
+		},
+		{
+			"description": "相邻非最高级方块\n变为结果块相同数字",
+			"icon": "res://assets/runtime/ui/components/card_icons/imprints/imprint_twin_mold_v01.png",
+			"id": "twin_mold",
+			"item_name": "双生晶模",
+			"skill_name": "双生铸模",
+			"type": "board"
+		},
+		{
+			"description": "对最靠近城堡的怪物\n进行一次高伤害炮击",
+			"icon": "res://assets/runtime/ui/components/card_icons/imprints/imprint_castle_cannon_v01.png",
+			"id": "castle_cannon",
+			"item_name": "王城魔炮",
+			"skill_name": "王城轰击",
+			"type": "board"
+		},
+		{
+			"description": "攻击靠近城堡的一组怪物\n造成范围伤害并附加燃烧",
+			"icon": "res://assets/runtime/ui/components/card_icons/imprints/imprint_dragon_catapult_v01.png",
+			"id": "dragon_catapult",
+			"item_name": "龙焰投石",
+			"skill_name": "龙焰轰炸",
+			"type": "board"
+		},
+		{
+			"description": "水晶攻击命中后\n对目标附加燃烧",
+			"icon": "res://assets/runtime/ui/components/card_icons/atlas_regions/fire_conduit.tres",
+			"id": "fire_conduit",
+			"item_name": "炉心龙纹管",
+			"skill_name": "龙焰附着",
+			"type": "crystal"
+		},
+		{
+			"description": "水晶攻击命中后\n施加持续毒伤",
+			"icon": "res://assets/runtime/ui/components/card_icons/atlas_regions/poison_tank.tres",
+			"id": "poison_tank",
+			"item_name": "腐蚀炼金罐",
+			"skill_name": "剧毒附着",
+			"type": "crystal"
+		},
+		{
+			"description": "当前游戏局提高\n水晶塔普通攻击伤害",
+			"icon": "res://assets/runtime/ui/components/card_icons/atlas_regions/star_boiler.tres",
+			"id": "star_boiler",
+			"item_name": "星核蒸汽炉",
+			"skill_name": "星核增幅",
+			"type": "crystal"
+		},
+		{
+			"description": "当前游戏局提高攻击速度\n缩短水晶普通攻击间隔",
+			"icon": "res://assets/runtime/ui/components/card_icons/atlas_regions/rapid_clockwork.tres",
+			"id": "rapid_clockwork",
+			"item_name": "迅流发条机",
+			"skill_name": "迅流脉冲",
+			"type": "crystal"
+		},
+		{
+			"description": "当前游戏局水晶攻击\n额外命中目标",
+			"icon": "res://assets/runtime/ui/components/card_icons/atlas_regions/twin_lens.tres",
+			"id": "twin_lens",
+			"item_name": "双塔折射镜",
+			"skill_name": "双重折射",
+			"type": "crystal"
+		},
+		{
+			"description": "水晶攻击穿透一个目标\n后续目标承受较低伤害",
+			"icon": "res://assets/runtime/ui/components/card_icons/atlas_regions/piercing_cannon.tres",
+			"id": "piercing_cannon",
+			"item_name": "城墙穿透炮",
+			"skill_name": "晶轨穿透",
+			"type": "crystal"
+		}
+	],
+	"damageUp": [
+		0.1,
+		0.14,
+		0.18,
+		0.22,
+		0.26
+	],
+	"extraTargets": [
+		1,
+		1,
+		1,
+		2,
+		2
+	],
+	"fireDps": [
+		0.1,
+		0.13,
+		0.16,
+		0.19,
+		0.22
+	],
+	"fireDuration": [
+		1.5,
+		2.0,
+		2.5,
+		3.0,
+		3.5
+	],
+	"interval": [
+		0.95,
+		0.93,
+		0.91,
+		0.89,
+		0.87
+	],
+	"pierceRatio": [
+		0.35,
+		0.4,
+		0.45,
+		0.5,
+		0.55
+	],
+	"poisonDps": [
+		0.1,
+		0.13,
+		0.16,
+		0.19,
+		0.22
+	],
+	"poisonDuration": [
+		2.5,
+		3.0,
+		3.5,
+		4.0,
+		4.5
+	],
+	"thunderRatio": [
+		0.25,
+		0.3,
+		0.35,
+		0.4,
+		0.45
+	]
+}

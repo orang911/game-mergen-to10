@@ -1,0 +1,6 @@
+Copyright 2020 The Open Sans Project Authors (https://github.com/googlefonts/opensans)
+Open Sans is a trademark of Google and may be registered in certain jurisdictions.
+Monotype Imaging Inc.
+Monotype Design Team
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL
+http://scripts.sil.org/OFL
