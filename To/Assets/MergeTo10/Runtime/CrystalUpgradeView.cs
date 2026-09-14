@@ -55,7 +55,7 @@ namespace MergeTo10.Runtime {
   void Label(string value,int size,string hex,float x,float y,float w,float h){
    ColorUtility.TryParseHtmlString("#"+hex,out var color);
    var text=ui.Label(ui.Root,value,size,color,x,y,w,h);
-   if(hex=="ffffff"||hex=="b7f8ff"||hex=="e7f1ff"){var outline=text.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.03f,.08f,.18f,.86f);outline.effectDistance=new Vector2(2,-2);}
+   if(hex=="ffffff"||hex=="b7f8ff"||hex=="e7f1ff"){var outline=text.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.03f,.08f,.18f,.86f);outline.effectDistance=new Vector2(2,2);}
   }
   void Counter(float x,float y,int value,string icon,float ix,float iy,float iw,float ih){
    Art("crystal_counter",x,y,241,61);Art(icon,ix,iy,iw,ih);

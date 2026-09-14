@@ -46,7 +46,7 @@ namespace MergeTo10.Runtime {
    OutlineText(ui.Label(confirmArt.transform,"确定",52,Color.white,0,0,348,114,900),8,new Color(.48f,.18f,.02f));confirm.interactable=false;
    ui.Complete();combat.MarkCrystalOffersSeen();StartCoroutine(Intro());
   }
-  static void OutlineText(Text text,int size,Color color){var outline=text.gameObject.EnsureComponent<Outline>();outline.effectDistance=Vector2.one*size;outline.effectColor=color;}
+  static void OutlineText(Text text,int size,Color color){var outline=text.gameObject.EnsureComponent<Outline>();outline.effectDistance=new Vector2(2,2);outline.effectColor=color;}
   static float Back(float t){float u=t-1;return 1+2.70158f*u*u*u+1.70158f*u*u;}
   IEnumerator Intro(){
    float elapsed=0;float total=.03f+(cards.Length-1)*.06f+.36f+.06f;

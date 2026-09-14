@@ -212,7 +212,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeTo10.Runtime.CommerceTextOutline
   m_EffectColor: {r: 0.96862745, g: 0.972549, b: 0.95686275, a: 1}
-  m_EffectDistance: {x: 3, y: -3}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!1 &807188773904417841
 GameObject:
@@ -384,7 +384,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeTo10.Runtime.CommerceTextOutline
   m_EffectColor: {r: 0.96862745, g: 0.972549, b: 0.95686275, a: 1}
-  m_EffectDistance: {x: 3, y: -3}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!1 &1610442861747529360
 GameObject:
@@ -829,7 +829,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeTo10.Runtime.CommerceTextOutline
   m_EffectColor: {r: 0.9098039, g: 1, b: 0.7764706, a: 1}
-  m_EffectDistance: {x: 2, y: -2}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!1 &2858961534524556291
 GameObject:
@@ -1423,7 +1423,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeTo10.Runtime.CommerceTextOutline
   m_EffectColor: {r: 0.09019608, g: 0.19607843, b: 0.039215688, a: 1}
-  m_EffectDistance: {x: 3, y: -3}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!1 &4771045531686135939
 GameObject:
@@ -1810,7 +1810,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeTo10.Runtime.CommerceTextOutline
   m_EffectColor: {r: 0.09019608, g: 0.20392157, b: 0.3647059, a: 1}
-  m_EffectDistance: {x: 3, y: -3}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!1 &6261963126233184763
 GameObject:
@@ -1925,7 +1925,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeTo10.Runtime.CommerceTextOutline
   m_EffectColor: {r: 0.47843137, g: 0.23921569, b: 0.03137255, a: 1}
-  m_EffectDistance: {x: 5, y: -5}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!1 &6424665259324112477
 GameObject:
@@ -2205,7 +2205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MergeTo10.Runtime.CommerceTextOutline
   m_EffectColor: {r: 0.08627451, g: 0.09803922, b: 0.11764706, a: 1}
-  m_EffectDistance: {x: 5, y: -5}
+  m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
 --- !u!1 &7691939967142539257
 GameObject:

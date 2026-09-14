@@ -78,7 +78,7 @@ namespace MergeTo10.Runtime {
   }
   Text Copy(string name, string value, Rect r, int font, string color = "17345d", int weight = 700, float outline = 0, string outlineColor = "17345d") {
    var text = ui.Label(content, value, font, Hex(color), r.x, r.y, r.width, r.height, weight); text.name = name;
-   if (outline > 0) { var effect = text.gameObject.EnsureComponent<CommerceTextOutline>(); effect.effectColor = Hex(outlineColor); effect.effectDistance = new Vector2(outline, -outline); }
+   if (outline > 0) { var effect = text.gameObject.EnsureComponent<CommerceTextOutline>(); effect.effectColor = Hex(outlineColor); effect.effectDistance = new Vector2(2, 2); }
    return text;
   }
   Text BenefitCopy(string name, string value, Rect r, int font, string color = "17345d", int weight = 700, int outline = 0, string outlineColor = "17345d") => Copy(name, value, B(r.x,r.y,r.width,r.height), Mathf.RoundToInt(font*BenefitScale), color, weight, Mathf.Round(outline*BenefitScale), outlineColor);
@@ -87,7 +87,7 @@ namespace MergeTo10.Runtime {
    var button = image.gameObject.EnsureComponent<Button>(); button.targetGraphic = image; button.transition = Selectable.Transition.None; button.interactable = enabled;
    button.onClick.AddListener(() => { if (button.interactable) action(); });
    var text = ui.Label(image.transform, copy, font, Color.white, 0, 0, r.width, r.height, 900);
-   var edge = text.gameObject.EnsureComponent<CommerceTextOutline>(); edge.effectColor = Hex(outlineColor); edge.effectDistance = new Vector2(outline, -outline);
+   var edge = text.gameObject.EnsureComponent<CommerceTextOutline>(); edge.effectColor = Hex(outlineColor); edge.effectDistance = new Vector2(2, 2);
    if (!enabled) { image.color = new Color(.72f,.76f,.82f,.92f); text.color = image.color; }
    GameUiSurface.CenterPivot(image.rectTransform);
    var feedback = image.gameObject.EnsureComponent<CommerceButtonFeedback>(); feedback.PressScale = press;

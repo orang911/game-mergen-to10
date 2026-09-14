@@ -33,7 +33,7 @@ namespace MergeTo10.Runtime
    if(!label.font)throw new InvalidOperationException("Missing packaged chapter font");
    label.text=value;label.fontSize=size;label.color=color;label.alignment=TextAnchor.MiddleCenter;label.raycastTarget=false;
    label.horizontalOverflow=HorizontalWrapMode.Wrap;label.verticalOverflow=VerticalWrapMode.Overflow;
-   if(outline){var edge=label.gameObject.EnsureComponent<Outline>();edge.effectColor=new Color(.04f,.10f,.24f);edge.effectDistance=Vector2.one;}
+   if(outline){var edge=label.gameObject.EnsureComponent<Outline>();edge.effectColor=new Color(.04f,.10f,.24f);edge.effectDistance=new Vector2(2,2);}
    return label;
   }
   void Build(string node){

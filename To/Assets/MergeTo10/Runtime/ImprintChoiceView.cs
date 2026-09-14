@@ -49,7 +49,7 @@ namespace MergeTo10.Runtime {
    Label(confirmArt.transform,"确定",52,0,0,303,110,7);ui.Complete();StartCoroutine(Intro());
   }
   void Label(Transform parent,string value,int font,float x,float y,float w,float h,int border){
-   var text=ui.Label(parent,value,font,Color.white,x,y,w,h,900);var outline=text.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.02f,.04f,.09f);outline.effectDistance=Vector2.one*border;
+   var text=ui.Label(parent,value,font,Color.white,x,y,w,h,900);var outline=text.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.02f,.04f,.09f);outline.effectDistance=new Vector2(2,2);
   }
   static string Description(string id,int q){
    switch(id){

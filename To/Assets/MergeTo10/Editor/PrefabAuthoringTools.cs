@@ -202,7 +202,7 @@ namespace MergeTo10.Editor {
    for(int i=0;i<3;i++){
     var overlay=GameUiSurface.Rect(surface.Root,"LoadingDialog",0,0,941,1672);overlay.gameObject.AddComponent<Image>().color=new Color(0,0,0,.6f);
     var panel=GameUiSurface.Rect(overlay,"Panel",160.5f,676,620,320);panel.gameObject.AddComponent<Image>().color=new Color(.1f,.19f,.29f);
-    foreach(var label in new[]{surface.Label(panel,titles[i],32,Color.white,20,16,580,50),surface.Label(panel,messages[i],25,Color.white,32,78,556,144)}){var outline=label.gameObject.AddComponent<Outline>();outline.effectColor=new Color(.055f,.11f,.075f);outline.effectDistance=new Vector2(2,-2);}
+    foreach(var label in new[]{surface.Label(panel,titles[i],32,Color.white,20,16,580,50),surface.Label(panel,messages[i],25,Color.white,32,78,556,144)}){var outline=label.gameObject.AddComponent<Outline>();outline.effectColor=new Color(.055f,.11f,.075f);outline.effectDistance=new Vector2(2,2);}
     if(i==0){LoadingButton(surface,panel,"ClearCancelButton","取消",38,246,240,54);LoadingButton(surface,panel,"ClearConfirmButton","确认清空",342,246,240,54);}
     else if(i==1){LoadingButton(surface,panel,"LoadRetryButton","重试",38,246,240,54);LoadingButton(surface,panel,"LoadResetButton","清空本地数据",342,246,240,54);}
     else LoadingButton(surface,panel,"RecoveryContinueButton","继续",190,246,240,54);

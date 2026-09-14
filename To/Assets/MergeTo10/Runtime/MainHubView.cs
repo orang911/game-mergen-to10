@@ -32,7 +32,7 @@ namespace MergeTo10.Runtime {
     if(item.kind=="text"){
      var text=rect.gameObject.EnsureComponent<Text>();text.font=Resources.Load<Font>("Campaign/chapter_900");text.fontSize=item.font;text.text=item.text;text.color=color;
      text.alignment=item.align==0?TextAnchor.MiddleLeft:TextAnchor.MiddleCenter;text.raycastTarget=false;text.verticalOverflow=VerticalWrapMode.Overflow;
-     if(item.outline>0){var outline=rect.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.025f,.045f,.09f);outline.effectDistance=Vector2.one*item.outline;}
+     if(item.outline>0){var outline=rect.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.025f,.045f,.09f);outline.effectDistance=new Vector2(2,2);}
      labels[item.name]=text;
     }else{
      var image=rect.gameObject.EnsureComponent<Image>();image.raycastTarget=item.kind=="button";

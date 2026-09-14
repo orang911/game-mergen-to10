@@ -29,7 +29,7 @@ namespace MergeTo10.Runtime {
   }
   Text Copy(Transform parent,string text,int size,float x,float y,float w,float h){
    var label=ui.Label(parent,text,size,Color.white,x,y,w,h);
-   var outline=label.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.055f,.11f,.075f);outline.effectDistance=new Vector2(2,-2);return label;
+   var outline=label.gameObject.EnsureComponent<Outline>();outline.effectColor=new Color(.055f,.11f,.075f);outline.effectDistance=new Vector2(2,2);return label;
   }
   static Button Button(GameUiSurface surface,Transform parent,string name,string text,float x,float y,float w,float h,Action action,bool flat=false){
    var rect=GameUiSurface.Rect(parent,name,x,y,w,h);var image=rect.gameObject.EnsureComponent<Image>();image.color=flat?new Color(0,0,0,.01f):new Color(.1f,.35f,.56f);
