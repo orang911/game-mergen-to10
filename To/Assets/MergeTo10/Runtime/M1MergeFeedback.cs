@@ -6,12 +6,14 @@ namespace MergeTo10.Runtime
 {
  public sealed class M1MergeFeedback:MonoBehaviour
  {
-  readonly List<Sprite> frames=new List<Sprite>();readonly List<GameObject> effects=new List<GameObject>();
-  Transform stage;M1Art art;Coroutine shake;
+  readonly List<GameObject> effects=new List<GameObject>();
+  Transform stage;GameObject burstPrefab;Coroutine shake;
   public void Setup(Transform layer,M1Art assets)
   {
-   stage=layer;art=assets;var texture=Resources.Load<Texture2D>("M1Art/merge_sheet");
-   for(int i=0;i<13;i++)frames.Add(Sprite.Create(texture,new Rect((i%4)*200,texture.height-(i/4+1)*200,200,200),Vector2.one*.5f,100,0,SpriteMeshType.FullRect));
+   stage=layer;
+   var settings=Resources.Load<MergeEffectSettings>("merge_effect");
+   burstPrefab=settings?settings.Prefab:null;
+   if(!burstPrefab)Debug.LogError("Missing merge_effect prefab reference",this);
   }
   public void Play(Vector2 local,int count)
   {
@@ -20,9 +22,24 @@ namespace MergeTo10.Runtime
   }
   IEnumerator Burst(Vector2 center)
   {
-   var go=new GameObject("MergeBurst");effects.Add(go);go.transform.SetParent(stage,false);go.transform.localPosition=LayoutMapper.World(center);
-   var r=go.AddComponent<SpriteRenderer>();r.sharedMaterial=art.Material;r.sortingOrder=100;r.sprite=frames[0];M1Art.SetSize(r,Vector2.one*209);
-   for(int i=1;i<13;i++){yield return new WaitForSeconds(.02f);r.sprite=frames[i];}
+   if(!burstPrefab)yield break;
+   var go=Instantiate(burstPrefab,stage,false);go.name="MergeBurst";effects.Add(go);
+   go.transform.localPosition=LayoutMapper.World(center);
+   // Preserve the authored rotation, scale, textures and child emitters.
+   var systems=go.GetComponentsInChildren<ParticleSystem>(true);
+   foreach(var particles in systems)
+   {
+    particles.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);
+    var main=particles.main;main.loop=false;main.stopAction=ParticleSystemStopAction.None;
+   }
+   foreach(var renderer in go.GetComponentsInChildren<ParticleSystemRenderer>(true))renderer.sortingOrder+=100;
+   foreach(var particles in systems)if(particles.gameObject.activeInHierarchy)particles.Play(false);
+   bool alive;
+   do
+   {
+    yield return null;alive=false;
+    foreach(var particles in systems)if(particles&&particles.IsAlive(false)){alive=true;break;}
+   }while(alive);
    effects.Remove(go);Destroy(go);
   }
   IEnumerator Shake(int count)
@@ -39,7 +56,7 @@ namespace MergeTo10.Runtime
    stage.localPosition=Vector3.zero;shake=null;
   }
   public void Clear(){StopAllCoroutines();shake=null;if(stage)stage.localPosition=Vector3.zero;foreach(var go in effects)if(go)Destroy(go);effects.Clear();}
-  void OnDestroy(){Clear();foreach(var frame in frames)Destroy(frame);}
+  void OnDisable(){Clear();}
+  void OnDestroy(){Clear();}
  }
 }
-
